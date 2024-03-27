@@ -1,0 +1,2 @@
+使用 Composer 创建项目 CodeIgniter 4 项目：
+composer create-project codeigniter4/appstarter
