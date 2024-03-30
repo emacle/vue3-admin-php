@@ -45,6 +45,14 @@ class Database extends Config
         'numberNative' => false,
     ];
 
+    public array $medoodb = [
+        'type' => 'mysql',
+        'host' => 'localhost',
+        'database' => 'demo',
+        'username' => 'root',
+        'password' => 'i7hfJK*6QL'
+    ];
+
     /**
      * This database connection is used when
      * running PHPUnit database tests.

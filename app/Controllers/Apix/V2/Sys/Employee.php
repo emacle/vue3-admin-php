@@ -3,7 +3,6 @@
 namespace App\Controllers\Apix\V2\Sys;
 
 use CodeIgniter\RESTful\ResourceController;
-use App\Models\EmployeeModel;
 
 // 标准流程
 // 1. 配置数据库连接, app/Config/Database.php
@@ -13,9 +12,10 @@ use App\Models\EmployeeModel;
 
 class Employee extends ResourceController
 {
+    private $Medoodb;
     public function __construct()
     {
-        $this->model = new EmployeeModel();
+        $this->Medoodb = \Config\Services::medoo();
     }
 
     // index() – Get’s all the records from the database.
@@ -27,14 +27,16 @@ class Employee extends ResourceController
     // all users
     public function index()
     {
-        $data['employees'] = $this->model->orderBy('id', 'DESC')->findAll();
+        // 使用Medoo进行数据库操作
+        $data['employees']  = $this->Medoodb->select('employees', '*');
         return $this->respond($data);
     }
+
     // single user
     public function show($id = null)
     {
         // 处理获取指定用户资源的逻辑
-        $data = $this->model->where('id', $id)->first();
+        $data = $this->Medoodb->get('employees', '*', ['id' => $id]);
         if ($data) {
             return $this->respond($data);
         } else {
@@ -50,7 +52,8 @@ class Employee extends ResourceController
             'name' => $this->request->getVar('name'),
             'email'  => $this->request->getVar('email'),
         ];
-        $this->model->insert($data);
+        $this->Medoodb->insert('employees', $data);
+
         $response = [
             'status'   => 201,
             'error'    => null,
@@ -69,8 +72,9 @@ class Employee extends ResourceController
             'name' => $this->request->getVar('name'),
             'email'  => $this->request->getVar('email'),
         ];
-        
-        $this->model->update($id, $data);
+
+        $this->Medoodb->update('employees', $data, ['id' => $id]);
+
         $response = [
             'status'   => 200,
             'error'    => null,
@@ -85,9 +89,9 @@ class Employee extends ResourceController
     public function delete($id = null)
     {
         // 处理删除用户资源的逻辑
-        $data = $this->model->where('id', $id)->delete($id);
+        $data = $this->Medoodb->has('employees', ['id' => $id]);
         if ($data) {
-            $this->model->delete($id);
+            $this->Medoodb->delete('employees', ['id' => $id]);
             $response = [
                 'status'   => 200,
                 'error'    => null,

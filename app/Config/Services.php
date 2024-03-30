@@ -29,4 +29,15 @@ class Services extends BaseService
      *     return new \CodeIgniter\Example();
      * }
      */
+
+    public static function medoo($getShared = true)
+    {
+        if ($getShared) {
+            return static::getSharedInstance('medoo');
+        }
+
+        $instance = new \App\Libraries\MedooService();
+
+        return $instance->getMedoo();
+    }
 }
