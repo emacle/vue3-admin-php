@@ -24,6 +24,7 @@ class Filters extends BaseConfig
         'honeypot'      => Honeypot::class,
         'invalidchars'  => InvalidChars::class,
         'secureheaders' => SecureHeaders::class,
+        'AuthCheck' => \App\Filters\AuthCheckFilter::class,
     ];
 
     /**
@@ -37,6 +38,11 @@ class Filters extends BaseConfig
             // 'honeypot',
             // 'csrf',
             // 'invalidchars',
+            'AuthCheck' => ['except' => [
+                '/',
+                'apix/v2/sys/employee/*',
+                'apix/v2/sys/employee',
+            ]], // route / 不应用该filter 
         ],
         'after' => [
             'toolbar',
