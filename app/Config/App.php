@@ -178,4 +178,18 @@ class App extends BaseConfig
      * @see http://www.w3.org/TR/CSP/
      */
     public bool $CSPEnabled = false;
+
+    // JWT 自定义配置
+    public string $jwt_key = 'pocoyo';
+    public int $jwt_access_token_exp = 7200; // 单位秒
+    public int $jwt_refresh_token_exp = 604800; // 单位秒
+    public int $jwt_refresh_count = 7; // 调用refresh_token接口超过此次数时, 会重置刷新token过期时间
+
+    // 自定义jwt token 过期或异常返回值,根据前端需要可以分开
+    // SignatureInvalidException 签名不正确
+    // BeforeValidException签名在某个时间点之后才能用
+    // ExpiredException token过期
+    // Exception 其他错误
+    public array $jwt_token_expired = ["code" => 50014, "message" => "Token 过期了oo"];
+    public array $jwt_token_exception = ['code' => 50008, 'message' => "非法的token"];
 }

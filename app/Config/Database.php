@@ -48,7 +48,7 @@ class Database extends Config
     public array $medoodb = [
         'type' => 'mysql',
         'host' => 'localhost',
-        'database' => 'demo',
+        'database' => 'vueadminv2',
         'username' => 'root',
         'password' => 'i7hfJK*6QL'
     ];

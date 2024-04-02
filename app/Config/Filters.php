@@ -42,7 +42,13 @@ class Filters extends BaseConfig
                 '/',
                 'apix/v2/sys/employee/*',
                 'apix/v2/sys/employee',
-            ]], // route / 不应用该filter 
+                'apix/v2/sys/user/login',
+                'apix/v2/sys/user/logout',
+                'apix/v2/sys/user/info',
+                'apix/v2/sys/user/refreshtoken',
+                'apix/v2/sys/user/githubauth',
+                'apix/v2/sys/user/giteeauth',
+            ]], // route / 不应用该filter
         ],
         'after' => [
             'toolbar',
