@@ -6,6 +6,7 @@ use CodeIgniter\RESTful\ResourceController;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use Exception;
+use PDO;
 
 class User extends ResourceController
 {
@@ -67,6 +68,40 @@ class User extends ResourceController
             return $this->respond($response);
         }
     }
+
+    /**
+     * 将数据格式化成树形结构路由菜单
+     */
+    private function genVueRouter($data, $idKey, $fidKey, $pId)
+    {
+        $tree = array();
+        foreach ($data as $k => $v) {
+            // 找到父节点为$pId的节点，然后进行递归查找其子节点，
+            if ($v[$fidKey] == $pId) {
+                // 数据库取出为string类型，强制类型转换成整形，方便前端使用
+                isset($v['id']) ? $v['id'] = intval($v['id']) : '';
+                isset($v['pid']) ? $v['pid'] = intval($v['pid']) : '';
+                isset($v['type']) ? $v['type'] = intval($v['type']) : '';
+                isset($v['hidden']) ? $v['hidden'] = intval($v['hidden']) : '';
+                isset($v['listorder']) ? $v['listorder'] = intval($v['listorder']) : '';
+
+                // 构造 vue-admin 路由结构 meta
+                $v['meta'] = [
+                    'title' => $v['title'],
+                    'icon' => $v['icon']
+                ];
+
+                unset($v['title']);
+                unset($v['icon']);
+
+                $v['children'] = $this->genVueRouter($data, $idKey, $fidKey, $v[$idKey]);
+                $tree[] = $v;     // 循环数组添加元素 属于同一层级
+            }
+        }
+        // print_r($tree);
+        return $tree;
+    }
+
     public function info()
     {
         // /sys/user/info 不用认证但是需要提取出 access_token 中的 user_id 来拉取用户信息
@@ -89,32 +124,12 @@ class User extends ResourceController
             ];
             return $this->respond($response, 401);
         }
-        //    $decoded = JWT::decode($Token, config_item('jwt_key'), ['HS256']); //HS256方式，这里要和签发的时候对应
-        //     print_r($decoded);
-        //            stdClass Object
-        //            (
-        //                [iss] => http://pocoyo.org
-        //    [aud] => http://emacs.org
-        //    [iat] => 1577348490
-        //    [nbf] => 1577348490
-        //    [data] => stdClass Object
-        //            (
-        //                [user_id] => 1
-        //            [username] => admin
-        //        )
-        //
-        //    [scopes] => role_access
-        //            [exp] => 1577355690
-        //)
-        // $result = $this->some_model();
 
-        // $result = $this->User_model->getUserInfo($jwt_obj->user_id);
-
-        $result = $this->Medoodb->select('sys_user', '*', [
+        $userInfo = $this->Medoodb->select('sys_user', '*', [
             "id" => $jwt_obj->user_id
         ]);
 
-        if (empty($result)) {
+        if (empty($userInfo)) {
             // 获取用户信息失败
             $response = [
                 "code" => 50008,
@@ -123,158 +138,99 @@ class User extends ResourceController
             return $this->respond($response);
         } else {
             // 获取用户信息成功
-            $info1 = $result[0];
-            
-            $MenuTreeArr = $this->permission->getPermission($jwt_obj->user_id, 'menu', false);
-            $asyncRouterMap = $this->permission->genVueRouter($MenuTreeArr, 'id', 'pid', 0);
-            $CtrlPerm = $this->permission->getMenuCtrlPerm($jwt_obj->user_id);
-    
+            $info1 = $userInfo[0];
+
+            // 获取用户控件权限 sys_menu.type = 2
+            $CtrlPerm = $this->Medoodb->query(
+                "SELECT basetbl.path
+                    FROM (
+                        SELECT p.*
+                        FROM sys_user_role ur
+                        JOIN sys_role_perm rp ON rp.role_id = ur.role_id
+                        JOIN sys_perm p ON p.id = rp.perm_id
+                        JOIN sys_role r ON r.id = ur.role_id
+                        WHERE ur.user_id = :userId
+                            AND r.status = 1
+                            AND p.perm_type = 'menu'
+                    ) t
+                    LEFT JOIN sys_menu basetbl ON t.r_id = basetbl.id
+                    WHERE basetbl.type = 2",
+                [
+                    ':userId' => $jwt_obj->user_id
+                ]
+            )->fetchAll(PDO::FETCH_ASSOC);
+
+            // 生成Vue路由 $asyncRouterMap
+            $rtblname = $this->Medoodb->select('sys_perm_type', 'r_table', [
+                "type" => 'menu'
+            ]);
+            if (empty($rtblname)) {
+                var_dump($this->request->getPath() . ' 获取基础表失败...');
+                return;
+            }
+            $basetable = $rtblname[0];
+            $query = "SELECT DISTINCT t.id AS perm_id, basetbl.*
+                      FROM (
+                          SELECT p.*
+                          FROM sys_user_role ur
+                          INNER JOIN sys_role_perm rp ON ur.role_id = rp.role_id
+                          INNER JOIN sys_perm p ON rp.perm_id = p.id
+                          INNER JOIN sys_role r ON ur.role_id = r.id
+                          WHERE ur.user_id = :userId
+                          AND r.status = 1
+                          AND p.perm_type = 'menu'
+                      ) t
+                      LEFT JOIN $basetable basetbl ON t.r_id = basetbl.id
+                      WHERE basetbl.type != 2
+                      ORDER BY basetbl.listorder";
+            $params = [":userId" => $jwt_obj->user_id];
+            $MenuTreeArr = $this->Medoodb->query($query, $params)->fetchAll(PDO::FETCH_ASSOC);
+            $asyncRouterMap = $this->genVueRouter($MenuTreeArr, 'id', 'pid', 0);
+
+            // 获取用户角色
+            $roles = $this->Medoodb->select(
+                'sys_role',
+                [
+                    "[><]sys_user_role" => ["sys_role.id" => "role_id"] // 表sys_role内联表sys_user_role
+                ],
+                [
+                    "@sys_role.id", // @ = DISTINCT
+                    "sys_role.name"
+                ],
+                [
+                    "sys_role.status" => 1,
+                    "sys_user_role.user_id" => $jwt_obj->user_id,
+                ]
+            );
+
             $info2 = [
                 // "roles" => ["admin", "editor"],
-                "roles" => $this->User_model->getUserRolesByUserId($jwt_obj->user_id),
+                "roles" => $roles,
                 "introduction" => "I am a super administrator",
                 // "avatar" => "https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif",
                 "name" => "pocoyo",
                 "identify" => "110000000000000000",
                 "phone" => "13888888888",
                 "ctrlperm" => $CtrlPerm,
-                //                "ctrlperm" => [
-                //                    [
-                //                        "path" => "/sys/menu/view"
-                //                    ],
-                //                    [
-                //                        "path" => "/sys/menu/add"
-                //                    ],
-                //                    [
-                //                        "path" => "/sys/menu/download"
-                //                    ]
-                //                ],
+                //    "ctrlperm" => [
+                //        [
+                //            "path" => "/sys/menu/view"
+                //        ],
+                //    ],
                 "asyncRouterMap" => $asyncRouterMap
             ];
             $info = array_merge($info1, $info2);
-            return $this->respond($info1);
 
-            $message = [
+            $response = [
                 "code" => 20000,
                 "data" => $info,
                 "_SERVER" => $_SERVER,
                 "_GET" => $_GET
             ];
-            $this->response($message, RestController::HTTP_OK);
-        }
-
-    
-        // 获取用户信息成功
-        if ($result['success']) {
-            $info1 = $result['userinfo'];
-            // 附加信息2
-            $info2 = [
-                // "roles" => ["admin", "editor"],
-                "roles" => $this->User_model->getUserRolesByUserId($jwt_obj->user_id),
-                "introduction" => "I am a super administrator",
-                // "avatar" => "https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif",
-                "name" => "pocoyo",
-                "identify" => "110000000000000000",
-                "phone" => "13888888888",
-                "ctrlperm" => $CtrlPerm,
-                //                "ctrlperm" => [
-                //                    [
-                //                        "path" => "/sys/menu/view"
-                //                    ],
-                //                    [
-                //                        "path" => "/sys/menu/add"
-                //                    ],
-                //                    [
-                //                        "path" => "/sys/menu/download"
-                //                    ]
-                //                ],
-                "asyncRouterMap" => $asyncRouterMap
-                //                "asyncRouterMap" => [
-                //                [
-                //                    "path" => '/sys',
-                //                    "name" => 'sys',
-                //                    "meta" => [
-                //                        "title" => "系统管理",
-                //                        "icon" => "sysset2"
-                //                    ],
-                //                    "component" => 'Layout',
-                //                    "redirect" => '/sys/menu',
-                //                    "children" => [
-                //                        [
-                //                            "path" => '/sys/menu',
-                //                            "name" => 'menu',
-                //                            "meta" => [
-                //                                "title" => "菜单管理",
-                //                                "icon" => "menu1"
-                //                            ],
-                //                            "component" => 'sys/menu/index',
-                //                            "redirect" => '',
-                //                            "children" => [
-                //
-                //                            ]
-                //                        ],
-                //                        [
-                //                            "path" => '/sys/user',
-                //                            "name" => 'user',
-                //                            "meta" => [
-                //                                "title" => "用户管理",
-                //                                "icon" => "user"
-                //                            ],
-                //                            "component" => 'pdf/index',
-                //                            "redirect" => '',
-                //                            "children" => [
-                //
-                //                            ]
-                //                        ],
-                //                        [
-                //                            "path" => '/sys/icon',
-                //                            "name" => 'icon',
-                //                            "meta" => [
-                //                                "title" => "图标管理",
-                //                                "icon" => "icon"
-                //                            ],
-                //                            "component" => 'svg-icons/index',
-                //                            "redirect" => '',
-                //                            "children" => [
-                //
-                //                            ]
-                //                        ]
-                //                    ]
-                //                ],
-                //                    [
-                //                        "path" => '/sysx',
-                //                        "name" => 'sysx',
-                //                        "meta" => [
-                //                            "title" => "其他管理",
-                //                            "icon" => "plane"
-                //                        ],
-                //                        "component" => 'Layout',
-                //                        "redirect" => '',
-                //                        "children" => [
-                //
-                //                        ]
-                //                    ]
-                //                ]
-            ];
-
-            $info = array_merge($info1, $info2);
-
-            $message = [
-                "code" => 20000,
-                "data" => $info,
-                "_SERVER" => $_SERVER,
-                "_GET" => $_GET
-            ];
-            $this->response($message, RestController::HTTP_OK);
-        } else {
-            $message = [
-                "code" => 50008,
-                "message" => 'Login failed, unable to get user details.'
-            ];
-
-            $this->response($message, RestController::HTTP_OK);
+            return $this->respond($response);
         }
     }
+
     public function index()
     {
         $data = $this->Medoodb->select('sys_user', '*');
