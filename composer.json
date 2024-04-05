@@ -11,6 +11,7 @@
     },
     "require": {
         "php": "^7.4 || ^8.0",
+        "bluem/tree": "^3.2",
         "catfan/medoo": "^2.1",
         "codeigniter4/framework": "^4.0",
         "firebase/php-jwt": "^6.10"

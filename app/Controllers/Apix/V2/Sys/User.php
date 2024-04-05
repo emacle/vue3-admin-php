@@ -69,39 +69,6 @@ class User extends ResourceController
         }
     }
 
-    /**
-     * 将数据格式化成树形结构路由菜单
-     */
-    private function genVueRouter($data, $idKey, $fidKey, $pId)
-    {
-        $tree = array();
-        foreach ($data as $k => $v) {
-            // 找到父节点为$pId的节点，然后进行递归查找其子节点，
-            if ($v[$fidKey] == $pId) {
-                // 数据库取出为string类型，强制类型转换成整形，方便前端使用
-                isset($v['id']) ? $v['id'] = intval($v['id']) : '';
-                isset($v['pid']) ? $v['pid'] = intval($v['pid']) : '';
-                isset($v['type']) ? $v['type'] = intval($v['type']) : '';
-                isset($v['hidden']) ? $v['hidden'] = intval($v['hidden']) : '';
-                isset($v['listorder']) ? $v['listorder'] = intval($v['listorder']) : '';
-
-                // 构造 vue-admin 路由结构 meta
-                $v['meta'] = [
-                    'title' => $v['title'],
-                    'icon' => $v['icon']
-                ];
-
-                unset($v['title']);
-                unset($v['icon']);
-
-                $v['children'] = $this->genVueRouter($data, $idKey, $fidKey, $v[$idKey]);
-                $tree[] = $v;     // 循环数组添加元素 属于同一层级
-            }
-        }
-        // print_r($tree);
-        return $tree;
-    }
-
     public function info()
     {
         // /sys/user/info 不用认证但是需要提取出 access_token 中的 user_id 来拉取用户信息
@@ -185,7 +152,13 @@ class User extends ResourceController
                       ORDER BY basetbl.listorder";
             $params = [":userId" => $jwt_obj->user_id];
             $MenuTreeArr = $this->Medoodb->query($query, $params)->fetchAll(PDO::FETCH_ASSOC);
-            $asyncRouterMap = $this->genVueRouter($MenuTreeArr, 'id', 'pid', 0);
+            // 将SQL查询出的一维树形结构生成 BlueM\Tree 树对象结构，方便后续遍历操作
+            $MenuTreeObj = new \BlueM\Tree(
+                $MenuTreeArr,
+                ['rootId' => 0, 'id' => 'id', 'parent' => 'pid']
+            );
+            // 从 $MenuTreeObj 对象中根节点遍历，生成vue路由菜单
+            $asyncRouterMap = $this->_dumpBlueMTreeNodes($MenuTreeObj->getRootNodes());
 
             // 获取用户角色
             $roles = $this->Medoodb->select(
@@ -277,5 +250,37 @@ class User extends ResourceController
         // 处理删除用户资源的逻辑
         //
         echo $id;
+    }
+
+    /**
+     * 遍历 BlueM\Tree 树对象，将数据格式化成 vue-router 结构的路由树或菜单树
+     */
+    private function _dumpBlueMTreeNodes($node)
+    {
+        $tree = array();
+
+        foreach ($node as $k => $v) {
+            $valArr = $v->toArray(); // 获取本节点属性数组
+
+            // 构造 vue-admin 路由结构 meta
+            $valArr['meta'] = [
+                'title' => $valArr['title'],
+                'icon' => $valArr['icon']
+            ];
+            // 删除组合成meta的元素title,icon 多余去除
+            unset($valArr['title']);
+            unset($valArr['icon']);
+
+            // BlueM\Tree 对象 多余去除
+            unset($valArr['parent']);
+
+            if ($v->hasChildren()) { // 存在 children 则构造 children key，否则不添加
+                $valArr['children'] = $this->_dumpBlueMTreeNodes($v->getChildren());
+            }
+
+            $tree[] = $valArr;     // 循环数组添加元素 属于同一层级
+        }
+
+        return $tree;
     }
 }
