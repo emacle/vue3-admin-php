@@ -5,6 +5,7 @@ namespace App\Controllers\Apix\V2\Sys;
 use CodeIgniter\RESTful\ResourceController;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
+use Nette\Utils\Strings;
 use Exception;
 use PDO;
 
@@ -181,7 +182,7 @@ class User extends ResourceController
                 "roles" => $roles,
                 "introduction" => "I am a super administrator",
                 // "avatar" => "https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif",
-                "name" => "pocoyo",
+                "name" => "zhangsan",
                 "identify" => "110000000000000000",
                 "phone" => "13888888888",
                 "ctrlperm" => $CtrlPerm,
@@ -206,12 +207,138 @@ class User extends ResourceController
 
     public function index()
     {
-        $data = $this->Medoodb->select('sys_user', '*');
+        // $this->request->getVar(); // 该方法首先尝试从 POST 数据中获取参数值,如果不存在,则尝试从 GET 参数中获取。
+        // GET /users?offset=1&limit=20&fields=id,username,email,listorder&sort=-listorder,+id&query=~username,status&username=admin&status=1
+        // fields: 显示字段参数过滤配置,不设置则为全部
+        $fields = $this->request->getVar('fields');
+        $fields ? $columns = explode(",", $fields) : $columns = "*";
+        // 显示字段过滤配置结束
 
-        // echo json_encode($data);
+        // GET /users?offset=1&limit=20&fields=id,username,email,listorder&sort=-listorder,+id&query=~username,status&username=admin&status=1
+        // 分页参数配置
+        $limit = $this->request->getVar('limit') ? $this->request->getVar('limit') : 10;
+        $offset = $this->request->getVar('offset') ?  ($this->request->getVar('offset') - 1) *  $limit : 0; // 第几页
+        $where = [
+            "LIMIT" => [$offset, $limit]
+        ];
+        // 分页参数配置结束
+
+        // GET /users?offset=1&limit=20&fields=id,username,email,listorder&sort=-listorder,+id&query=~username,status&username=admin&status=1
+        // 存在排序参数则 获取排序参数 加入 $where，否则不添加ORDER条件
+        $sort = $this->request->getVar('sort');
+        if ($sort) {
+            $where["ORDER"] = [];
+            $sortArr = explode(",", $sort);
+            foreach ($sortArr as $k => $v) {
+                if (str_starts_with($v, '-')) { // true DESC
+                    $key = Strings::substring($v, 1); //  去 '-'
+                    $where["ORDER"][$key] = "DESC";
+                } else {
+                    $key = Strings::substring($v, 1); //  去 '+'
+                    $where["ORDER"][$key] = "ASC";
+                }
+            }
+        }
+        // 排序参数结束
+
+        // GET /users?offset=1&limit=20&fields=id,username,email,listorder&sort=-listorder,+id&query=~username,status&username=admin&status=1
+        // 指定条件模糊或搜索查询,author like %zhangsan%, status=1 此时 total $wherecnt 条件也要发生变化
+        // 查询字段及字段值获取
+        // 如果存在query 参数以,分隔，且每个参数的有值才会增加条件
+        $wherecnt = []; // 计算total使用条件，默认为全部
+        $query = $this->request->getVar('query');
+        if ($query) { // 存在才进行过滤,否则不过滤
+            $queryArr = explode(",", $query);
+            foreach ($queryArr as $k => $v) {
+                if (str_starts_with($v, '~')) { // true   query=~username&status=1 以~开头表示模糊查询
+                    $tmpKey = Strings::substring($v, 1); // username
+
+                    $tmpValue = $this->request->getVar($tmpKey);
+                    if (!is_null($tmpValue)) {
+                        $where[$tmpKey . '[~]'] = $tmpValue;
+                        $wherecnt[$tmpKey . '[~]'] = $tmpValue;
+                    }
+                } else {
+                    $tmpValue = $this->request->getVar($v);
+                    if (!is_null($tmpValue)) {
+                        $where[$v] = $tmpValue;
+                        $wherecnt[$v] = $tmpValue;
+                    }
+                }
+            }
+        }
+        // 查询字段及字段值获取结束
+
+        // 执行查询
+        $UserArr = $this->Medoodb->select(
+            "sys_user",
+            $columns,
+            $where
+        );
+
+        $sqlCmd = $this->Medoodb->log()[0];
+
+        // 捕获错误信息
+        if ($this->Medoodb->error) { // 如果出错 否则为NULL
+            $response = [
+                "code" => 20400,
+                "sql" => $sqlCmd,
+                "message" => $this->Medoodb->error
+            ];
+            return $this->respond($response, 400);
+        }
+
+        // 获取记录总数
+        $total = $this->Medoodb->count("sys_user",  $wherecnt);
+
+        // 遍历该用户所属角色信息
+        foreach ($UserArr as $k => $v) {
+            $UserArr[$k]['role'] = [];
+            // 获取用户角色
+            $RoleArr = $this->Medoodb->select(
+                'sys_role',
+                [
+                    "[><]sys_user_role" => ["sys_role.id" => "role_id"] // 表sys_role内联表sys_user_role
+                ],
+                [
+                    "@sys_role.id",
+                    "sys_role.name"
+
+                ],
+                [
+                    "sys_role.status" => 1,
+                    "sys_user_role.user_id" => $v['id'],
+                ]
+            );
+
+            foreach ($RoleArr as $kk => $vv) {
+                array_push($UserArr[$k]['role'], intval($vv['id'])); // 字符串转数字 前端treeselect value与option 的id 必须类型一致
+            }
+        }
+
+        // 遍历该用户所属部门信息
+        foreach ($UserArr as $k => $v) {
+            $UserArr[$k]['dept'] = [];
+            $DeptArr = $this->Medoodb->select(
+                'sys_user_dept',
+                'dept_id',
+                [
+                    "user_id" => $v['id']
+                ]
+            );
+
+            foreach ($DeptArr as $kk => $vv) {
+                array_push($UserArr[$k]['dept'], intval($vv['dept_id'])); // 字符串转数字 前端treeselect value与option 的id 必须类型一致
+            }
+        }
+
         $response = [
             "code" => 20000,
-            "data" => $data,
+            "data" => [
+                'items' => $UserArr,
+                'total' => $total,
+                // "sql" => $sqlCmd
+            ]
         ];
         return $this->respond($response);
     }

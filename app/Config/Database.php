@@ -3,6 +3,7 @@
 namespace Config;
 
 use CodeIgniter\Database\Config;
+use PDO;
 
 /**
  * Database Configuration
@@ -50,7 +51,8 @@ class Database extends Config
         'host' => 'localhost',
         'database' => 'vueadminv2',
         'username' => 'root',
-        'password' => 'i7hfJK*6QL'
+        'password' => 'i7hfJK*6QL',
+        'error' => PDO::ERRMODE_SILENT,
     ];
 
     /**

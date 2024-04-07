@@ -45,6 +45,7 @@ class Filters extends BaseConfig
                 'apix/v2/sys/user/login',
                 'apix/v2/sys/user/logout',
                 'apix/v2/sys/user/info',
+                'apix/v2/sys/user', // TODO: 权限完善后需在此处删除 AuthCheckFilter.php
                 'apix/v2/sys/user/refreshtoken',
                 'apix/v2/sys/user/githubauth',
                 'apix/v2/sys/user/giteeauth',
