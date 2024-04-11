@@ -10,6 +10,7 @@ use \Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use Firebase\JWT\ExpiredException;
 use UnexpectedValueException;
+use PDO;
 
 class AuthCheckFilter implements FilterInterface
 {
@@ -45,42 +46,81 @@ class AuthCheckFilter implements FilterInterface
             return $this->createErrorResponse(204, json_encode(null)); // 直接返回204空对象即可
         }
 
-        $uri = $request->getUri()->getPath();  // string(21) "/apix/v2/sys/employee"
-        $parts = explode("/", $uri);
-        $pathToFind = "/" . implode("/", array_slice($parts, 3)) . "/" . strtolower($request->getMethod()); // "/sys/blog/get"
-
         list($Token) = sscanf($request->getHeaderLine('Authorization'), 'Bearer %s');
         if (is_null($Token)) {
-            $message = [
+            $response = [
                 "code" => 50014,
                 "message" => 'token is null'
             ];
             // 如果返回 Response 实例,将向客户端发送响应,并停止脚本执行。这对于实现 API 的速率限制很有用。
-            return $this->createErrorResponse(401, json_encode($message)); // 未授权错误
+            return $this->createErrorResponse(401, json_encode($response)); // 未授权错误
         }
 
         try {
             $decoded = JWT::decode($Token, new Key('pocoyo', 'HS256'));
             $userId = $decoded->user_id;
-            $appConfig = config('App'); // 获取app/Config/文件夹里变量，如config('Pager')
-            $apiUrl = $appConfig->baseURL . 'api/v2/sys/menu/perms?userid=' . $userId;
+            $uri_long = $request->getUri()->getPath();  // string(19) "/apix/v2/sys/user/1"
+            $parts = explode("/", $uri_long);
+            $uri_short = "/" . implode("/", array_slice($parts, 3));  // string(11) "/sys/user/1"
+            $http_method = strtolower($request->getMethod());  // string(3) "put"
 
-            $client = curl_init($apiUrl);
-            curl_setopt($client, CURLOPT_RETURNTRANSFER, true);
-            $response = curl_exec($client);
-            curl_close($client);
+            $medoodb = \Config\Services::medoo();
+            // 获取用户控件权限 sys_menu.type = 2
+            $CtrlPermArr = $medoodb->query(
+                "SELECT basetbl.path
+                            FROM (
+                                SELECT p.*
+                                FROM sys_user_role ur
+                                JOIN sys_role_perm rp ON rp.role_id = ur.role_id
+                                JOIN sys_perm p ON p.id = rp.perm_id
+                                JOIN sys_role r ON r.id = ur.role_id
+                                WHERE ur.user_id = :userId
+                                    AND r.status = 1
+                                    AND p.perm_type = 'menu'
+                            ) t
+                            LEFT JOIN sys_menu basetbl ON t.r_id = basetbl.id
+                            WHERE basetbl.type = 2",
+                [
+                    ':userId' => $userId
+                ]
+            )->fetchAll(PDO::FETCH_ASSOC);
+            // array(18) {
+            //     [0]=>
+            //     array(1) {
+            //     ["path"]=>
+            //     string(20) "/sys/menu/menus/post"
+            //     }
+            //     [1]=>
+            //     array(1) {
+            //     ["path"]=>
+            //     string(19) "/sys/menu/menus/put"
+            //     }
+            //     [2]=>
+            //     array(1) {
+            //     ["path"]=>
+            //     string(22) "/sys/menu/menus/delete"
+            //     }
+            // }
 
-            // 处理API的返回值
-            $jsonArray = json_decode($response, true);
-            $found = false;
-            foreach ($jsonArray['data'] as $item) {
-                if ($pathToFind === $item['path']) {
-                    $found = true;
+            if (empty($CtrlPermArr)) {
+                $response = ['code' => 50016, 'message' => "无操作权限 " . $uri_short, 'data' => $CtrlPermArr];
+                return $this->createErrorResponse(401, json_encode($response)); // 未授权错误
+            }
+
+            $hasPerm = false;
+            foreach ($CtrlPermArr as $k => $v) {
+                $res = explode("/", $v['path']);
+                $http_method_db = array_pop($res); // 获取最后一个元素，并且原数组删除最后一个 string(4) "post"
+                $uri_db = implode("/", $res);  // string(15) "/sys/menu"
+
+                if (str_contains($uri_short, $uri_db) && $http_method === $http_method_db) {
+                    $hasPerm = true;
                     break;
                 }
             }
-            if (!$found) {
-                return $this->createErrorResponse(401, '用户无权限 ' . $pathToFind);
+            if (!$hasPerm) {
+                $response = ['code' => 50016, 'message' => "无操作权限1 " . $uri_short, 'data' => $CtrlPermArr];
+                return $this->createErrorResponse(401, json_encode($response)); // 未授权错误
             }
         } catch (ExpiredException $e) { // access_token过期
             $message = [
