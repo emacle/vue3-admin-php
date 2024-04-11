@@ -356,14 +356,92 @@ class User extends ResourceController
 
     public function create()
     {
-        // 处理创建用户资源的逻辑
+        // --data-raw '{
+        //     "username": "test",
+        //     "password": "test",
+        //      "tel": "",
+        //     "email": "1@test.com",
+        //     "status": 1,
+        //     "listorder": 1000
+        // }'
+        $parms = get_object_vars($this->request->getVar());
+
+        // 参数数据预处理
+        $RoleArr = $parms['role'];
+        unset($parms['role']);    // 剔除role数组
+        $DeptArr = $parms['dept'];
+        unset($parms['dept']);    // 剔除role数组
+
+        // 加入新增时间
+        $parms['create_time'] = time();
+        $parms['password'] = md5($parms['password']);
+
+        // $user_id = $this->Base_model->_insert_key('sys_user', $parms);
+
+        $this->Medoodb->insert("sys_user", $parms);
+        $user_id = $this->Medoodb->id();
+
+        if (!$user_id) {
+            $response = [
+                "code" => 20000,
+                "type" => 'error',
+                "message" => $parms['username'] . ' - 用户新增失败'
+            ];
+            $this->respond($response, 400);
+        }
+
+        // 处理关联角色
+        $failed = false;
+        $failedArr = [];
+        foreach ($RoleArr as $k => $v) {
+            $arr = ['user_id' => $user_id, 'role_id' => $v];
+            $this->Medoodb->insert("sys_user_role", $arr);
+            $ret = $this->Medoodb->id();
+
+            if (!$ret) {
+                $failed = true;
+                array_push($failedArr, $arr);
+            }
+        }
+
+        if ($failed) {
+            $response = [
+                "code" => 20000,
+                "type" => 'error',
+                "message" => '用户关联角色失败 ' . json_encode($failedArr)
+            ];
+            return $this->respond($response, 400);
+        }
+
+        // 处理关联部门
+        $failed = false;
+        $failedArr = [];
+        foreach ($DeptArr as $k => $v) {
+            $arr = ['user_id' => $user_id, 'dept_id' => $v];
+            $this->Medoodb->insert("sys_user_dept", $arr);
+            $ret = $this->Medoodb->id();
+
+            if (!$ret) {
+                $failed = true;
+                array_push($failedArr, $arr);
+            }
+        }
+
+        if ($failed) {
+            $response = [
+                "code" => 20000,
+                "type" => 'error',
+                "message" => '用户关联部门失败 ' . json_encode($failedArr)
+            ];
+            return $this->respond($response, 400);
+        }
+
         $response = [
-            'status' => 201,
-            'error' => null,
-            'messages' => [
-                'success' => 'Employee created successfully'
-            ]
+            "code" => 20000,
+            "type" => 'success',
+            "message" => $parms['username'] . ' - 用户新增成功'
         ];
+
         return $this->respondCreated($response);
     }
 
