@@ -376,8 +376,6 @@ class User extends ResourceController
         $parms['create_time'] = time();
         $parms['password'] = md5($parms['password']);
 
-        // $user_id = $this->Base_model->_insert_key('sys_user', $parms);
-
         $this->Medoodb->insert("sys_user", $parms);
         $user_id = $this->Medoodb->id();
 
@@ -387,7 +385,7 @@ class User extends ResourceController
                 "type" => 'error',
                 "message" => $parms['username'] . ' - 用户新增失败'
             ];
-            $this->respond($response, 400);
+            return $this->respond($response, 403); // 403 的响应，表示禁止访问。告诉客户端某个操作是不允许的
         }
 
         // 处理关联角色
@@ -410,7 +408,7 @@ class User extends ResourceController
                 "type" => 'error',
                 "message" => '用户关联角色失败 ' . json_encode($failedArr)
             ];
-            return $this->respond($response, 400);
+            return $this->respond($response, 403); // 403 的响应，表示禁止访问。告诉客户端某个操作是不允许的
         }
 
         // 处理关联部门
@@ -433,7 +431,7 @@ class User extends ResourceController
                 "type" => 'error',
                 "message" => '用户关联部门失败 ' . json_encode($failedArr)
             ];
-            return $this->respond($response, 400);
+            return $this->respond($response, 403); // 403 的响应，表示禁止访问。告诉客户端某个操作是不允许的
         }
 
         $response = [
@@ -447,14 +445,203 @@ class User extends ResourceController
 
     public function update($id = null)
     {
+        // $id类型可以在Routes.php中定义  $routes->put('user/(.*)', 'User::update/$1'); 默认$1是字符串
+        $id = intval($id);
         // 处理更新用户资源的逻辑
+        $parms = get_object_vars($this->request->getVar()); // 获取表单参数，类型为数组
+        // 参数检验/数据预处理
+        // 超级管理员角色不允许修改
+        if ($id == 1) {
+            $message = [
+                "code" => 20000,
+                "type" => 'error',
+                "message" => $parms['username'] . ' - 超级管理员用户不允许修改'
+            ];
+            return $this->respond($message, 403);  // 403 的响应，表示禁止访问。告诉客户端某个操作是不允许的
+        }
+
+        $RoleArr = [];
+        foreach ($parms['role'] as $k => $v) {
+            $RoleArr[$k] = ['user_id' => $id, 'role_id' => $v];
+        }
+        $DeptArr = [];
+        foreach ($parms['dept'] as $k => $v) {
+            $DeptArr[$k] = ['user_id' => $id, 'dept_id' => $v];
+        }
+        unset($parms['role']);  // 剔除role数组
+        unset($parms['dept']);  // 剔除dept数组
+
+        // 处理角色数组编辑操作
+        $RoleSqlArr = $this->Medoodb->select(
+            'sys_user_role',
+            ['user_id', 'role_id'],
+            [
+                "user_id" => $id
+            ]
+        );
+
+        $AddArr = $this->array_diff_assoc2($RoleArr, $RoleSqlArr);
+        // var_dump('------------只存在于前台传参 做添加操作-------------');
+        // var_dump($AddArr);
+        $failed = false;
+        $failedArr = [];
+        foreach ($AddArr as $k => $v) {
+            $this->Medoodb->insert("sys_user_role", $v);
+            $ret = $this->Medoodb->id();
+            if (!$ret) {
+                $failed = true;
+                array_push($failedArr, $v);
+            }
+        }
+
+        if ($failed) {
+            $response = [
+                "code" => 20000,
+                "type" => 'error',
+                "message" => '用户关联角色失败 ' . json_encode($failedArr)
+            ];
+            $this->respond($response, 403);
+        }
+        $DelArr = $this->array_diff_assoc2($RoleSqlArr, $RoleArr);
+        // var_dump('------------只存在于后台数据库 删除操作-------------');
+        // var_dump($DelArr);
+        $failed = false;
+        $failedArr = [];
+        foreach ($DelArr as $k => $v) {
+            $this->Medoodb->delete("sys_user_role", $v);
+            $ret = $this->Medoodb->id();
+            if (!$ret) {
+                $failed = true;
+                array_push($failedArr, $v);
+            }
+        }
+        if ($failed) {
+            $response = [
+                "code" => 20000,
+                "type" => 'error',
+                "message" => '用户关联角色失败 ' . json_encode($failedArr)
+            ];
+            $this->respond($response, 403);
+        }
+
+        // 处理部门数组编辑操作
+        $DeptSqlArr = $this->Medoodb->select(
+            'sys_user_dept',
+            ['user_id', 'dept_id'],
+            [
+                "user_id" => $id
+            ]
+        );
+        $AddArr = $this->array_diff_assoc2($DeptArr, $DeptSqlArr);
+        // var_dump('------------只存在于前台传参 做添加操作-------------');
+        // var_dump($AddArr);
+        $failed = false;
+        $failedArr = [];
+        foreach ($AddArr as $k => $v) {
+            $this->Medoodb->insert('sys_user_dept', $v);
+            $ret = $this->Medoodb->id();
+            if (!$ret) {
+                $failed = true;
+                array_push($failedArr, $v);
+            }
+        }
+        if ($failed) {
+            $response = [
+                "code" => 20000,
+                "type" => 'error',
+                "message" => '用户关联部门失败 ' . json_encode($failedArr)
+            ];
+            $this->respond($response, 403);
+        }
+        $DelArr = $this->array_diff_assoc2($DeptSqlArr, $DeptArr);
+        // var_dump('------------只存在于后台数据库 删除操作-------------');
+        // var_dump($DelArr);
+        $failed = false;
+        $failedArr = [];
+        foreach ($DelArr as $k => $v) {
+            $this->Medoodb->delete('sys_user_dept', $v);
+            $ret = $this->Medoodb->id();
+            if (!$ret) {
+                $failed = true;
+                array_push($failedArr, $v);
+            }
+        }
+        if ($failed) {
+            $response = [
+                "code" => 20000,
+                "type" => 'error',
+                "message" => '用户关联部门失败 ' . json_encode($failedArr)
+            ];
+            return $this->respond($response, 403);
+        }
+
+        // 添加用户放在最后，先添加角色处理，部门处理，失败后直接提前返回
+        $where = ["id" => $id];
+        $result = $this->Medoodb->update('sys_user', $parms, $where);
+
+        if ($result->rowCount() > 0) {
+            $response = [
+                "code" => 20000,
+                "type" => 'success',
+                "message" => '用户（' . $parms['username'] . '）更新成功'
+            ];
+            return $this->respond($response, 200);
+        } else {
+            $response = [
+                "code" => 20000,
+                "type" => 'error',
+                "message" => '用户数据未更新'
+            ];
+            return $this->respond($response, 204); // 对于 PUT 请求,如果数据未发生变化,遵循 HTTP 规范的做法是返回 204 No Content 状态码
+        }
     }
 
     public function delete($id = null)
     {
+        $id = intval($id);
+        // 参数检验/数据预处理
+        // 超级管理员用户不允许删除
+        if ($id == 1) {
+            $response = [
+                "code" => 20000,
+                "type" => 'error',
+                "message" => '超级管理员不允许删除'
+            ];
+            // todo: DELETE/UPDATE操作，返回响应体为空？
+            return $this->respond($response, 403);
+        }
+
         // 处理删除用户资源的逻辑
-        //
-        echo $id;
+        $hasUser = $this->Medoodb->has('sys_user', ['id' => $id]);
+        if ($hasUser) {
+            // 删除外键关联表 sys_user_role, sys_user_dept
+            $this->Medoodb->delete('sys_user_role', ['user_id' => $id]);
+            $this->Medoodb->delete('sys_user_dept', ['user_id' => $id]);
+            $result = $this->Medoodb->delete('sys_user', ['id' => $id]);
+            if ($result->rowCount() > 0) {
+                $response = [
+                    "code" => 20000,
+                    "type" => 'success',
+                    "message" => '删除成功'
+                ];
+                return $this->respondDeleted($response);
+            } else {
+                $response = [
+                    "code" => 20000,
+                    "type" => 'error',
+                    "message" => '删除失败'
+                ];
+                return $this->respond($response, 403);
+            }
+        } else {
+            // return $this->failNotFound('No employee found');
+            $response = [
+                "code" => 20404,
+                "type" => 'error',
+                'message' => '用户id（' . $id . '）不存在'
+            ];
+            return $this->respond($response, 404);
+        }
     }
 
     /**
@@ -487,5 +674,32 @@ class User extends ResourceController
         }
 
         return $tree;
+    }
+
+    /**
+     * 指定格式两个二维数组比较差集, 只存在于array1,不存在于array2
+     * @param $array1
+     * @param $array2
+     * @return array
+     */
+    // $arr1 = [
+    // ['role_id'=>1,'perm_id'=>1],
+    // ['role_id'=>1,'perm_id'=>2]
+    // ];
+    private function array_diff_assoc2($array1, $array2)
+    {
+        $ret = array();
+        foreach ($array1 as $k => $v) {
+            #               var_dump($v);
+            $isExist = false;
+            foreach ($array2 as $k2 => $v2) {
+                if (empty(array_diff_assoc($v, $v2))) {
+                    $isExist = true;
+                    break;
+                }
+            }
+            if (!$isExist) array_push($ret, $v);
+        }
+        return $ret;
     }
 }

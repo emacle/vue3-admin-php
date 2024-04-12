@@ -119,7 +119,7 @@ class AuthCheckFilter implements FilterInterface
                 }
             }
             if (!$hasPerm) {
-                $response = ['code' => 50016, 'message' => "无操作权限1 " . $uri_short, 'data' => $CtrlPermArr];
+                $response = ['code' => 50016, 'message' => "无操作权限 nohasPerm " . $uri_short, 'data' => $CtrlPermArr];
                 return $this->createErrorResponse(401, json_encode($response)); // 未授权错误
             }
         } catch (ExpiredException $e) { // access_token过期

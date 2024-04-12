@@ -52,7 +52,8 @@ class Database extends Config
         'database' => 'vueadminv2',
         'username' => 'root',
         'password' => 'i7hfJK*6QL',
-        'error' => PDO::ERRMODE_SILENT,
+        'error' => PDO::ERRMODE_EXCEPTION,
+        // ERRMODE_EXCEPTION PDO will throw a PDOException, and all following codes will be terminated, quickly pointing the finger at potential problem areas in your code.
     ];
 
     /**

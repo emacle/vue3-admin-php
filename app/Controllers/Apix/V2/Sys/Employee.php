@@ -101,7 +101,15 @@ class Employee extends ResourceController
             ];
             return $this->respondDeleted($response);
         } else {
-            return $this->failNotFound('No employee found');
+            // return $this->failNotFound('No employee found');  //  等价于下面的内容响应体
+            $response = [
+                'status'   => 404,
+                'error'    =>  404,
+                'messages' => [
+                    'success' => 'No employee found'
+                ]
+            ];
+            return $this->respond($response, 404);
         }
     }
 }
