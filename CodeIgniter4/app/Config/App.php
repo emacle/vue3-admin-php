@@ -16,8 +16,7 @@ class App extends BaseConfig
      *
      * E.g., http://example.com/
      */
-    // public string $baseURL = 'http://localhost:8080/';
-    public string $baseURL = 'http://cirest.dvl.to/';
+    public string $baseURL = 'http://localhost:8080/';
 
     /**
      * Allowed Hostnames in the Site URL other than the hostname in the baseURL.
@@ -41,8 +40,7 @@ class App extends BaseConfig
      * something else. If you have configured your web server to remove this file
      * from your site URIs, set this variable to an empty string.
      */
-    // public string $indexPage = 'index.php';
-    public string $indexPage = '';
+    public string $indexPage = 'index.php';
 
     /**
      * --------------------------------------------------------------------------
@@ -60,6 +58,30 @@ class App extends BaseConfig
      * WARNING: If you set this to 'PATH_INFO', URIs will always be URL-decoded!
      */
     public string $uriProtocol = 'REQUEST_URI';
+
+    /*
+    |--------------------------------------------------------------------------
+    | Allowed URL Characters
+    |--------------------------------------------------------------------------
+    |
+    | This lets you specify which characters are permitted within your URLs.
+    | When someone tries to submit a URL with disallowed characters they will
+    | get a warning message.
+    |
+    | As a security measure you are STRONGLY encouraged to restrict URLs to
+    | as few characters as possible.
+    |
+    | By default, only these are allowed: `a-z 0-9~%.:_-`
+    |
+    | Set an empty string to allow all characters -- but only if you are insane.
+    |
+    | The configured value is actually a regular expression character group
+    | and it will be used as: '/\A[<permittedURIChars>]+\z/iu'
+    |
+    | DO NOT CHANGE THIS UNLESS YOU FULLY UNDERSTAND THE REPERCUSSIONS!!
+    |
+    */
+    public string $permittedURIChars = 'a-z 0-9~%.:_\-';
 
     /**
      * --------------------------------------------------------------------------
@@ -111,8 +133,7 @@ class App extends BaseConfig
      * @see https://www.php.net/manual/en/timezones.php for list of timezones
      *      supported by PHP.
      */
-    /* public string $appTimezone = 'UTC'; */
-    public string $appTimezone = 'Asia/Shanghai';
+    public string $appTimezone = 'UTC';
 
     /**
      * --------------------------------------------------------------------------
@@ -178,18 +199,4 @@ class App extends BaseConfig
      * @see http://www.w3.org/TR/CSP/
      */
     public bool $CSPEnabled = false;
-
-    // JWT 自定义配置
-    public string $jwt_key = 'pocoyo';
-    public int $jwt_access_token_exp = 7200; // 单位秒
-    public int $jwt_refresh_token_exp = 604800; // 单位秒
-    public int $jwt_refresh_count = 7; // 调用refresh_token接口超过此次数时, 会重置刷新token过期时间
-
-    // 自定义jwt token 过期或异常返回值,根据前端需要可以分开
-    // SignatureInvalidException 签名不正确
-    // BeforeValidException签名在某个时间点之后才能用
-    // ExpiredException token过期
-    // Exception 其他错误
-    public array $jwt_token_expired = ["code" => 50014, "message" => "Token 过期了oo"];
-    public array $jwt_token_exception = ['code' => 50008, 'message' => "非法的token"];
 }
