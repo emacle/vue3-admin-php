@@ -3,6 +3,7 @@
 namespace Config;
 
 use CodeIgniter\Database\Config;
+use PDO;
 
 /**
  * Database Configuration
@@ -48,6 +49,17 @@ class Database extends Config
             'datetime' => 'Y-m-d H:i:s',
             'time'     => 'H:i:s',
         ],
+    ];
+
+    public array $medoodb = [
+        'type' => 'mysql',
+        'host' => 'localhost',
+        'database' => 'vueadminv2',
+        'username' => 'root',
+        'password' => 'i7hfJK*6QL',
+        'error' => PDO::ERRMODE_EXCEPTION,
+        // ERRMODE_EXCEPTION PDO will throw a PDOException, and all following codes will be terminated, 
+        // quickly pointing the finger at potential problem areas in your code.
     ];
 
     //    /**

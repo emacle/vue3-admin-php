@@ -12,6 +12,7 @@ use CodeIgniter\Filters\InvalidChars;
 use CodeIgniter\Filters\PageCache;
 use CodeIgniter\Filters\PerformanceMetrics;
 use CodeIgniter\Filters\SecureHeaders;
+use \App\Filters\AuthCheckFilter;
 
 class Filters extends BaseFilters
 {
@@ -34,6 +35,7 @@ class Filters extends BaseFilters
         'forcehttps'    => ForceHTTPS::class,
         'pagecache'     => PageCache::class,
         'performance'   => PerformanceMetrics::class,
+        'AuthCheck'     => AuthCheckFilter::class,
     ];
 
     /**
@@ -72,8 +74,21 @@ class Filters extends BaseFilters
             // 'honeypot',
             // 'csrf',
             // 'invalidchars',
+            'AuthCheck' => ['except' => [
+                '/',
+                'api/v2/sys/employee/*',
+                'api/v2/sys/employee',
+                'api/v2/sys/user/login',
+                'api/v2/sys/user/logout',
+                'api/v2/sys/user/info',
+                // 'api/v2/sys/user/*', // TODO: 权限完善后需在此处删除 AuthCheckFilter.php
+                'api/v2/sys/user/refreshtoken',
+                'api/v2/sys/user/githubauth',
+                'api/v2/sys/user/giteeauth',
+            ]], // route / 不应用该filter
         ],
         'after' => [
+            'toolbar',
             // 'honeypot',
             // 'secureheaders',
         ],
