@@ -59,7 +59,8 @@ class Filters extends BaseFilters
         'after' => [
             'pagecache',   // Web Page Caching
             'performance', // Performance Metrics
-            'toolbar',     // Debug Toolbar
+            // toobar 与 cors冲突禁用
+            // 'toolbar',     // Debug Toolbar
         ],
     ];
 
@@ -73,7 +74,8 @@ class Filters extends BaseFilters
         'before' => [
             // 'honeypot',
             // 'csrf',
-            // 'invalidchars',
+            'invalidchars',
+            'cors',
             'AuthCheck' => ['except' => [
                 '/',
                 'api/v2/sys/employee/*',

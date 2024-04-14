@@ -10,9 +10,16 @@ export function getLoginCodeApi() {
 }
 
 /** 登录并返回 Token */
-export function loginApi(data: Login.LoginRequestData) {
+// export function loginApi(data: Login.LoginRequestData) {
+//   return request<Login.LoginResponseData>({
+//     url: "users/login",
+//     method: "post",
+//     data
+//   })
+// }
+export function loginApi(data: any) {
   return request<Login.LoginResponseData>({
-    url: "users/login",
+    url: "sys/user/login",
     method: "post",
     data
   })
@@ -21,7 +28,7 @@ export function loginApi(data: Login.LoginRequestData) {
 /** 获取用户详情 */
 export function getUserInfoApi() {
   return request<Login.UserInfoResponseData>({
-    url: "users/info",
+    url: "sys/user/info",
     method: "get"
   })
 }

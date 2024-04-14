@@ -33,7 +33,8 @@ class User extends ResourceController
         if (empty($result)) {
             $response = [
                 "code" => 60204,
-                "message" => 'Account and password are incorrect.'
+                "message" => 'Account and password are incorrect.',
+                "data" => []
             ];
             return $this->respond($response);
         } else {
@@ -61,6 +62,7 @@ class User extends ResourceController
 
             $response = [
                 "code" => 20000,
+                "message" => "Login successful",
                 "data" => [
                     "token" => JWT::encode($access_token, $appConfig->jwt_key, 'HS256'), //生成access_tokenToken,
                     "refresh_token" => JWT::encode($refresh_token, $appConfig->jwt_key, 'HS256') //生成refresh_token,

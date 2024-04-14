@@ -20,6 +20,16 @@ export const useUserStore = defineStore("user", () => {
   /** 登录 */
   const login = async ({ username, password, code }: LoginRequestData) => {
     const { data } = await loginApi({ username, password, code })
+    // console.log("useUserStore.login return..........", data)
+    // loginApi return 如下 const { data }  直接对应其中的 data
+    //   {
+    //     "code": 20000,
+    //     "message": "Login successful",
+    //     "data": {
+    //         "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3MTMwNzAyMzcsIm5iZiI6MTcxMzA3MDIzNywidXNlcl9pZCI6MSwic2NvcGVzIjoicm9sZV9hY2Nlc3MiLCJleHAiOjE3MTMwNzc0Mzd9.nFlGlpUQK3t5IKnxKtRAsWqQI4Iu1ZD7TBoqzfTAdAU",
+    //         "refresh_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3MTMwNzAyMzcsIm5iZiI6MTcxMzA3MDIzNywidXNlcl9pZCI6MSwic2NvcGVzIjoicm9sZV9yZWZyZXNoIiwiZXhwIjoxNzEzNjc1MDM3LCJjb3VudCI6MH0.9UM8PnMdT4cri4pcNW56F_ad9CXo2FGzSQZYWIVg3r0"
+    //     }
+    // }
     setToken(data.token)
     token.value = data.token
   }

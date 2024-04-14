@@ -39,6 +39,12 @@ export default ({ mode }: ConfigEnv): UserConfigExport => {
           ws: true,
           /** 是否允许跨域 */
           changeOrigin: true
+        },
+        "/api/v2": {
+          target: "http://cirest.dvl.to",
+          ws: true,
+          /** 是否允许跨域 */
+          changeOrigin: true
         }
       },
       /** 预热常用文件，提高初始页面加载速度 */

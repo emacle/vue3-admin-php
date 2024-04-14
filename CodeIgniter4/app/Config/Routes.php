@@ -18,6 +18,7 @@ $routes->group('api/v2/sys', ['namespace' => 'App\Controllers\Api\V2\Sys'], func
     $routes->delete('user/(.*)', 'User::delete/$1');
     $routes->options('user', 'User::options'); // $routes->resource 不会创建options请求，但是cors里必须要有options的请求接收
 
+    $routes->options('user/login', 'User::login_options'); // $routes->resource 不会创建options请求，但是cors里必须要有options的请求接收
     $routes->post('user/login', 'User::login');
     $routes->post('user/logout', 'User::logout');
     $routes->post('user/refreshtoken', 'User::refreshtoken');

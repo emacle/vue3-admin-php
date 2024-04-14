@@ -25,6 +25,7 @@ function createService() {
     (response) => {
       // apiData 是 api 返回的数据
       const apiData = response.data
+      // console.log(apiData)
       // 二进制数据则直接返回
       const responseType = response.request?.responseType
       if (responseType === "blob" || responseType === "arraybuffer") return apiData
@@ -36,9 +37,10 @@ function createService() {
         return Promise.reject(new Error("非本系统的接口"))
       }
       switch (code) {
-        case 0:
+        case 20000:
           // 本系统采用 code === 0 来表示没有业务错误
           return apiData
+        // TODO: 50008:非法的token; 50012:其他客户端登录了;  50014:Token 过期了;  50015: refresh_token过期
         case 401:
           // Token 过期时
           return logout()
@@ -100,6 +102,7 @@ function createService() {
 function createRequest(service: AxiosInstance) {
   return function <T>(config: AxiosRequestConfig): Promise<T> {
     const token = getToken()
+    // console.log("......", token, import.meta.env.VITE_BASE_API)
     const defaultConfig = {
       headers: {
         // 携带 Token

@@ -31,20 +31,20 @@ class AuthCheckFilter implements FilterInterface
      */
     public function before(RequestInterface $request, $arguments = null)
     {
-        // 
-        $allowedOrigins = ['http://localhost:3333', 'http://www.baidu.com'];
+        // TODO: v4.5.0 引入cors.php 代替
+        // $allowedOrigins = ['http://localhost:3333', 'http://www.baidu.com'];
 
-        $origin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : '';
-        if (in_array($origin, $allowedOrigins)) {
-            header("Access-Control-Allow-Origin: $origin");
-        }
-        header("Access-Control-Allow-Headers: X-API-KEY, Origin,X-Requested-With, Content-Type, Accept, Access-Control-Requested-Method, Authorization");
-        header("Access-Control-Allow-Methods: GET, POST, OPTIONS, PATCH, PUT, DELETE");
-        if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') { // Routes.php 里必须有定义 $routes->options('blog', 'Blog::options');  $routes->resource('blog');默认不会创建options的路由方法
-            // 如果返回 Response 实例,将向客户端发送响应,并停止脚本执行。这对于实现 API 的速率限制很有用。
-            // die(); // return 200 空对象
-            return $this->createErrorResponse(204, json_encode(null)); // 直接返回204空对象即可
-        }
+        // $origin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : '';
+        // if (in_array($origin, $allowedOrigins)) {
+        //     header("Access-Control-Allow-Origin: $origin");
+        // }
+        // header("Access-Control-Allow-Headers: X-API-KEY, Origin,X-Requested-With, Content-Type, Accept, Access-Control-Requested-Method, Authorization");
+        // header("Access-Control-Allow-Methods: GET, POST, OPTIONS, PATCH, PUT, DELETE");
+        // if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') { // Routes.php 里必须有定义 $routes->options('blog', 'Blog::options');  $routes->resource('blog');默认不会创建options的路由方法
+        //     // 如果返回 Response 实例,将向客户端发送响应,并停止脚本执行。这对于实现 API 的速率限制很有用。
+        //     // die(); // return 200 空对象
+        //     return $this->createErrorResponse(204, json_encode(null)); // 直接返回204空对象即可
+        // }
 
         list($Token) = sscanf($request->getHeaderLine('Authorization'), 'Bearer %s');
         if (is_null($Token)) {
