@@ -3,6 +3,7 @@
 namespace App\Controllers\Api\V2\Sys;
 
 use CodeIgniter\RESTful\ResourceController;
+use Config\App;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use Nette\Utils\Strings;
@@ -40,7 +41,7 @@ class User extends ResourceController
             $userInfo = $result[0];
 
             $time = time(); //当前时间
-            $appConfig = config('App'); // 获取app/Config/文件夹里变量，如config('Pager')
+            $appConfig = config(App::class); // 获取app/Config/App.php文件夹里变量
 
             // 公用信息
             $payload = [
@@ -75,7 +76,7 @@ class User extends ResourceController
         // /sys/user/info 不用认证但是需要提取出 access_token 中的 user_id 来拉取用户信息
         $Bearer = $this->request->getHeaderLine('Authorization');
         list($Token) = sscanf($Bearer, 'Bearer %s');
-        $appConfig = config('App'); // 获取app/Config/文件夹里变量，如config('Pager')
+        $appConfig = config(App::class); // 获取app/Config/App.php文件夹里变量
 
         try {
             $jwt_obj = JWT::decode($Token, new Key($appConfig->jwt_key, 'HS256')); //HS256方式，这里要和签发的时候对应

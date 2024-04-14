@@ -5,7 +5,7 @@ namespace App\Filters;
 use CodeIgniter\Filters\FilterInterface;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
-
+use Config\App;
 use \Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use Firebase\JWT\ExpiredException;
@@ -57,8 +57,7 @@ class AuthCheckFilter implements FilterInterface
         }
 
         try {
-            $appConfig = config('App'); // 获取app/Config/文件夹里变量，如config('Pager')
-
+            $appConfig = config(App::class);
             $decoded = JWT::decode($Token, new Key($appConfig->jwt_key, 'HS256'));
             $userId = $decoded->user_id;
             $uri_long = $request->getUri()->getPath();  // string(19) "/apix/v2/sys/user/1"

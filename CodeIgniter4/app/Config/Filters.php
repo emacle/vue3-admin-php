@@ -88,7 +88,6 @@ class Filters extends BaseFilters
             ]], // route / 不应用该filter
         ],
         'after' => [
-            'toolbar',
             // 'honeypot',
             // 'secureheaders',
         ],
