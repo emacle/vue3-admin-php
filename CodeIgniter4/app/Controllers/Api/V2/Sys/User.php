@@ -670,7 +670,7 @@ class User extends ResourceController
             // 构造 vue-admin 路由结构 meta
             $valArr['meta'] = [
                 'title' => $valArr['title'],
-                'icon' => $valArr['icon']
+                'elIcon' => $valArr['icon']
             ];
             // 删除组合成meta的元素title,icon 多余去除
             unset($valArr['title']);

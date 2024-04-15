@@ -4,7 +4,12 @@ import Admin from "./components/Admin.vue"
 import Editor from "./components/Editor.vue"
 
 const userStore = useUserStore()
-const isAdmin = userStore.roles.includes("admin")
+console.log("dashboard", userStore.roles)
+console.log("dashboard", userStore.roles.length)
+
+// const isAdmin = userStore.roles.includes("admin")
+const isAdmin = userStore.roles.some((role) => role.id === 1 && role.name === "超级管理员")
+console.log("dashboard", isAdmin)
 </script>
 
 <template>

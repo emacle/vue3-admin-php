@@ -11,8 +11,12 @@ import routeSettings from "@/config/route"
 
 export const useUserStore = defineStore("user", () => {
   const token = ref<string>(getToken() || "")
-  const roles = ref<string[]>([])
+  // const roles = ref<string[]>([])
+  // 声明ref响应式数据变量
+  const roles = ref<{ id: number; name: string }[]>([])
+
   const username = ref<string>("")
+  const asyncRouterMap = ref<unknown[]>([])
 
   const tagsViewStore = useTagsViewStore()
   const settingsStore = useSettingsStore()
@@ -36,9 +40,12 @@ export const useUserStore = defineStore("user", () => {
   /** 获取用户详情 */
   const getInfo = async () => {
     const { data } = await getUserInfoApi()
+    console.log("useUserStore.getInfo", data)
     username.value = data.username
+    asyncRouterMap.value = data.asyncRouterMap
     // 验证返回的 roles 是否为一个非空数组，否则塞入一个没有任何作用的默认角色，防止路由守卫逻辑进入无限循环
-    roles.value = data.roles?.length > 0 ? data.roles : routeSettings.defaultRoles
+    // roles.value = data.roles?.length > 0 ? data.roles : routeSettings.defaultRoles
+    roles.value = data.roles.map((role: any) => ({ id: Number(role.id), name: role.name }))
   }
   /** 模拟角色变化 */
   const changeRoles = async (role: string) => {
@@ -70,7 +77,7 @@ export const useUserStore = defineStore("user", () => {
     }
   }
 
-  return { token, roles, username, login, getInfo, changeRoles, logout, resetToken }
+  return { token, roles, username, asyncRouterMap, login, getInfo, changeRoles, logout, resetToken }
 })
 
 /** 在 setup 外使用 */
