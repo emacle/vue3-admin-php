@@ -7,7 +7,7 @@ import { getToken, removeToken, setToken } from "@/utils/cache/cookies"
 import { resetRouter } from "@/router"
 import { loginApi, getUserInfoApi } from "@/api/login"
 import { type LoginRequestData } from "@/api/login/types/login"
-import routeSettings from "@/config/route"
+// import routeSettings from "@/config/route"
 
 export const useUserStore = defineStore("user", () => {
   const token = ref<string>(getToken() || "")

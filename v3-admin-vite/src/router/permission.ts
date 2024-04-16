@@ -39,9 +39,11 @@ router.beforeEach(async (to, _from, next) => {
   try {
     await userStore.getInfo()
     // 注意：角色必须是一个数组！ 例如: ["admin"] 或 ["developer", "editor"]
-    const roles = userStore.roles
+    // const roles = userStore.roles
     // 生成可访问的 Routes
-    routeSettings.dynamic ? permissionStore.setRoutes(roles) : permissionStore.setAllRoutes()
+    // routeSettings.dynamic ? permissionStore.setRoutes(roles) : permissionStore.setAllRoutes()
+    routeSettings.dynamic ? permissionStore.setRoutes() : permissionStore.setAllRoutes()
+
     // 将 "有访问权限的动态路由" 添加到 Router 中
     permissionStore.addRoutes.forEach((route) => router.addRoute(route))
     // 确保添加路由已完成
