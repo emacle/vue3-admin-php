@@ -38,6 +38,7 @@ export interface asyncRouterMapData {
 }
 
 export type UserInfoResponseData = ApiResponseData<{
+  avatar: string
   username: string
   roles: string[]
   ctrlperm: CtrlPermData[]

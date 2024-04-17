@@ -16,6 +16,7 @@ export const useUserStore = defineStore("user", () => {
   const roles = ref<{ id: number; name: string }[]>([])
 
   const username = ref<string>("")
+  const avatar = ref<string>("")
   const asyncRouterMap = ref<unknown[]>([])
 
   const tagsViewStore = useTagsViewStore()
@@ -42,6 +43,7 @@ export const useUserStore = defineStore("user", () => {
     const { data } = await getUserInfoApi()
     console.log("useUserStore.getInfo", data)
     username.value = data.username
+    avatar.value = data.avatar
     asyncRouterMap.value = data.asyncRouterMap
     // 验证返回的 roles 是否为一个非空数组，否则塞入一个没有任何作用的默认角色，防止路由守卫逻辑进入无限循环
     // roles.value = data.roles?.length > 0 ? data.roles : routeSettings.defaultRoles
@@ -77,7 +79,7 @@ export const useUserStore = defineStore("user", () => {
     }
   }
 
-  return { token, roles, username, asyncRouterMap, login, getInfo, changeRoles, logout, resetToken }
+  return { token, roles, username, avatar, asyncRouterMap, login, getInfo, changeRoles, logout, resetToken }
 })
 
 /** 在 setup 外使用 */

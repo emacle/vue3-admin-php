@@ -86,7 +86,7 @@ export const constantRoutes: RouteRecordRaw[] = [
     children: [
       {
         path: "https://juejin.cn/post/7089377403717287972",
-        component: () => { },
+        component: () => {},
         name: "Link1",
         meta: {
           title: "中文文档"
@@ -94,7 +94,7 @@ export const constantRoutes: RouteRecordRaw[] = [
       },
       {
         path: "https://juejin.cn/column/7207659644487139387",
-        component: () => { },
+        component: () => {},
         name: "Link2",
         meta: {
           title: "新手教程"
