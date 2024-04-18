@@ -39,3 +39,5 @@
 
    : cp env .env
    根据实际修改 app.baseURL , postman测试 http://{app.baseURL} API配置正确
+
+** 生产环境部署

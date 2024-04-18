@@ -50,7 +50,8 @@ export const useUserStore = defineStore("user", () => {
     roles.value = data.roles.map((role: any) => ({ id: Number(role.id), name: role.name }))
   }
   /** 模拟角色变化 */
-  const changeRoles = async (role: string) => {
+  // const changeRoles = async (role: string) => {
+  const changeRoles = async (role: any) => {
     const newToken = "token-" + role
     token.value = newToken
     setToken(newToken)

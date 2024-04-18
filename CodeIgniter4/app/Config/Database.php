@@ -55,8 +55,11 @@ class Database extends Config
         'type' => 'mysql',
         'host' => 'localhost',
         'database' => 'vueadminv2',
-        'username' => 'root',
-        'password' => 'i7hfJK*6QL',
+        // 实际用户名、密码
+        // 'username' => 'vueadmin',
+        // 'password' => 'vueadmin',
+        'username' => 'root', // #gitignore
+        'password' => 'i7hfJK*6QL', // #gitignore
         'error' => PDO::ERRMODE_EXCEPTION,
         // ERRMODE_EXCEPTION PDO will throw a PDOException, and all following codes will be terminated, 
         // quickly pointing the finger at potential problem areas in your code.
