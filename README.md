@@ -1,9 +1,6 @@
 # [vue3-admin-php-demo](http://pocoyo.rr.nu:10000)
 
 # vue-php-admin 项目说明
-
-通用后台角色权限管理系统, 基于 [vue-element-admin](https://github.com/PanJiaChen/vue-element-admin/) 和 [PHP CodeIgniter 3.1.10 RESTful](https://github.com/chriskacerguis/codeigniter-restserver) 实现，
-
 通用后台角色权限管理系统, 基于 [v3-admin-vite](https://github.com/un-pany/v3-admin-vite) 和 [PHP CodeIgniter 4.5.0](https://github.com/codeigniter4/framework) RESTful 实现，采用前后端分离架构的权限管理系统，PHP快速开发平台，目标是搭建一套简洁易用的快速解决方案，可以帮助用户有效降低项目开发难度和成本。
 
 以 [v3-admin-vite](https://github.com/un-pany/v3-admin-vite) 前端模板为基础，修改动态路由部分，实现菜单路由可根据后端角色进行动态加载。
@@ -34,25 +31,35 @@ CodeIgniter4/ 后端 Restful API 接口
   3. pnpm 版本 8.x 或最新版
 
 	进入项目目录
+
 	```
 	cd v3-admin-vite
 	```
+
   安装依赖
+
 	```
 	pnpm i
 	```
+
    启动服务
+
 	```
 	pnpm dev
 	```
+
 ### 后端
    **php 8.1+**
+
 	```php
     cd CodeIgniter4
+
     composer install  // 根据composer.json 初始安装所有插件包
+
     cp env .env
     # 根据实际修改 app.baseURL , postman测试 http://{app.baseURL} API配置正确
 	```
+
 ### 生产环境部署
 
 ## 角色权限说明
@@ -65,7 +72,7 @@ CodeIgniter4/ 后端 Restful API 接口
    业务代码逻辑可先根据授权范围，来处理来判断角色拥有的部门数据权限，全部数据权限则sql语句不做限制，
    部门数据及以下数据权限，及本人数据需要对sql语句做限制，自定义数据权限，则sql语句加入自定义的部门限制条件即可
 
- ![角色权限](https://raw.githubusercontent.com/emacle/vue-php-admin/master/vue-element-admin/static/screenshot/role_perm.png.png)
+ ![角色权限](CodeIgniter4/public/role_perm.png)
 
 ## 数据库表说明
 
