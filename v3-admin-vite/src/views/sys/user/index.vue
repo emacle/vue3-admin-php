@@ -59,6 +59,20 @@ const xGridOpt: VxeGridProps = reactive({
         }
       },
       {
+        field: "status",
+        itemRender: {
+          name: "$select",
+          props: {
+            placeholder: "请选择状态",
+            options: [
+              { label: "启用", value: 1 },
+              { label: "禁用", value: 0 }
+            ],
+            clearable: true
+          }
+        }
+      },
+      {
         itemRender: {
           name: "$buttons",
           children: [
@@ -158,10 +172,14 @@ const xGridOpt: VxeGridProps = reactive({
           /** 接口需要的参数 */
           const params = {
             username: form.username || undefined,
-            phone: form.phone || undefined,
+            tel: form.phone || undefined,
+            status: form.status || undefined,
             limit: page.pageSize,
-            offset: page.currentPage
+            offset: page.currentPage,
+            fields: "id,username,email,tel,create_time,status,listorder", // 与后端一致
+            query: "~username,~tel,status" // 与后端一致 username tel 模糊匹配 status精确匹配
           }
+          console.log(params)
           /** 调用接口 */
           getUserDataApi(params).then(callback).catch(callback)
         })
