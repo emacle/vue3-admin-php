@@ -370,11 +370,16 @@ class User extends ResourceController
         $parms = get_object_vars($this->request->getVar());
 
         // 参数数据预处理
-        $RoleArr = $parms['role'];
-        unset($parms['role']);    // 剔除role数组
-        $DeptArr = $parms['dept'];
-        unset($parms['dept']);    // 剔除role数组
-
+        $RoleArr = [];
+        $DeptArr = [];
+        if (isset($parms['role'])) {
+            $RoleArr = $parms['role'];
+            unset($parms['role']);    // 剔除role数组
+        }
+        if (isset($parms['dept'])) {
+            $DeptArr = $parms['dept'];
+            unset($parms['dept']);    // 剔除role数组
+        }
         // 加入新增时间
         $parms['create_time'] = time();
         $parms['password'] = md5($parms['password']);
@@ -474,16 +479,19 @@ class User extends ResourceController
         }
 
         $RoleArr = [];
-        foreach ($parms['role'] as $k => $v) {
-            $RoleArr[$k] = ['user_id' => $id, 'role_id' => $v];
-        }
         $DeptArr = [];
-        foreach ($parms['dept'] as $k => $v) {
-            $DeptArr[$k] = ['user_id' => $id, 'dept_id' => $v];
+        if (isset($parms['role'])) {
+            foreach ($parms['role'] as $k => $v) {
+                $RoleArr[$k] = ['user_id' => $id, 'role_id' => $v];
+            }
+            unset($parms['role']);  // 剔除role数组
         }
-        unset($parms['role']);  // 剔除role数组
-        unset($parms['dept']);  // 剔除dept数组
-
+        if (isset($parms['dept'])) {
+            foreach ($parms['dept'] as $k => $v) {
+                $DeptArr[$k] = ['user_id' => $id, 'dept_id' => $v];
+            }
+            unset($parms['dept']);  // 剔除dept数组
+        }
         // 处理角色数组编辑操作
         $RoleSqlArr = $this->Medoodb->select(
             'sys_user_role',

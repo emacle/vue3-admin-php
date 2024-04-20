@@ -2,6 +2,9 @@ export interface CreateOrUpdateUserRequestData {
   id?: string
   username: string
   password?: string
+  email?: string
+  listorder: number
+  status: number
 }
 
 export interface GetUserRequestData {

@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { nextTick, reactive, ref } from "vue"
 import { type ElMessageBoxOptions, ElMessageBox, ElMessage } from "element-plus"
-import { deleteUserDataApi, getUserDataApi } from "@/api/user"
+import { createUserDataApi, deleteUserDataApi, updateUserDataApi, getUserDataApi } from "@/api/user"
 import { type GetUserResponseData } from "@/api/user/types/user"
 // import RoleColumnSolts from "./tsx/RoleColumnSolts"
 import CreateTimeColumnSolts from "./tsx/CreateTimeColumnSolts"
@@ -96,7 +96,7 @@ const xGridOpt: VxeGridProps = reactive({
   /** 自定义列配置项 */
   customConfig: {
     /** 是否允许列选中  */
-    checkMethod: ({ column }) => !["username"].includes(column.field)
+    checkMethod: ({ column }) => !["username", "id"].includes(column.field)
   },
   /** 列配置 */
   columns: [
@@ -214,7 +214,10 @@ const xFormOpt: VxeFormProps = reactive({
   /** 表单数据 */
   data: {
     username: "",
-    password: ""
+    password: "",
+    email: "1@1.com",
+    listorder: 1000,
+    status: 1 // 状态默认为启用
   },
   /** 项列表 */
   items: [
@@ -227,6 +230,65 @@ const xFormOpt: VxeFormProps = reactive({
       field: "password",
       title: "密码",
       itemRender: { name: "$input", props: { placeholder: "请输入" } }
+    },
+    {
+      field: "email",
+      title: "邮箱",
+      itemRender: { name: "$input", props: { placeholder: "请输入" } }
+    },
+    // {
+    //   field: "role",
+    //   title: "角色",
+    //   itemRender: {
+    //     name: "$select",
+    //     props: {
+    //       placeholder: "请选择角色",
+    //       options: [
+    //         { label: "管理员", value: 1 },
+    //         { label: "普通用户", value: 2 }
+    //       ],
+    //       clearable: true
+    //     }
+    //   }
+    // },
+    // {
+    //   field: "dept",
+    //   title: "部门",
+    //   itemRender: {
+    //     name: "$select",
+    //     props: {
+    //       placeholder: "请选择部门",
+    //       options: [
+    //         { label: "开发部", value: 1 },
+    //         { label: "测试部", value: 2 }
+    //       ],
+    //       clearable: true
+    //     }
+    //   }
+    // },
+    // {
+    //   field: "listorder",
+    //   title: "排序ID",
+    //   itemRender: {
+    //     name: "$input-number",
+    //     props: {
+    //       placeholder: "请输入排序ID",
+    //       min: 1000 // 设置最小值为 0
+    //     }
+    //   }
+    // },
+    {
+      field: "status",
+      title: "状态",
+      itemRender: {
+        name: "$switch",
+        props: {
+          openLabel: "启用", // 开启时的文字描述
+          closedLabel: "禁用", // 关闭时的文字描述
+          openValue: 1, // 开启时的值
+          closedValue: 0 // 关闭时的值
+        }
+      }
     },
     {
       align: "right",
@@ -278,17 +340,20 @@ const xFormOpt: VxeFormProps = reactive({
 const crudStore = reactive({
   /** 表单类型，true 表示修改，false 表示新增 */
   isUpdate: true,
+  id: 0,
   /** 加载表格数据 */
   commitQuery: () => xGridDom.value?.commitProxy("query"),
   /** 清空表格数据 */
   clearTable: () => xGridDom.value?.reloadData([]),
   /** 点击显示弹窗 */
   onShowModal: (row?: RowMeta) => {
+    console.log("onShowModal row", row)
     if (row) {
       crudStore.isUpdate = true
       xModalOpt.title = "修改用户"
       // 赋值
       xFormOpt.data.username = row.username
+      crudStore.id = row.id
     } else {
       crudStore.isUpdate = false
       xModalOpt.title = "新增用户"
@@ -317,10 +382,13 @@ const crudStore = reactive({
       }
       if (crudStore.isUpdate) {
         // 模拟调用修改接口成功
-        setTimeout(() => callback(), 1000)
+        // setTimeout(() => callback(), 1000)
+        updateUserDataApi(crudStore.id, xFormOpt.data).then(callback).catch(callback)
       } else {
         // 模拟调用新增接口成功
-        setTimeout(() => callback(), 1000)
+        // setTimeout(() => callback(), 1000)
+        /** 调用接口 */
+        createUserDataApi(xFormOpt.data).then(callback).catch(callback)
       }
     })
   },
@@ -375,7 +443,7 @@ const crudStore = reactive({
       <!-- 左侧按钮列表 -->
       <template #toolbar-btns>
         <vxe-button status="primary" icon="vxe-icon-add" @click="crudStore.onShowModal()">新增用户</vxe-button>
-        <vxe-button status="danger" icon="vxe-icon-delete">批量删除</vxe-button>
+        <!-- <vxe-button status="danger" icon="vxe-icon-delete">批量删除</vxe-button> -->
       </template>
       <!-- 操作 -->
       <template #row-operate="{ row }">
