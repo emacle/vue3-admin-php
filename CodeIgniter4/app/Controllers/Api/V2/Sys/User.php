@@ -338,7 +338,7 @@ class User extends ResourceController
         $response = [
             "code" => 20000,
             "data" => [
-                'items' => $UserArr,
+                'list' => $UserArr,
                 'total' => $total,
                 // "sql" => $sqlCmd
             ]
