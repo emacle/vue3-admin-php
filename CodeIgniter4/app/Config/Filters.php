@@ -59,8 +59,8 @@ class Filters extends BaseFilters
         'after' => [
             'pagecache',   // Web Page Caching
             'performance', // Performance Metrics
-            // toobar 与 cors冲突禁用
-            // 'toolbar',     // Debug Toolbar
+            // toobar ci 4.5.1 cors 冲突解决
+            'toolbar',     // Debug Toolbar
         ],
     ];
 
