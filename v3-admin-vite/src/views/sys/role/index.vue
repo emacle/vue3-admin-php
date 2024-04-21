@@ -96,7 +96,7 @@ const getRoleData = () => {
     currentPage: paginationData.currentPage,
     size: paginationData.pageSize,
     name: searchData.name || undefined,
-    status: parseInt(searchData.status) || undefined,
+    status: searchData.status || undefined,
     fields: "id,name,remark,status,listorder", // 与后端一致 前端指定获取的字段
     query: "~name,status", // 前端指定模糊查询的字段为name,精确查询字段为status
     sort: "+listorder" // 前面指定按listorder升序排列
@@ -127,7 +127,7 @@ watch([() => paginationData.currentPage, () => paginationData.pageSize], getRole
 
 <template>
   <div class="app-container">
-    <el-card v-loading="loading" shadow="never" class="search-wrapper">
+    <el-card shadow="never" class="search-wrapper">
       <el-form ref="searchFormRef" :inline="true" :model="searchData">
         <el-form-item prop="name" label="角色名">
           <el-input v-model="searchData.name" placeholder="请输入" />
@@ -147,12 +147,12 @@ watch([() => paginationData.currentPage, () => paginationData.pageSize], getRole
       <div class="toolbar-wrapper">
         <div>
           <el-button type="primary" :icon="CirclePlus" @click="dialogVisible = true">新增角色</el-button>
-          <el-button type="danger" :icon="Delete">批量删除</el-button>
+          <!-- <el-button type="danger" :icon="Delete">批量删除</el-button> -->
         </div>
         <div>
-          <el-tooltip content="下载">
+          <!-- <el-tooltip content="下载">
             <el-button type="primary" :icon="Download" circle />
-          </el-tooltip>
+          </el-tooltip> -->
           <el-tooltip content="刷新当前页">
             <el-button type="primary" :icon="RefreshRight" circle @click="getRoleData" />
           </el-tooltip>

@@ -15,7 +15,7 @@ export interface GetRoleRequestData {
   name?: string
   /** 查询参数：角色说明 */
   remark?: string
-  status?: number
+  status?: string
   listorder?: number
   fields?: string
   query?: string
