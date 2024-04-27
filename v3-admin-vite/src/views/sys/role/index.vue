@@ -130,7 +130,7 @@ watch([() => paginationData.currentPage, () => paginationData.pageSize], getRole
     <el-card shadow="never" class="search-wrapper">
       <el-form ref="searchFormRef" :inline="true" :model="searchData">
         <el-form-item prop="name" label="角色名">
-          <el-input v-model="searchData.name" placeholder="请输入" />
+          <el-input v-model="searchData.name" clearable placeholder="请输入角色名称" />
         </el-form-item>
         <el-form-item prop="status" label="状态">
           <el-select v-model="searchData.status" clearable placeholder="请选择">

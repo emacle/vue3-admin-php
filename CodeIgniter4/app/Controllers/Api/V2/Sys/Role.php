@@ -216,14 +216,16 @@ class Role extends ResourceController
                 "type" => 'success',
                 "message" => '角色（' . $parms['name'] . '）更新成功'
             ];
-            return $this->respond($response, 200);
+            return $this->respond($response);
         } else {
             $response = [
                 "code" => 20000,
-                "type" => 'error',
+                "type" => 'info',
                 "message" => '角色数据未更新'
             ];
-            return $this->respond($response, 204); // 对于 PUT 请求,如果数据未发生变化,遵循 HTTP 规范的做法是返回 204 No Content 状态码
+            // 对于 PUT 请求,如果数据未发生变化,遵循 HTTP 规范的做法是返回 204 No Content 状态码
+            // 返回204时，与前端service.ts约定冲突
+            return $this->respond($response);
         }
     }
     // 删
@@ -271,7 +273,7 @@ class Role extends ResourceController
                     "type" => 'error',
                     "message" => '角色删除失败'
                 ];
-                return $this->respond($response, 200);
+                return $this->respond($response);
             }
         } else {
             // return $this->failNotFound('No employee found');
@@ -280,7 +282,7 @@ class Role extends ResourceController
                 "type" => 'error',
                 'message' => '角色（' . $id . '）不存在'
             ];
-            return $this->respond($response, 200);
+            return $this->respond($response);
         }
     }
 }
