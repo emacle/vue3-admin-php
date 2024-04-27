@@ -609,11 +609,11 @@ class User extends ResourceController
             return $this->respond($response, 200);
         } else {
             $response = [
-                "code" => 20000,
-                "type" => 'error',
+                "code" => 20204,
+                "type" => 'info',
                 "message" => '用户数据未更新'
             ];
-            return $this->respond($response, 204); // 对于 PUT 请求,如果数据未发生变化,遵循 HTTP 规范的做法是返回 204 No Content 状态码
+            return $this->respond($response);
         }
     }
 

@@ -53,6 +53,9 @@ const handleCreateOrUpdate = () => {
       .finally(() => {
         loading.value = false
       })
+      .catch((err) => {
+        console.log(err)
+      })
   })
 }
 const resetForm = () => {
@@ -67,12 +70,16 @@ const handleDelete = (row: GetRoleData) => {
     confirmButtonText: "确定",
     cancelButtonText: "取消",
     type: "warning"
-  }).then(() => {
-    deleteRoleDataApi(row.id).then((res: any) => {
-      ElMessage({ message: res.message, type: res.type })
-      getRoleData()
-    })
   })
+    .then(() => {
+      deleteRoleDataApi(row.id).then((res: any) => {
+        ElMessage({ message: res.message, type: res.type })
+        getRoleData()
+      })
+    })
+    .catch((err) => {
+      console.log(err)
+    })
 }
 //#endregion
 

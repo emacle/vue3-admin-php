@@ -1,460 +1,285 @@
 <script lang="ts" setup>
-import { nextTick, reactive, ref } from "vue"
-import { type ElMessageBoxOptions, ElMessageBox, ElMessage } from "element-plus"
-import { createUserDataApi, deleteUserDataApi, updateUserDataApi, getUserDataApi } from "@/api/user"
-import { type GetUserResponseData } from "@/api/user/types/user"
-// import RoleColumnSolts from "./tsx/RoleColumnSolts"
-import CreateTimeColumnSolts from "./tsx/CreateTimeColumnSolts"
-import StatusColumnSolts from "./tsx/StatusColumnSolts"
-import {
-  type VxeGridInstance,
-  type VxeGridProps,
-  type VxeModalInstance,
-  type VxeModalProps,
-  type VxeFormInstance,
-  type VxeFormProps
-} from "vxe-table"
+import { reactive, ref, watch } from "vue"
+import { createUserDataApi, deleteUserDataApi, getUserDataApi, updateUserDataApi } from "@/api/user"
+import { type CreateOrUpdateUserRequestData, type GetUserData } from "@/api/user/types/user"
+import { type FormInstance, type FormRules, ElMessage, ElMessageBox } from "element-plus"
+import { Search, Refresh, CirclePlus, Delete, Download, RefreshRight } from "@element-plus/icons-vue"
+import { usePagination } from "@/hooks/usePagination"
+import { cloneDeep, isNull } from "lodash-es"
 
 defineOptions({
   // 命名当前组件
   name: "SysUser"
 })
 
-//#region vxe-grid
-interface RowMeta {
-  id: number
-  username: string
-  role: number[]
-  dept: number[]
-  phone: string
-  email: string
-  status: number
-  createTime: string
-  /** vxe-table 自动添加上去的属性 */
-  _VXE_ID?: string
+const loading = ref<boolean>(false)
+const { paginationData, handleCurrentChange, handleSizeChange } = usePagination()
+
+//#region 增
+const DEFAULT_FORM_DATA: CreateOrUpdateUserRequestData = {
+  id: undefined,
+  username: "",
+  password: "",
+  email: "",
+  listorder: 1000,
+  status: 1
 }
-const xGridDom = ref<VxeGridInstance>()
-const xGridOpt: VxeGridProps = reactive({
-  loading: true,
-  autoResize: true,
-  /** 分页配置项 */
-  pagerConfig: {
-    align: "right"
+const dialogVisible = ref<boolean>(false)
+const formRef = ref<FormInstance | null>(null)
+const formData = ref<CreateOrUpdateUserRequestData>(cloneDeep(DEFAULT_FORM_DATA))
+const formRules: FormRules<CreateOrUpdateUserRequestData> = {
+  username: [{ required: true, trigger: "blur", message: "请输入用户名" }]
+}
+const options = [
+  {
+    value: "1",
+    label: "启用"
   },
-  /** 表单配置项 */
-  formConfig: {
-    items: [
-      {
-        field: "username",
-        itemRender: {
-          name: "$input",
-          props: { placeholder: "用户名", clearable: true }
-        }
-      },
-      {
-        field: "phone",
-        itemRender: {
-          name: "$input",
-          props: { placeholder: "手机号", clearable: true }
-        }
-      },
-      {
-        field: "status",
-        itemRender: {
-          name: "$select",
-          props: {
-            placeholder: "请选择状态",
-            options: [
-              { label: "启用", value: 1 },
-              { label: "禁用", value: 0 }
-            ],
-            clearable: true
-          }
-        }
-      },
-      {
-        itemRender: {
-          name: "$buttons",
-          children: [
-            {
-              props: { type: "submit", content: "查询", status: "primary" }
-            },
-            {
-              props: { type: "reset", content: "重置" }
-            }
-          ]
-        }
-      }
-    ]
-  },
-  /** 工具栏配置 */
-  toolbarConfig: {
-    refresh: true,
-    custom: true,
-    slots: { buttons: "toolbar-btns" }
-  },
-  /** 自定义列配置项 */
-  customConfig: {
-    /** 是否允许列选中  */
-    checkMethod: ({ column }) => !["username", "id"].includes(column.field)
-  },
-  /** 列配置 */
-  columns: [
-    {
-      type: "checkbox",
-      width: "50px"
-    },
-    {
-      field: "id",
-      title: "ID"
-    },
-    {
-      field: "username",
-      title: "用户名"
-    },
-    {
-      field: "tel",
-      title: "手机号"
-    },
-    {
-      field: "email",
-      title: "邮箱"
-    },
-    {
-      field: "status",
-      title: "状态",
-      slots: StatusColumnSolts
-    },
-    {
-      field: "create_time",
-      title: "创建时间",
-      slots: CreateTimeColumnSolts
-    },
-    {
-      title: "操作",
-      width: "150px",
-      fixed: "right",
-      showOverflow: false,
-      slots: { default: "row-operate" }
-    }
-  ],
-  /** 数据代理配置项（基于 Promise API） */
-  proxyConfig: {
-    /** 启用动态序号代理 */
-    seq: true,
-    /** 是否代理表单 */
-    form: true,
-    /** 是否自动加载，默认为 true */
-    // autoLoad: false,
-    props: {
-      total: "total"
-    },
-    ajax: {
-      query: ({ page, form }) => {
-        xGridOpt.loading = true
-        crudStore.clearTable()
-        return new Promise((resolve) => {
-          let total = 0
-          let result: RowMeta[] = []
-          /** 加载数据 */
-          const callback = (res: GetUserResponseData) => {
-            if (res?.data) {
-              // 总数
-              total = res.data.total
-              // 列表数据
-              result = res.data.list
-            }
-            xGridOpt.loading = false
-            // 返回值有格式要求，详情见 vxe-table 官方文档
-            resolve({ total, result })
-          }
-
-          /** 接口需要的参数 */
-          const params = {
-            username: form.username || undefined,
-            tel: form.phone || undefined,
-            status: form.status || undefined,
-            limit: page.pageSize,
-            offset: page.currentPage,
-            fields: "id,username,email,tel,create_time,status,listorder", // 与后端一致
-            query: "~username,~tel,status" // 与后端一致 username tel 模糊匹配 status精确匹配
-          }
-          console.log(params)
-          /** 调用接口 */
-          getUserDataApi(params).then(callback).catch(callback)
-        })
-      }
-    }
+  {
+    value: "0",
+    label: "禁用"
   }
-})
+]
+const handleCreateOrUpdate = () => {
+  formRef.value?.validate((valid: boolean, fields) => {
+    if (!valid) return console.error("表单校验不通过", fields)
+    loading.value = true
+    const api = formData.value.id === undefined ? createUserDataApi : updateUserDataApi
+    api(formData.value)
+      .then((res: any) => {
+        ElMessage({ message: res.message, type: res.type })
+        dialogVisible.value = false
+        getUserData()
+      })
+      .finally(() => {
+        loading.value = false
+      })
+      .catch((err) => {
+        console.log(err)
+      })
+  })
+}
+const resetForm = () => {
+  formRef.value?.clearValidate()
+  formData.value = cloneDeep(DEFAULT_FORM_DATA)
+}
 //#endregion
 
-//#region vxe-modal
-const xModalDom = ref<VxeModalInstance>()
-const xModalOpt: VxeModalProps = reactive({
-  title: "",
-  showClose: true,
-  escClosable: true,
-  maskClosable: true,
-  beforeHideMethod: () => {
-    xFormDom.value?.clearValidate()
-    return Promise.resolve()
-  }
-})
-//#endregion
-
-//#region vxe-form
-const xFormDom = ref<VxeFormInstance>()
-const xFormOpt: VxeFormProps = reactive({
-  span: 24,
-  titleWidth: "100px",
-  loading: false,
-  /** 是否显示标题冒号 */
-  titleColon: false,
-  /** 表单数据 */
-  data: {
-    username: "",
-    password: "",
-    email: "1@1.com",
-    listorder: 1000,
-    status: 1 // 状态默认为启用
-  },
-  /** 项列表 */
-  items: [
-    {
-      field: "username",
-      title: "用户名",
-      itemRender: { name: "$input", props: { placeholder: "请输入" } }
-    },
-    {
-      field: "password",
-      title: "密码",
-      itemRender: { name: "$input", props: { placeholder: "请输入" } }
-    },
-    {
-      field: "email",
-      title: "邮箱",
-      itemRender: { name: "$input", props: { placeholder: "请输入" } }
-    },
-    // {
-    //   field: "role",
-    //   title: "角色",
-    //   itemRender: {
-    //     name: "$select",
-    //     props: {
-    //       placeholder: "请选择角色",
-    //       options: [
-    //         { label: "管理员", value: 1 },
-    //         { label: "普通用户", value: 2 }
-    //       ],
-    //       clearable: true
-    //     }
-    //   }
-    // },
-    // {
-    //   field: "dept",
-    //   title: "部门",
-    //   itemRender: {
-    //     name: "$select",
-    //     props: {
-    //       placeholder: "请选择部门",
-    //       options: [
-    //         { label: "开发部", value: 1 },
-    //         { label: "测试部", value: 2 }
-    //       ],
-    //       clearable: true
-    //     }
-    //   }
-    // },
-    // {
-    //   field: "listorder",
-    //   title: "排序ID",
-    //   itemRender: {
-    //     name: "$input-number",
-    //     props: {
-    //       placeholder: "请输入排序ID",
-    //       min: 1000 // 设置最小值为 0
-    //     }
-    //   }
-    // },
-    {
-      field: "status",
-      title: "状态",
-      itemRender: {
-        name: "$switch",
-        props: {
-          openLabel: "启用", // 开启时的文字描述
-          closedLabel: "禁用", // 关闭时的文字描述
-          openValue: 1, // 开启时的值
-          closedValue: 0 // 关闭时的值
-        }
-      }
-    },
-    {
-      align: "right",
-      itemRender: {
-        name: "$buttons",
-        children: [
-          { props: { content: "取消" }, events: { click: () => xModalDom.value?.close() } },
-          {
-            props: { type: "submit", content: "确定", status: "primary" },
-            events: { click: () => crudStore.onSubmitForm() }
-          }
-        ]
-      }
-    }
-  ],
-  /** 校验规则 */
-  rules: {
-    username: [
-      {
-        required: true,
-        validator: ({ itemValue }) => {
-          switch (true) {
-            case !itemValue:
-              return new Error("请输入")
-            case !itemValue.trim():
-              return new Error("空格无效")
-          }
-        }
-      }
-    ],
-    password: [
-      {
-        required: true,
-        validator: ({ itemValue }) => {
-          switch (true) {
-            case !itemValue:
-              return new Error("请输入")
-            case !itemValue.trim():
-              return new Error("空格无效")
-          }
-        }
-      }
-    ]
-  }
-})
-//#endregion
-
-//#region 增删改查
-const crudStore = reactive({
-  /** 表单类型，true 表示修改，false 表示新增 */
-  isUpdate: true,
-  id: 0,
-  /** 加载表格数据 */
-  commitQuery: () => xGridDom.value?.commitProxy("query"),
-  /** 清空表格数据 */
-  clearTable: () => xGridDom.value?.reloadData([]),
-  /** 点击显示弹窗 */
-  onShowModal: (row?: RowMeta) => {
-    console.log("onShowModal row", row)
-    if (row) {
-      crudStore.isUpdate = true
-      xModalOpt.title = "修改用户"
-      // 赋值
-      xFormOpt.data.username = row.username
-      crudStore.id = row.id
-    } else {
-      crudStore.isUpdate = false
-      xModalOpt.title = "新增用户"
-    }
-    // 禁用表单项
-    const props = xFormOpt.items?.[0]?.itemRender?.props
-    props && (props.disabled = crudStore.isUpdate)
-    xModalDom.value?.open()
-    nextTick(() => {
-      !crudStore.isUpdate && xFormDom.value?.reset()
-      xFormDom.value?.clearValidate()
-    })
-  },
-  /** 确定并保存 */
-  onSubmitForm: () => {
-    if (xFormOpt.loading) return
-    xFormDom.value?.validate((errMap) => {
-      if (errMap) return
-      xFormOpt.loading = true
-      const callback = () => {
-        xFormOpt.loading = false
-        xModalDom.value?.close()
-        ElMessage.success("操作成功")
-        !crudStore.isUpdate && crudStore.afterInsert()
-        crudStore.commitQuery()
-      }
-      if (crudStore.isUpdate) {
-        // 模拟调用修改接口成功
-        // setTimeout(() => callback(), 1000)
-        updateUserDataApi(crudStore.id, xFormOpt.data).then(callback).catch(callback)
-      } else {
-        // 模拟调用新增接口成功
-        // setTimeout(() => callback(), 1000)
-        /** 调用接口 */
-        createUserDataApi(xFormOpt.data).then(callback).catch(callback)
-      }
-    })
-  },
-  /** 新增后是否跳入最后一页 */
-  afterInsert: () => {
-    const pager = xGridDom.value?.getProxyInfo()?.pager
-    if (pager) {
-      const currentTotal = pager.currentPage * pager.pageSize
-      if (currentTotal === pager.total) {
-        ++pager.currentPage
-      }
-    }
-  },
-  /** 删除 */
-  onDelete: (row: RowMeta) => {
-    const tip = `确定 <strong style="color: var(--el-color-danger);"> 删除 </strong> 用户 <strong style="color: var(--el-color-primary);"> ${row.username} </strong> ？`
-    const config: ElMessageBoxOptions = {
-      type: "warning",
-      showClose: true,
-      closeOnClickModal: true,
-      closeOnPressEscape: true,
-      cancelButtonText: "取消",
-      confirmButtonText: "确定",
-      dangerouslyUseHTMLString: true
-    }
-    ElMessageBox.confirm(tip, "提示", config).then(() => {
-      deleteUserDataApi(row.id).then(() => {
-        ElMessage.success("删除成功")
-        crudStore.afterDelete()
-        crudStore.commitQuery()
+//#region 删
+const handleDelete = (row: GetUserData) => {
+  ElMessageBox.confirm(`正在删除用户：${row.username}，确认删除？`, "提示", {
+    confirmButtonText: "确定",
+    cancelButtonText: "取消",
+    type: "warning"
+  })
+    .then(() => {
+      deleteUserDataApi(row.id).then((res: any) => {
+        ElMessage({ message: res.message, type: res.type })
+        getUserData()
       })
     })
-  },
-  /** 删除后是否返回上一页 */
-  afterDelete: () => {
-    const tableData: RowMeta[] = xGridDom.value!.getData()
-    const pager = xGridDom.value?.getProxyInfo()?.pager
-    if (pager && pager.currentPage > 1 && tableData.length === 1) {
-      --pager.currentPage
-    }
-  },
-  /** 更多自定义方法 */
-  moreFn: () => {}
-})
+    .catch(() => {})
+}
 //#endregion
+
+//#region 改
+const handleUpdate = (row: GetUserData) => {
+  dialogVisible.value = true
+  formData.value = cloneDeep(row)
+}
+//#endregion
+
+//#region 查
+const userData = ref<GetUserData[]>([])
+const searchFormRef = ref<FormInstance | null>(null)
+const searchData = reactive({
+  username: "",
+  tel: "",
+  status: ""
+})
+// 监听排序
+const sortParm = ref<string>("+listorder")
+const handleSort = (column: any) => {
+  if (!column.order) {
+    sortParm.value = "+listorder"
+  } else {
+    sortParm.value = (column.order === "ascending" ? "+" : "-") + column.prop
+  }
+  console.log("sortParm.value", sortParm.value)
+  getUserData()
+}
+const getUserData = () => {
+  loading.value = true
+  getUserDataApi({
+    currentPage: paginationData.currentPage,
+    size: paginationData.pageSize,
+    username: searchData.username || undefined,
+    tel: searchData.tel || undefined,
+    status: searchData.status || undefined,
+    fields: "id,username,email,tel,status,listorder", // 与后端一致 前端指定获取的字段
+    query: "~username,~tel,status", // 前端指定模糊查询的字段为name,精确查询字段为status
+    sort: sortParm.value // 前面指定按listorder升序排列
+  })
+    .then(({ data }) => {
+      paginationData.total = data.total
+      userData.value = data.list
+    })
+    .catch(() => {
+      userData.value = []
+    })
+    .finally(() => {
+      loading.value = false
+    })
+}
+const handleSearch = () => {
+  paginationData.currentPage === 1 ? getUserData() : (paginationData.currentPage = 1)
+}
+const resetSearch = () => {
+  searchFormRef.value?.resetFields()
+  handleSearch()
+}
+//#endregion
+
+/** 监听分页参数的变化 */
+watch([() => paginationData.currentPage, () => paginationData.pageSize], getUserData, { immediate: true })
 </script>
 
 <template>
   <div class="app-container">
-    <!-- 表格 -->
-    <vxe-grid ref="xGridDom" v-bind="xGridOpt">
-      <!-- 左侧按钮列表 -->
-      <template #toolbar-btns>
-        <vxe-button status="primary" icon="vxe-icon-add" @click="crudStore.onShowModal()">新增用户</vxe-button>
-        <!-- <vxe-button status="danger" icon="vxe-icon-delete">批量删除</vxe-button> -->
+    <el-card shadow="never" class="search-wrapper">
+      <el-form ref="searchFormRef" :inline="true" :model="searchData">
+        <el-form-item prop="username" label="用户名">
+          <el-input v-model="searchData.username" clearable placeholder="请输入用户名称" />
+        </el-form-item>
+        <el-form-item prop="tel" label="手机号">
+          <el-input v-model="searchData.tel" clearable placeholder="请输入手机号" />
+        </el-form-item>
+        <el-form-item prop="status" label="状态">
+          <el-select v-model="searchData.status" clearable placeholder="请选择">
+            <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" :icon="Search" @click="handleSearch">查询</el-button>
+          <el-button :icon="Refresh" @click="resetSearch">重置</el-button>
+        </el-form-item>
+      </el-form>
+    </el-card>
+    <el-card v-loading="loading" shadow="never">
+      <div class="toolbar-wrapper">
+        <div>
+          <el-button type="primary" :icon="CirclePlus" @click="dialogVisible = true">新增用户</el-button>
+          <!-- <el-button type="danger" :icon="Delete">批量删除</el-button> -->
+        </div>
+        <div>
+          <!-- <el-tooltip content="下载">
+            <el-button type="primary" :icon="Download" circle />
+          </el-tooltip> -->
+          <el-tooltip content="刷新当前页">
+            <el-button type="primary" :icon="RefreshRight" circle @click="getUserData" />
+          </el-tooltip>
+        </div>
+      </div>
+      <div class="table-wrapper">
+        <el-table :data="userData" @sort-change="handleSort">
+          <el-table-column type="selection" width="50" align="center" />
+          <el-table-column prop="id" label="ID" sortable="custom" align="center" />
+          <el-table-column prop="username" label="用户名" align="center" />
+          <el-table-column prop="tel" label="电话" align="center" />
+          <el-table-column prop="email" label="邮箱" align="center" />
+          <el-table-column prop="listorder" label="排序" align="center" />
+          <el-table-column prop="status" label="状态" align="center">
+            <template #default="scope">
+              <el-tag v-if="scope.row.status" type="success" effect="plain">启用</el-tag>
+              <el-tag v-else type="danger" effect="plain">禁用</el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column fixed="right" label="操作" width="150" align="center">
+            <template #default="scope">
+              <el-button type="primary" text bg size="small" @click="handleUpdate(scope.row)">修改</el-button>
+              <el-button type="danger" text bg size="small" @click="handleDelete(scope.row)">删除</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
+      <div class="pager-wrapper">
+        <el-pagination
+          background
+          :layout="paginationData.layout"
+          :page-sizes="paginationData.pageSizes"
+          :total="paginationData.total"
+          :page-size="paginationData.pageSize"
+          :currentPage="paginationData.currentPage"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+        />
+      </div>
+    </el-card>
+    <!-- 新增/修改 -->
+    <el-dialog
+      v-model="dialogVisible"
+      :title="formData.id === undefined ? '新增用户' : '修改用户'"
+      @closed="resetForm"
+      width="30%"
+    >
+      <el-form ref="formRef" :model="formData" :rules="formRules" label-width="100px" label-position="left">
+        <el-form-item prop="username" label="用户名">
+          <el-input v-model.trim="formData.username" placeholder="请输入" />
+        </el-form-item>
+        <el-form-item prop="password" label="密码">
+          <el-input v-model="formData.password" placeholder="请输入" />
+        </el-form-item>
+        <el-form-item prop="email" label="邮箱">
+          <el-input v-model="formData.email" placeholder="请输入" />
+        </el-form-item>
+        <el-form-item prop="tel" label="手机号">
+          <el-input v-model="formData.tel" placeholder="请输入" />
+        </el-form-item>
+        <el-form-item prop="listorder" label="排序">
+          <!-- <el-input v-model="formData.listorder" placeholder="请输入" /> -->
+          <el-input-number v-model="formData.listorder" :min="99" controls-position="right" size="large" />
+        </el-form-item>
+        <el-form-item prop="status" label="状态">
+          <!-- <el-input v-model="formData.remark" placeholder="请输入" /> -->
+          <el-switch v-model="formData.status" :active-value="1" :inactive-value="0">
+            <template #active>启用</template>
+            <template #inactive>禁用</template>
+          </el-switch>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleCreateOrUpdate" :loading="loading">确认</el-button>
       </template>
-      <!-- 操作 -->
-      <template #row-operate="{ row }">
-        <el-button link type="primary" @click="crudStore.onShowModal(row)">修改</el-button>
-        <el-button link type="danger" @click="crudStore.onDelete(row)">删除</el-button>
-      </template>
-    </vxe-grid>
-    <!-- 弹窗 -->
-    <vxe-modal ref="xModalDom" v-bind="xModalOpt">
-      <!-- 表单 -->
-      <vxe-form ref="xFormDom" v-bind="xFormOpt" />
-    </vxe-modal>
+    </el-dialog>
   </div>
 </template>
+
+<style lang="scss" scoped>
+.search-wrapper {
+  margin-bottom: 20px;
+  :deep(.el-card__body) {
+    padding-bottom: 2px;
+  }
+}
+
+.toolbar-wrapper {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.table-wrapper {
+  margin-bottom: 20px;
+}
+
+.el-select {
+  width: auto;
+  min-width: 100px; /* Adjust as needed */
+}
+
+.pager-wrapper {
+  display: flex;
+  justify-content: flex-end;
+}
+</style>

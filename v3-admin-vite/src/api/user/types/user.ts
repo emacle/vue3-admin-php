@@ -3,30 +3,37 @@ export interface CreateOrUpdateUserRequestData {
   username: string
   password?: string
   email?: string
+  tel?: string
   listorder: number
   status: number
 }
 
 export interface GetUserRequestData {
   /** 当前页码 */
-  offset: number
+  currentPage: number
   /** 查询条数 */
-  limit: number
+  size: number
   /** 查询参数：用户名 */
   username?: string
   /** 查询参数：手机号 */
-  phone?: string
+  tel?: string
+  listorder?: number
+  //** TODO: 查询时status使用 string 与searchData保持一致 */
+  status?: string
+  fields?: string
+  query?: string
+  sort?: string
 }
 
 export interface GetUserData {
-  createTime: string
+  id: string
+  username: string
   email: string
-  id: number
-  phone: string
+  tel: string
   role: number[]
   dept: number[]
+  listorder: number
   status: number
-  username: string
 }
 
 export type GetUserResponseData = ApiResponseData<{

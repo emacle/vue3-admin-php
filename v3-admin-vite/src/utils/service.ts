@@ -23,7 +23,7 @@ function createService() {
   // 响应拦截（可根据具体业务作出相应的调整）
   service.interceptors.response.use(
     (response) => {
-      // console.log(response)
+      console.log(response)
       // apiData 是 api 返回的数据
       const apiData = response.data
       // 二进制数据则直接返回
@@ -36,22 +36,33 @@ function createService() {
         ElMessage.error("非本系统的接口")
         return Promise.reject(new Error("非本系统的接口"))
       }
-      switch (code) {
-        case 20000:
-          // 本系统采用 code === 20000 来表示没有业务错误
-          return apiData
-        // TODO: 50008:非法的token; 50012:其他客户端登录了;  50014:Token 过期了;  50015: refresh_token过期
-        // case 401:
-        //   // Token 过期时
-        //   return logout()
-        default:
-          // 不是正确的 code
-          console.log(code)
-          ElMessage.error(apiData.message || "Error")
-          return Promise.reject(new Error("Error"))
+      // 本系统采用 code === 20000 来表示没有业务错误
+      if (code !== 20000) {
+        ElMessage({ message: apiData.message, type: apiData.type })
+
+        // // 50008:非法的token; 50012:其他客户端登录了;  50014:Token 过期了;  50015: refresh_token过期
+        // if (res.code === 50008 || res.code === 50012 || res.code === 50015) {
+        //   // 请自行在引入 MessageBox
+        //   // import { Message, MessageBox } from 'element-ui'
+        //   console.log(' refresh_token过期 超时......')
+        //   MessageBox.confirm('你已被登出，可以取消继续留在该页面，或者重新登录', '确定登出', {
+        //     confirmButtonText: '重新登录',
+        //     cancelButtonText: '取消',
+        //     type: 'warning'
+        //   }).then(() => {
+        //     store.dispatch('user/FedLogOut').then(() => {
+        //       location.reload() // 为了重新实例化vue-router对象 避免bug
+        //     })
+        //   })
+        // }
+
+        return Promise.reject(new Error(apiData.message || "Error"))
+      } else {
+        return apiData
       }
     },
     (error) => {
+      console.log(error)
       // status 是 HTTP 状态码
       const status = get(error, "response.status")
       switch (status) {

@@ -219,7 +219,7 @@ class Role extends ResourceController
             return $this->respond($response);
         } else {
             $response = [
-                "code" => 20000,
+                "code" => 20204,
                 "type" => 'info',
                 "message" => '角色数据未更新'
             ];
