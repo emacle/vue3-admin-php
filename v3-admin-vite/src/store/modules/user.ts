@@ -3,14 +3,23 @@ import store from "@/store"
 import { defineStore } from "pinia"
 import { useTagsViewStore } from "./tags-view"
 import { useSettingsStore } from "./settings"
-import { getToken, removeToken, setToken } from "@/utils/cache/cookies"
+import {
+  getToken,
+  removeToken,
+  setToken,
+  getRefreshToken,
+  removeRefreshToken,
+  setRefreshToken
+} from "@/utils/cache/cookies"
 import { resetRouter } from "@/router"
-import { loginApi, getUserInfoApi } from "@/api/login"
+import { loginApi, getUserInfoApi, refreshTokenApi } from "@/api/login"
 import { type LoginRequestData } from "@/api/login/types/login"
 // import routeSettings from "@/config/route"
 
 export const useUserStore = defineStore("user", () => {
   const token = ref<string>(getToken() || "")
+  const refresh_token = ref<string>(getRefreshToken() || "")
+
   // const roles = ref<string[]>([])
   // 声明ref响应式数据变量
   const roles = ref<{ id: number; name: string }[]>([])
@@ -37,6 +46,8 @@ export const useUserStore = defineStore("user", () => {
     // }
     setToken(data.token)
     token.value = data.token
+    setRefreshToken(data.refresh_token)
+    refresh_token.value = data.refresh_token
   }
   /** 获取用户详情 */
   const getInfo = async () => {
@@ -62,15 +73,29 @@ export const useUserStore = defineStore("user", () => {
   const logout = () => {
     removeToken()
     token.value = ""
+    removeRefreshToken()
+    refresh_token.value = ""
     roles.value = []
     resetRouter()
     _resetTagsView()
   }
-  /** 重置 Token */
+  /** 重置 Token, refresh_Token */
   const resetToken = () => {
     removeToken()
     token.value = ""
+    removeRefreshToken()
+    refresh_token.value = ""
     roles.value = []
+  }
+
+  const handleRefreshToken = async () => {
+    const { data } = await refreshTokenApi()
+    console.log("useUserStore.handleRefreshToken", data)
+    setToken(data.token)
+    token.value = data.token
+    console.log("handleRefreshToken...setToken 完成")
+    setRefreshToken(data.refresh_token)
+    refresh_token.value = data.refresh_token
   }
   /** 重置 Visited Views 和 Cached Views */
   const _resetTagsView = () => {
@@ -80,7 +105,19 @@ export const useUserStore = defineStore("user", () => {
     }
   }
 
-  return { token, roles, username, avatar, asyncRouterMap, login, getInfo, changeRoles, logout, resetToken }
+  return {
+    token,
+    roles,
+    username,
+    avatar,
+    asyncRouterMap,
+    login,
+    getInfo,
+    changeRoles,
+    logout,
+    resetToken,
+    handleRefreshToken
+  }
 })
 
 /** 在 setup 外使用 */

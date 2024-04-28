@@ -50,7 +50,8 @@ class AuthCheckFilter implements FilterInterface
         if (is_null($Token)) {
             $response = [
                 "code" => 50014,
-                "message" => 'token is null'
+                "message" => 'token is null',
+                "data" => []
             ];
             // 如果返回 Response 实例,将向客户端发送响应,并停止脚本执行。这对于实现 API 的速率限制很有用。
             return $this->createErrorResponse(401, json_encode($response)); // 未授权错误

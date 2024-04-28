@@ -62,7 +62,7 @@ class User extends ResourceController
 
             $response = [
                 "code" => 20000,
-                "message" => "Login successful",
+                "message" => "login successful",
                 "data" => [
                     "token" => JWT::encode($access_token, $appConfig->jwt_key, 'HS256'), //生成access_tokenToken,
                     "refresh_token" => JWT::encode($refresh_token, $appConfig->jwt_key, 'HS256') //生成refresh_token,
@@ -205,6 +205,90 @@ class User extends ResourceController
                 "_GET" => $_GET
             ];
             return $this->respond($response);
+        }
+    }
+
+    public function refreshtoken()
+    {
+        // 此处 $Token 应为refresh token 在前端 request 拦截器中做了修改
+        // 刷新token接口需要在控制器内作权限验证,比较特殊,不能使用hook ManageAuth来验证
+        $Bearer = $this->request->getHeaderLine('Authorization');
+        list($Token) = sscanf($Bearer, 'Bearer %s');
+        $appConfig = config(App::class); // 获取app/Config/App.php文件夹里变量
+
+        try {
+            $decoded = JWT::decode($Token, new Key($appConfig->jwt_key, 'HS256')); //HS256方式，这里要和签发的时候对应
+
+            // $decoded = JWT::decode($Token, config_item('jwt_key'), ['HS256']); //HS256方式，这里要和签发的时候对应
+            //            stdClass Object
+            //            (
+            //                [iss] => http://www.helloweba.net
+            //                [aud] => http://www.helloweba.net
+            //                [iat] => 1577668094
+            //                [nbf] => 1577668094
+            //                [exp] => 1577668094
+            //                [user_id] => 2
+            //                [count] => 0
+            //            )
+
+            $time = time(); //当前时间
+            // 公用信息
+            $payload = [
+                'iat' => $time, //签发时间
+                'nbf' => $time, //(Not Before)：某个时间点后才能访问，比如设置time+30，表示当前时间30秒后才能使用
+                'user_id' => $decoded->user_id, //自定义信息，不要定义敏感信息, 一般只有 userId 或 username
+            ];
+
+            $access_token = $payload;
+            $access_token['scopes'] = 'role_access'; //token标识，请求接口的token
+            $access_token['exp'] = $time + $appConfig->jwt_access_token_exp; //access_token过期时间,这里设置2个小时
+            $new_access_token =  JWT::encode($access_token, $appConfig->jwt_key, 'HS256'); //生成access_tokenToken
+            //        {
+            //          "iss": "http://pocoyo.org",
+            //          "aud": "http://emacs.org",
+            //          "iat": 1577757920,
+            //          "nbf": 1577757920,
+            //          "user_id": "1",
+            //          "scopes": "role_refresh",
+            //          "exp": 1577758100,
+            //          "count": 0
+            //        }
+
+            $count = $decoded->count + 1;
+            if ($count > $appConfig->jwt_refresh_count) { // 在刷新token期间 {多次} 请求刷新token则表示活跃,可以重新生成刷新token以免刷新token过期后登录
+                $refresh_token = $payload;
+                $refresh_token['scopes'] = 'role_refresh'; //token标识，刷新access_token
+                $refresh_token['exp'] = $time + $appConfig->jwt_refresh_token_exp;
+                $refresh_token['count'] = 0; // 重置刷新TOKEN计数
+                $new_refresh_token = JWT::encode($refresh_token, $appConfig->jwt_key, 'HS256'); // 这里可以根据需要重新生成 refresh_token
+            } else { // 保持refresh_token过期时间及其他共公用信息,仅自增计数器
+                $decoded->count++;
+                $new_refresh_token = JWT::encode(json_decode(json_encode($decoded), true), $appConfig->jwt_key, 'HS256');
+            }
+
+            $response = [
+                "code" => 20000,
+                "message" => "success refresh token",
+                "data" => [
+                    "token" => $new_access_token,
+                    "refresh_token" => $new_refresh_token
+                ]
+            ];
+            return $this->respond($response);
+        } catch (\Firebase\JWT\ExpiredException $e) {  // access_token过期
+            $response = [
+                "code" => 50015,
+                "message" => $e->getMessage() . ' refresh_token过期, 请重新登录',
+                "data" => []
+            ];
+            return $this->respond($response, 401);
+        } catch (Exception $e) {  //其他错误
+            $response = [
+                "code" => 50015,
+                "message" => $e->getMessage(),
+                "data" => []
+            ];
+            return $this->respond($response, 401);
         }
     }
 

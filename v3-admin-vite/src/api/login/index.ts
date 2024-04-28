@@ -32,3 +32,10 @@ export function getUserInfoApi() {
     method: "get"
   })
 }
+
+export function refreshTokenApi() {
+  return request<Login.LoginResponseData>({
+    url: "sys/user/refreshtoken",
+    method: "post"
+  })
+}

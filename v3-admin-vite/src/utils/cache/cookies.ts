@@ -12,3 +12,12 @@ export const setToken = (token: string) => {
 export const removeToken = () => {
   Cookies.remove(CacheKey.TOKEN)
 }
+export const getRefreshToken = () => {
+  return Cookies.get(CacheKey.REFRESH_TOKEN)
+}
+export const setRefreshToken = (refresh_token: string) => {
+  Cookies.set(CacheKey.REFRESH_TOKEN, refresh_token)
+}
+export const removeRefreshToken = () => {
+  Cookies.remove(CacheKey.REFRESH_TOKEN)
+}
