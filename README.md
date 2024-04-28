@@ -14,7 +14,7 @@ V3 Admin Vite 基于 Vue3、TypeScript、Element Plus、Pinia 和 Vite 等主流
 - [x] 3. 角色管理：新建角色，修改角色，删除角色，查询角色
 - [ ] 4. 菜单管理：新建菜单，修改菜单，删除菜单，查询菜单
 - [ ] 5. 部门管理：新建部门，修改部门，删除部门，查询部门
-- [ ] 6. **jwt生成访问与刷新token， access_token过期后，根据refreshtoken刷新访问token，实现无缝刷新功能。refreshtoken 加入计数器,在有效期内接口调用超过一定次数自动续期** 
+- [x] 6. **jwt生成访问与刷新token， access_token过期后，根据refreshtoken刷新访问token，实现无缝刷新功能。refreshtoken 加入计数器,在有效期内接口调用超过一定次数自动续期** 
 - [ ] 7. 图形验证码（`gregwar/captcha` 包生成）
 - [ ] 8. 系统日志
 
