@@ -32,6 +32,12 @@ $routes->group('api/v2/sys', ['namespace' => 'App\Controllers\Api\V2\Sys'], func
     $routes->delete('role/(.*)', 'Role::delete/$1');
     $routes->options('role', 'Role::options'); // $routes->resource 不会创建options请求，但是cors里必须要有options的请求接收
 
+    $routes->get('menu', 'Menu::index');
+    $routes->post('menu', 'Menu::create');
+    $routes->put('menu/(.*)', 'Menu::update/$1');
+    $routes->delete('menu/(.*)', 'Menu::delete/$1');
+    $routes->options('menu', 'Menu::options'); // $routes->resource 不会创建options请求，但是cors里必须要有options的请求接收
+
     // $routes->get('blog', 'Blog::index', ['filter' => 'AuthCheck']);  // 过滤器优先在Config/Filter里全局定义+排除
     // $routes->resource('blog');
     // $routes->options('blog', 'Blog::options'); // $routes->resource 不会创建options请求，但是cors里必须要有options的请求接收
