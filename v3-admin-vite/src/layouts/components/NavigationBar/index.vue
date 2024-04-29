@@ -57,6 +57,9 @@ const logout = () => {
         </div>
         <template #dropdown>
           <el-dropdown-menu>
+            <a target="_blank" href="https://github.com/emacle/vue3-admin-php">
+              <el-dropdown-item>vue3-admin-php</el-dropdown-item>
+            </a>
             <a target="_blank" href="https://github.com/un-pany/v3-admin-vite">
               <el-dropdown-item>GitHub</el-dropdown-item>
             </a>

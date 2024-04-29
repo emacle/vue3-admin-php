@@ -473,11 +473,11 @@ class User extends ResourceController
 
         if (!$user_id) {
             $response = [
-                "code" => 20000,
+                "code" => 20403, // 403 的响应，表示禁止访问。告诉客户端某个操作是不允许的
                 "type" => 'error',
                 "message" => $parms['username'] . ' - 用户新增失败'
             ];
-            return $this->respond($response, 403); // 403 的响应，表示禁止访问。告诉客户端某个操作是不允许的
+            return $this->respond($response);
         }
 
         // 处理关联角色
@@ -496,11 +496,11 @@ class User extends ResourceController
 
         if ($failed) {
             $response = [
-                "code" => 20000,
+                "code" => 20403, // 403 的响应，表示禁止访问。告诉客户端某个操作是不允许的
                 "type" => 'error',
                 "message" => '用户关联角色失败 ' . json_encode($failedArr)
             ];
-            return $this->respond($response, 403); // 403 的响应，表示禁止访问。告诉客户端某个操作是不允许的
+            return $this->respond($response);
         }
 
         // 处理关联部门
@@ -519,11 +519,11 @@ class User extends ResourceController
 
         if ($failed) {
             $response = [
-                "code" => 20000,
+                "code" => 20403,
                 "type" => 'error',
                 "message" => '用户关联部门失败 ' . json_encode($failedArr)
             ];
-            return $this->respond($response, 403); // 403 的响应，表示禁止访问。告诉客户端某个操作是不允许的
+            return $this->respond($response);
         }
 
         $response = [
@@ -545,11 +545,11 @@ class User extends ResourceController
         // 超级管理员角色不允许修改
         if ($id == 1) {
             $message = [
-                "code" => 20000,
+                "code" => 20403,
                 "type" => 'error',
                 "message" => $parms['username'] . ' - 超级管理员用户不允许修改'
             ];
-            return $this->respond($message, 403);  // 403 的响应，表示禁止访问。告诉客户端某个操作是不允许的
+            return $this->respond($message,);
         }
 
         $hasUser = $this->Medoodb->has('sys_user', ['id' => $id]);
@@ -601,11 +601,11 @@ class User extends ResourceController
 
         if ($failed) {
             $response = [
-                "code" => 20000,
+                "code" => 20403,
                 "type" => 'error',
-                "message" => '用户关联角色失败 ' . json_encode($failedArr)
+                "message" => '用户添加关联角色失败 ' . json_encode($failedArr)
             ];
-            $this->respond($response, 403);
+            $this->respond($response);
         }
         $DelArr = $this->array_diff_assoc2($RoleSqlArr, $RoleArr);
         // var_dump('------------只存在于后台数据库 删除操作-------------');
@@ -622,11 +622,11 @@ class User extends ResourceController
         }
         if ($failed) {
             $response = [
-                "code" => 20000,
+                "code" => 20403,
                 "type" => 'error',
-                "message" => '用户关联角色失败 ' . json_encode($failedArr)
+                "message" => '用户删除关联角色失败 ' . json_encode($failedArr)
             ];
-            $this->respond($response, 403);
+            $this->respond($response);
         }
 
         // 处理部门数组编辑操作
@@ -652,11 +652,11 @@ class User extends ResourceController
         }
         if ($failed) {
             $response = [
-                "code" => 20000,
+                "code" => 20403,
                 "type" => 'error',
-                "message" => '用户关联部门失败 ' . json_encode($failedArr)
+                "message" => '用户添加关联部门失败 ' . json_encode($failedArr)
             ];
-            $this->respond($response, 403);
+            $this->respond($response);
         }
         $DelArr = $this->array_diff_assoc2($DeptSqlArr, $DeptArr);
         // var_dump('------------只存在于后台数据库 删除操作-------------');
@@ -673,11 +673,11 @@ class User extends ResourceController
         }
         if ($failed) {
             $response = [
-                "code" => 20000,
+                "code" => 20403,
                 "type" => 'error',
-                "message" => '用户关联部门失败 ' . json_encode($failedArr)
+                "message" => '用户删除关联部门失败 ' . json_encode($failedArr)
             ];
-            return $this->respond($response, 403);
+            return $this->respond($response);
         }
 
         // 添加用户放在最后，先添加角色处理，部门处理，失败后直接提前返回
@@ -708,12 +708,12 @@ class User extends ResourceController
         // 超级管理员用户不允许删除
         if ($id == 1) {
             $response = [
-                "code" => 20000,
+                "code" => 20403,
                 "type" => 'error',
                 "message" => '超级管理员不允许删除'
             ];
             // todo: DELETE/UPDATE操作，返回响应体为空？
-            return $this->respond($response, 403);
+            return $this->respond($response);
         }
 
         // 处理删除用户资源的逻辑
@@ -732,11 +732,11 @@ class User extends ResourceController
                 return $this->respondDeleted($response);
             } else {
                 $response = [
-                    "code" => 20000,
+                    "code" => 20403,
                     "type" => 'error',
                     "message" => '删除失败'
                 ];
-                return $this->respond($response, 403);
+                return $this->respond($response);
             }
         } else {
             // return $this->failNotFound('No employee found');

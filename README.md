@@ -98,10 +98,10 @@ CodeIgniter4/ 后端 Restful API 接口
     前端GET请求参数与使用的 table 组件有关
 
     ```
-    GET /articles?offset=1&limit=30&sort=-id&fields=id,title,author&query=~author,title&author=888&title=world
+    GET /articles?currentPage=1&limit=30&sort=-id&fields=id,title,author&query=~author,title&author=888&title=world
 
-    limit:  每页记录数，后台会配置默认值
-    offset: 第几页，后台会配置默认值
+    size:  每页记录数，后台会配置默认值
+    currentPage: 第几页，后台会配置默认值
     sort:   支持多个参数 &sort=-id,+author => id降序 author 升序
     fileds: 指定要获取的显示字段 => 降低网络流量
     query:  支持多个参数 &query=~author,title => author like 模糊查询， title精确查询 &author=888&title=world 需要配合query参数才有意义
