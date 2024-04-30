@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { reactive, ref, watch } from "vue"
+import { onMounted, reactive, ref, watch } from "vue"
 import { createMenuDataApi, deleteMenuDataApi, getMenuDataApi, updateMenuDataApi } from "@/api/menu"
 import { type CreateOrUpdateMenuRequestData, type GetMenuData } from "@/api/menu/types/menu"
 import { type FormInstance, type FormRules, ElMessage, ElMessageBox } from "element-plus"
@@ -16,24 +16,24 @@ const loading = ref<boolean>(false)
 const { paginationData, handleCurrentChange, handleSizeChange } = usePagination()
 
 //#region 增
-// const DEFAULT_FORM_DATA: CreateOrUpdateMenuRequestData = {
-//   id: undefined,
-//   pid: ""
-//   name: ""
-//   path: ""
-//   component: ""
-//   type: ""
-//   title: ""
-//   icon: ""
-//   redirect: ""
-//   hidden: ""
-//   status: ""
-//   condition: ""
-//   listorder: 99
-// }
-// const dialogVisible = ref<boolean>(false)
+const DEFAULT_FORM_DATA: CreateOrUpdateMenuRequestData = {
+  id: undefined,
+  pid: "",
+  name: "",
+  path: "",
+  component: "",
+  type: 0,
+  title: "",
+  icon: "",
+  redirect: "",
+  hidden: 0,
+  status: "",
+  condition: "",
+  listorder: 99
+}
+const dialogVisible = ref<boolean>(false)
 // const formRef = ref<FormInstance | null>(null)
-// const formData = ref<CreateOrUpdateMenuRequestData>(cloneDeep(DEFAULT_FORM_DATA))
+const formData = ref<CreateOrUpdateMenuRequestData>(cloneDeep(DEFAULT_FORM_DATA))
 // const formRules: FormRules<CreateOrUpdateMenuRequestData> = {
 //   name: [{ required: true, trigger: "blur", message: "请输入菜单名" }]
 // }
@@ -63,29 +63,29 @@ const { paginationData, handleCurrentChange, handleSizeChange } = usePagination(
 //#endregion
 
 //#region 删
-// const handleDelete = (row: GetMenuData) => {
-//   ElMessageBox.confirm(`正在删除用户：${row.name}，确认删除？`, "提示", {
-//     confirmButtonText: "确定",
-//     cancelButtonText: "取消",
-//     type: "warning"
-//   })
-//     .then(() => {
-//       deleteMenuDataApi(row.id).then((res: any) => {
-//         ElMessage({ message: res.message, type: res.type })
-//         getMenuData()
-//       })
-//     })
-//     .catch((err) => {
-//       console.log(err)
-//     })
-// }
+const handleDelete = (row: GetMenuData) => {
+  ElMessageBox.confirm(`正在删除菜单：${row.name}，确认删除？`, "提示", {
+    confirmButtonText: "确定",
+    cancelButtonText: "取消",
+    type: "warning"
+  })
+    .then(() => {
+      deleteMenuDataApi(row.id).then((res: any) => {
+        ElMessage({ message: res.message, type: res.type })
+        getMenuData()
+      })
+    })
+    .catch((err) => {
+      console.log(err)
+    })
+}
 //#endregion
 
 //#region 改
-// const handleUpdate = (row: GetMenuData) => {
-//   dialogVisible.value = true
-//   formData.value = cloneDeep(row)
-// }
+const handleUpdate = (row: GetMenuData) => {
+  dialogVisible.value = true
+  formData.value = cloneDeep(row)
+}
 //#endregion
 
 //#region 查
@@ -119,14 +119,18 @@ const resetSearch = () => {
   handleSearch()
 }
 //#endregion
+// 根据icon值返回对应的组件名称
+const getIconComponent = (icon: any) => {
+  return icon
+}
 
-/** 监听分页参数的变化 */
-watch([() => paginationData.currentPage, () => paginationData.pageSize], getMenuData, { immediate: true })
+// 在组件实例创建时立即获取数据
+getMenuData()
 </script>
 
 <template>
   <div class="app-container">
-    <el-card shadow="never" class="search-wrapper">
+    <!-- <el-card shadow="never" class="search-wrapper">
       <el-form ref="searchFormRef" :inline="true" :model="searchData">
         <el-form-item prop="title" label="菜单名">
           <el-input v-model="searchData.title" clearable placeholder="请输入菜单名称" />
@@ -136,12 +140,14 @@ watch([() => paginationData.currentPage, () => paginationData.pageSize], getMenu
           <el-button :icon="Refresh" @click="resetSearch">重置</el-button>
         </el-form-item>
       </el-form>
-    </el-card>
+    </el-card> -->
     <el-card v-loading="loading" shadow="never">
       <div class="toolbar-wrapper">
-        <!-- <div>
-          <el-button type="primary" :icon="CirclePlus" @click="dialogVisible = true">新增菜单</el-button>
-        </div> -->
+        <div>
+          <el-button v-perm="['/sys/menu/post']" type="primary" :icon="CirclePlus" @click="dialogVisible = true"
+            >新增菜单</el-button
+          >
+        </div>
         <div>
           <el-tooltip content="刷新当前页">
             <el-button type="primary" :icon="RefreshRight" circle @click="getMenuData" />
@@ -149,25 +155,62 @@ watch([() => paginationData.currentPage, () => paginationData.pageSize], getMenu
         </div>
       </div>
       <div class="table-wrapper">
-        <el-table :data="menuData" row-key="title" border >
+        <el-table :data="menuData" row-key="title" border>
           <el-table-column prop="title" label="菜单名称" align="center" />
           <el-table-column prop="name" label="路由别名" align="center" />
-          <el-table-column prop="path" label="路由" align="center" />
-          <el-table-column prop="icon" label="图标" align="center" />
+          <el-table-column prop="path" label="路由" align="center">
+            <template #default="scope">
+              <span v-if="scope.row.type !== 2">{{ scope.row.path }}</span>
+              <span v-else-if="scope.row.type === 2 && scope.row.path.match(/\/post$/g)">{{
+                scope.row.path.replace(/\/post$/, "")
+              }}</span>
+              <span v-else-if="scope.row.type === 2 && scope.row.path.match(/\/get$/g)">{{
+                scope.row.path.replace(/\/get$/, "")
+              }}</span>
+              <span v-else-if="scope.row.type === 2 && scope.row.path.match(/\/put$/g)">{{
+                scope.row.path.replace(/\/put$/, "")
+              }}</span>
+              <span v-else-if="scope.row.type === 2 && scope.row.path.match(/\/delete$/g)">{{
+                scope.row.path.replace(/\/delete$/, "")
+              }}</span>
+              <span v-else-if="scope.row.type === 2">{{ scope.row.path }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column prop="icon" label="图标" align="center">
+            <template #default="scope">
+              <el-icon v-if="scope.row.type !== 2" color="#409efc" :size="20" class="no-inherit">
+                <component :is="getIconComponent(scope.row.icon)" />
+              </el-icon>
+              <span v-else-if="scope.row.type === 2 && scope.row.path.match(/\/post$/g)">
+                <el-tag size="small" type="success" effect="dark">POST</el-tag>
+              </span>
+              <span v-else-if="scope.row.type === 2 && scope.row.path.match(/\/get$/g)">
+                <el-tag size="small" type="primary" effect="dark">GET</el-tag>
+              </span>
+              <span v-else-if="scope.row.type === 2 && scope.row.path.match(/\/put$/g)">
+                <el-tag size="small" type="warning" effect="dark">PUT</el-tag>
+              </span>
+              <span v-else-if="scope.row.type === 2 && scope.row.path.match(/\/delete$/g)">
+                <el-tag size="small" type="danger" effect="dark">DEL</el-tag>
+              </span>
+            </template>
+          </el-table-column>
           <el-table-column prop="type" label="类型" align="center">
             <template #default="scope">
               <!-- :type="!scope.row.type ? '' : scope.row.type === 1 ? 'success' : 'warning'" -->
-              <el-tag size="small">{{ menuTypeList[scope.row.type] }}</el-tag>
+              <el-tag :type="!scope.row.type ? 'primary' : scope.row.type === 1 ? 'success' : 'warning'" size="small">{{
+                menuTypeList[scope.row.type]
+              }}</el-tag>
             </template>
           </el-table-column>
           <el-table-column prop="component" label="组件" align="center" />
           <el-table-column prop="redirect" label="重定向" align="center" />
           <el-table-column prop="listorder" label="排序" align="center" />
           <el-table-column fixed="right" label="操作" width="150" align="center">
-            <!-- <template #default="scope">
+            <template #default="scope">
               <el-button type="primary" text bg size="small" @click="handleUpdate(scope.row)">修改</el-button>
               <el-button type="danger" text bg size="small" @click="handleDelete(scope.row)">删除</el-button>
-            </template> -->
+            </template>
           </el-table-column>
         </el-table>
       </div>

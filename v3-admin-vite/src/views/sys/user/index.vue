@@ -146,7 +146,7 @@ watch([() => paginationData.currentPage, () => paginationData.pageSize], getUser
 
 <template>
   <div class="app-container">
-    <el-card shadow="never" class="search-wrapper">
+    <el-card shadow="never" class="search-wrapper" v-perm="['/sys/user/get']">
       <el-form ref="searchFormRef" :inline="true" :model="searchData">
         <el-form-item prop="username" label="用户名">
           <el-input v-model="searchData.username" clearable placeholder="请输入用户名称" />
@@ -168,7 +168,9 @@ watch([() => paginationData.currentPage, () => paginationData.pageSize], getUser
     <el-card v-loading="loading" shadow="never">
       <div class="toolbar-wrapper">
         <div>
-          <el-button type="primary" :icon="CirclePlus" @click="dialogVisible = true">新增用户</el-button>
+          <el-button v-perm="['/sys/user/post']" type="primary" :icon="CirclePlus" @click="dialogVisible = true"
+            >新增用户</el-button
+          >
           <!-- <el-button type="danger" :icon="Delete">批量删除</el-button> -->
         </div>
         <div>
@@ -196,8 +198,18 @@ watch([() => paginationData.currentPage, () => paginationData.pageSize], getUser
           </el-table-column>
           <el-table-column fixed="right" label="操作" width="150" align="center">
             <template #default="scope">
-              <el-button type="primary" text bg size="small" @click="handleUpdate(scope.row)">修改</el-button>
-              <el-button type="danger" text bg size="small" @click="handleDelete(scope.row)">删除</el-button>
+              <el-button v-perm="['/sys/user/put']" type="primary" text bg size="small" @click="handleUpdate(scope.row)"
+                >修改</el-button
+              >
+              <el-button
+                v-perm="['/sys/user/delete']"
+                type="danger"
+                text
+                bg
+                size="small"
+                @click="handleDelete(scope.row)"
+                >删除</el-button
+              >
             </template>
           </el-table-column>
         </el-table>

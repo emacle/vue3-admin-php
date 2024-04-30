@@ -134,7 +134,7 @@ watch([() => paginationData.currentPage, () => paginationData.pageSize], getRole
 
 <template>
   <div class="app-container">
-    <el-card shadow="never" class="search-wrapper">
+    <el-card shadow="never" class="search-wrapper" v-perm="['/sys/role/get']">
       <el-form ref="searchFormRef" :inline="true" :model="searchData">
         <el-form-item prop="name" label="角色名">
           <el-input v-model="searchData.name" clearable placeholder="请输入角色名称" />
@@ -153,7 +153,9 @@ watch([() => paginationData.currentPage, () => paginationData.pageSize], getRole
     <el-card v-loading="loading" shadow="never">
       <div class="toolbar-wrapper">
         <div>
-          <el-button type="primary" :icon="CirclePlus" @click="dialogVisible = true">新增角色</el-button>
+          <el-button v-perm="['/sys/role/post']" type="primary" :icon="CirclePlus" @click="dialogVisible = true"
+            >新增角色</el-button
+          >
           <!-- <el-button type="danger" :icon="Delete">批量删除</el-button> -->
         </div>
         <div>
@@ -180,8 +182,18 @@ watch([() => paginationData.currentPage, () => paginationData.pageSize], getRole
           </el-table-column>
           <el-table-column fixed="right" label="操作" width="150" align="center">
             <template #default="scope">
-              <el-button type="primary" text bg size="small" @click="handleUpdate(scope.row)">修改</el-button>
-              <el-button type="danger" text bg size="small" @click="handleDelete(scope.row)">删除</el-button>
+              <el-button v-perm="['/sys/role/put']" type="primary" text bg size="small" @click="handleUpdate(scope.row)"
+                >修改</el-button
+              >
+              <el-button
+                v-perm="['/sys/role/delete']"
+                type="danger"
+                text
+                bg
+                size="small"
+                @click="handleDelete(scope.row)"
+                >删除</el-button
+              >
             </template>
           </el-table-column>
         </el-table>

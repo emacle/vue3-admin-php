@@ -1,6 +1,6 @@
 export interface CreateOrUpdateMenuRequestData {
-  id?: number
-  pid: number
+  id?: string
+  pid: string
   name: string
   path: string
   component: string
@@ -20,8 +20,8 @@ export interface GetMenuRequestData {
 }
 
 export interface GetMenuData {
-  id: number
-  pid: number
+  id: string
+  pid: string
   name: string
   path: string
   component: string
