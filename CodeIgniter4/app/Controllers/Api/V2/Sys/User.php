@@ -763,6 +763,7 @@ class User extends ResourceController
             $valArr['meta'] = [
                 'title' => $valArr['title'],
                 'elIcon' => $valArr['icon'],
+                'keepAlive' => true, // 前端默认缓存所有页面
                 'alwaysShow' => $v->countChildren() ? true : false
             ];
             // 删除组合成meta的元素title,icon 多余去除
