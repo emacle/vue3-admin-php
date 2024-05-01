@@ -87,9 +87,22 @@ const handleDelete = (row: GetMenuData) => {
 //#endregion
 
 //#region 改
-const handleUpdate = (row: GetMenuData) => {
+const handleUpdate = (row: CreateOrUpdateMenuRequestData) => {
   dialogVisible.value = true
-  formData.value = cloneDeep(row)
+  // 克隆对象
+  const clonedRow = cloneDeep(row)
+  // 删除不需要的属性
+  if ("children" in clonedRow) {
+    delete clonedRow.children
+  }
+  if ("create_time" in clonedRow) {
+    delete clonedRow.create_time
+  }
+  if ("update_time" in clonedRow) {
+    delete clonedRow.update_time
+  }
+  // 设置formData的值
+  formData.value = clonedRow
 }
 //#endregion
 
@@ -289,7 +302,7 @@ getMenuData()
             </template>
             <el-input
               v-model.trim="formData.path"
-              :placeholder="menuTypeList[formData.type] + ', 如 /sys, /sys/menu/menus/get'"
+              :placeholder="menuTypeList[formData.type] + ', 如 /sys, /sys/menu/get'"
             />
           </el-tooltip>
         </el-form-item>
