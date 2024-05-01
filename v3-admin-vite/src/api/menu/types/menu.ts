@@ -9,7 +9,7 @@ export interface CreateOrUpdateMenuRequestData {
   icon: string
   redirect: string
   hidden: number
-  status: string
+  status: number
   condition: string
   listorder: number
 }
@@ -30,10 +30,15 @@ export interface GetMenuData {
   icon: string
   redirect: string
   hidden: number
-  status: string
+  status: number
   condition: string
   listorder: number
   children: GetMenuData[]
+}
+export interface GetMenuDataOptions {
+  value: string
+  label: string
+  children: GetMenuDataOptions[]
 }
 
 export type GetMenuResponseData = ApiResponseData<{

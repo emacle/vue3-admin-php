@@ -83,61 +83,61 @@ class Menu extends ResourceController
     public function create()
     {
         $parms = get_object_vars($this->request->getVar());
-
-        $hasMenu = $this->Medoodb->has('sys_menu', ['name' => $parms['name']]);
+        // 参数检验/数据预处理
+        // 菜单类型为目录
+        if (!$parms['type']) {
+            $parms['component'] = 'Layout';
+        }
+        $hasMenu = $this->Medoodb->has('sys_menu', ['path' => $parms['path']]);
         if ($hasMenu) {
             $response = [
-                "code" => 20000,
+                "code" => 20403,
                 "type" => 'error',
-                'message' => '角色名称（' . $parms['name'] . '）已存在'
+                'message' => '菜单路由（' . $parms['path'] . '）已存在，禁止添加'
             ];
-            return $this->respond($response, 200);
+            return $this->respond($response);
         }
-
-        $parms['create_time'] = time();
 
         $this->Medoodb->insert("sys_menu", $parms);
         $menu_id = $this->Medoodb->id();
         if (!$menu_id) {
             $response = [
-                "code" => 20000,
+                "code" => 20403,
                 "type" => 'error',
-                "message" => '角色（' . $parms['name'] . '）新增失败'
+                "message" => '菜单（' . $parms['title'] . '）新增失败'
             ];
-            return $this->respond($response, 200);
+            return $this->respond($response);
         }
 
-        // 生成该角色对应的权限: sys_perm, 权限类型为: menu, 生成唯一的 perm_id
+        // 生成该菜单对应的权限: sys_perm, 权限类型为: menu, 生成唯一的 perm_id
         $this->Medoodb->insert("sys_perm", ['perm_type' => 'menu', "r_id" => $menu_id]);
         $perm_id = $this->Medoodb->id();
         if (!$perm_id) {
             $response = [
-                "code" => 20000,
+                "code" => 20403,
                 "type" => 'error',
                 "message" => $this->request->getPath() . ' 生成该角色对应的权限: sys_perm, 失败...' .
                     json_encode(['perm_type' => 'menu', "r_id" => $menu_id])
             ];
-            return $this->respond($response, 200);
+            return $this->respond($response);
         }
-
-        // 超级管理员角色(1) 自动拥有该权限perm_id
-        $this->Medoodb->insert("sys_menu_perm", ["menu_id" => 1, "perm_id" => $perm_id]);
-        $menu_perm_id = $this->Medoodb->id();
-
-        if (!$menu_perm_id) {
+        // 超级管理员角色自动拥有该权限 perm_id
+        $this->Medoodb->insert("sys_role_perm", ["role_id" => 1, "perm_id" => $perm_id]);
+        $role_perm_id = $this->Medoodb->id();
+        if (!$role_perm_id) {
             $response = [
-                "code" => 20000,
+                "code" => 20403,
                 "type" => 'error',
-                "message" => $this->request->getPath() . ' 超级管理员角色自动拥有该权限: perm_id, sys_menu_perm, 失败...' .
-                    json_encode(["menu_id" => 1, "perm_id" => $perm_id])
+                "message" => $this->request->getPath() . ' 超级管理员角色自动拥有该权限: perm_id, sys_role_perm, 失败...' .
+                    json_encode(["role_id" => 1, "perm_id" => $perm_id])
             ];
-            return $this->respond($response, 200);
+            return $this->respond($response);
         }
 
         $response = [
             "code" => 20000,
             "type" => 'success',
-            "message" => '角色（' . $parms['name'] . '）新增成功'
+            "message" => '菜单（' . $parms['title'] . '）新增成功'
         ];
         return $this->respondCreated($response);
     }
@@ -153,24 +153,14 @@ class Menu extends ResourceController
         unset($parms['id']);
 
         // 参数检验/数据预处理
-        // 超级管理员角色不允许修改
-        if ($id == 1) {
-            $response = [
-                "code" => 20000,
-                "type" => 'error',
-                "message" =>  '超级管理员角色（' . $id . '）不允许修改'
-            ];
-            return $this->respond($response, 200);
-        }
-
         $hasMenu = $this->Medoodb->has('sys_menu', ['id' => $id]);
         if (!$hasMenu) {
             $response = [
                 "code" => 20404,
                 "type" => 'error',
-                'message' => '角色（' . $parms['name'] . '）数据表sys_menu中不存在'
+                'message' => '菜单（' . $parms['title'] . '）数据表sys_menu中不存在'
             ];
-            return $this->respond($response, 200);
+            return $this->respond($response);
         }
 
         $result = $this->Medoodb->update('sys_menu', $parms, ["id" => $id]);
@@ -179,21 +169,21 @@ class Menu extends ResourceController
             $response = [
                 "code" => 20000,
                 "type" => 'success',
-                "message" => '角色（' . $parms['name'] . '）更新成功'
+                "message" => '菜单（' . $parms['title'] . '）更新成功'
             ];
             return $this->respond($response);
         } else {
             $response = [
                 "code" => 20204,
                 "type" => 'info',
-                "message" => '角色数据未更新'
+                "message" => '菜单数据未更新'
             ];
             // 对于 PUT 请求,如果数据未发生变化,遵循 HTTP 规范的做法是返回 204 No Content 状态码
             // 返回204时，与前端service.ts约定冲突
             return $this->respond($response);
         }
     }
-    // 删
+    // 删 注意级联删除？？？
     public function delete($id = null)
     {
         $id = intval($id);
