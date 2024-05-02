@@ -248,7 +248,7 @@ class Role extends ResourceController
         $hasRole = $this->Medoodb->has('sys_role', ['id' => $id]);
         if ($hasRole) {
             // 删除外键关联表 sys_role_perm, sys_perm, sys_role 次序有先后
-            // 1. 根据 该角色id及'role' 在 sys_perm 表中查找 perm_id
+            // 1. 根据 该角色id及 类型 'role' 在 sys_perm 表中查找 perm_id
             // 2. 删除 sys_role_perm 中perm_id记录
             // 3. 删除 sys_perm 中 perm_type='role' and r_id = role_id 记录,即第1步中获取的 perm_id， 一一对应
             // 4. 删除 sys_user_role 中 该角色id的记录
@@ -269,7 +269,7 @@ class Role extends ResourceController
                 return $this->respondDeleted($response);
             } else {
                 $response = [
-                    "code" => 20000,
+                    "code" => 20403,
                     "type" => 'error',
                     "message" => '角色删除失败'
                 ];

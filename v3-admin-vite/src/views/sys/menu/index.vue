@@ -203,7 +203,7 @@ getMenuData()
       </div>
       <div class="table-wrapper">
         <el-table :data="menuData" row-key="title" border>
-          <el-table-column prop="title" label="菜单名称" align="center" />
+          <el-table-column prop="title" label="菜单名称" align="left" />
           <el-table-column prop="name" label="路由别名" align="center" />
           <el-table-column prop="path" label="路由" align="center">
             <template #default="scope">

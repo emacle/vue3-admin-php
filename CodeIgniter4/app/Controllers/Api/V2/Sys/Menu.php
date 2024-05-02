@@ -183,50 +183,46 @@ class Menu extends ResourceController
             return $this->respond($response);
         }
     }
-    // 删 注意级联删除？？？
+    // 删
     public function delete($id = null)
     {
-        $id = intval($id);
         // 参数检验/数据预处理
-        // 超级管理员角色不允许删除
-        if ($id == 1) {
-            $response = [
-                "code" => 20000,
-                "type" => 'error',
-                "message" => '超级管理员角色不允许删除'
-            ];
-            // todo: DELETE/UPDATE操作，返回响应体为空？403
-            return $this->respond($response, 200);
-        }
-
-        // 处理删除角色资源的逻辑
+        // 处理删除菜单资源的逻辑
         $hasMenu = $this->Medoodb->has('sys_menu', ['id' => $id]);
         if ($hasMenu) {
-            // 删除外键关联表 sys_menu_perm, sys_perm, sys_menu 次序有先后
-            // 1. 根据 该角色id及'menu' 在 sys_perm 表中查找 perm_id
-            // 2. 删除 sys_menu_perm 中perm_id记录
-            // 3. 删除 sys_perm 中 perm_type='menu' and r_id = menu_id 记录,即第1步中获取的 perm_id， 一一对应
-            // 4. 删除 sys_user_menu 中 该角色id的记录
-            // 5. 删除 sys_menu 中 id = menu_id 的记录
+            $hasChild = $this->Medoodb->has('sys_menu', ['pid' => $id]);
+            // 存在子节点
+            if ($hasChild) {
+                $response = [
+                    "code" => 20403,
+                    "type" => 'error',
+                    "message" => '存在子节点不能删除'
+                ];
+                return $this->respond($response);
+            }
 
+            // 删除外键关联表 sys_menu_perm, sys_perm, sys_menu 次序有先后
+            // 1. 根据 该menu id及 类型 'menu' 在 sys_perm 表中查找 perm_id
+            // 2. 删除 sys_role_perm 中perm_id记录
+            // 3. 删除 sys_perm 中 perm_type='menu' and r_id = menu_id 记录,即第1步中获取的 perm_id， 一一对应
+            // 4. 删除 sys_menu 中 id = menu_id 的记录
             $perm_id =  $this->Medoodb->get('sys_perm', 'id', ['perm_type' => 'menu', 'r_id' => $id]);
-            $this->Medoodb->delete('sys_menu_perm', ['perm_id' => $perm_id]);
+            $this->Medoodb->delete('sys_role_perm', ['perm_id' => $perm_id]);
             $this->Medoodb->delete('sys_perm', ['id' => $perm_id]);
-            $this->Medoodb->delete('sys_user_menu', ['menu_id' => $id]);
             $result = $this->Medoodb->delete('sys_menu', ['id' => $id]);
 
             if ($result->rowCount() > 0) {
                 $response = [
                     "code" => 20000,
                     "type" => 'success',
-                    "message" => '角色删除成功'
+                    "message" => '菜单删除成功'
                 ];
                 return $this->respondDeleted($response);
             } else {
                 $response = [
-                    "code" => 20000,
+                    "code" => 20403,
                     "type" => 'error',
-                    "message" => '角色删除失败'
+                    "message" => '菜单删除失败'
                 ];
                 return $this->respond($response);
             }
@@ -235,7 +231,7 @@ class Menu extends ResourceController
             $response = [
                 "code" => 20404,
                 "type" => 'error',
-                'message' => '角色（' . $id . '）不存在'
+                'message' => '菜单（' . $id . '）不存在'
             ];
             return $this->respond($response);
         }
