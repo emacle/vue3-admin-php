@@ -270,14 +270,12 @@ getMenuData()
       width="30%"
     >
       <el-form ref="formRef" :model="formData" :rules="formRules" label-width="100px" label-position="right">
-        {{ formData.id }}
         <el-form-item prop="type" label="菜单类型">
           <el-radio-group v-model="formData.type">
             <el-radio-button v-for="(type, index) in menuTypeList" :key="index" :value="index">{{
               type
             }}</el-radio-button>
           </el-radio-group>
-          {{ formData.type }}
         </el-form-item>
         <el-form-item prop="title" :label="menuTypeList[formData.type] + '名称'">
           <el-input v-model.trim="formData.title" placeholder="请输入" />
@@ -292,7 +290,6 @@ getMenuData()
             :render-after-expand="false"
             style="width: 240px"
           />
-          {{ formData.pid }}
         </el-form-item>
 
         <el-form-item prop="path" :label="formData.type !== 2 ? '路由' : '操作'">
