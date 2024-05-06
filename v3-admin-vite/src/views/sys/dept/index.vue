@@ -4,7 +4,6 @@ import { createDeptDataApi, deleteDeptDataApi, getDeptDataApi, updateDeptDataApi
 import { type CreateOrUpdateDeptRequestData, type GetDeptData, type GetDeptDataOptions } from "@/api/dept/types/dept"
 import { type FormInstance, type FormRules, ElMessage, ElMessageBox } from "element-plus"
 import { Search, Refresh, CirclePlus, Delete, Download, RefreshRight } from "@element-plus/icons-vue"
-import { usePagination } from "@/hooks/usePagination"
 // cloneDeep 将ref变量转换成human的格式
 import { cloneDeep } from "lodash-es"
 
@@ -14,33 +13,22 @@ defineOptions({
 })
 
 const loading = ref<boolean>(false)
-const { paginationData, handleCurrentChange, handleSizeChange } = usePagination()
 
 //#region 增
 const DEFAULT_FORM_DATA: CreateOrUpdateDeptRequestData = {
   id: undefined,
   pid: "",
   name: "",
-  path: "",
-  component: "",
-  type: 0,
-  title: "",
-  icon: "",
-  redirect: "",
-  hidden: 0,
-  status: 1,
-  condition: "",
-  listorder: 99
+  aliasname: "",
+  listorder: 99,
+  status: 1
 }
 const dialogVisible = ref<boolean>(false)
 const formRef = ref<FormInstance | null>(null)
 const formData = ref<CreateOrUpdateDeptRequestData>(cloneDeep(DEFAULT_FORM_DATA))
 const formRules: FormRules<CreateOrUpdateDeptRequestData> = {
-  title: [{ required: true, trigger: "blur", message: "请输入目录/部门/操作名称" }],
-  pid: [{ required: true, trigger: "blur", message: "请选择部门目录" }],
-  path: [{ required: true, trigger: "blur", message: "请输入路由或操作路径" }],
-  name: [{ required: true, trigger: "blur", message: "请输入路由组件名" }],
-  component: [{ required: true, trigger: "blur", message: "请输入组件路径" }]
+  name: [{ required: true, trigger: "blur", message: "请输入部门名" }],
+  pid: [{ required: true, trigger: "blur", message: "请选择上级机构" }]
 }
 const options = [
   {
@@ -79,7 +67,7 @@ const resetForm = () => {
 
 //#region 删
 const handleDelete = (row: GetDeptData) => {
-  ElMessageBox.confirm(`正在删除部门：${row.title}，确认删除？`, "提示", {
+  ElMessageBox.confirm(`正在删除部门：${row.name}，确认删除？`, "提示", {
     confirmButtonText: "确定",
     cancelButtonText: "取消",
     type: "warning"
@@ -105,12 +93,6 @@ const handleUpdate = (row: CreateOrUpdateDeptRequestData) => {
   if ("children" in clonedRow) {
     delete clonedRow.children
   }
-  if ("create_time" in clonedRow) {
-    delete clonedRow.create_time
-  }
-  if ("update_time" in clonedRow) {
-    delete clonedRow.update_time
-  }
   // 设置formData的值
   formData.value = clonedRow
 }
@@ -124,10 +106,7 @@ const searchData = reactive({
   name: "",
   status: ""
 })
-const deptTypeList = reactive(["目录", "部门", "操作"])
-
 const convertDeptData = (deptData: GetDeptData[]): any[] => {
-
   // 转换剩余的部门项 递归函数
   return deptData.map(({ id, name, children }) => ({
     value: id,
@@ -136,13 +115,13 @@ const convertDeptData = (deptData: GetDeptData[]): any[] => {
   }))
 }
 const topLevelDept = (convertedData: GetDeptData[]): any[] => {
-  console.log("topLevelDept", [
-    {
-      value: "0",
-      label: "顶级部门",
-      children: convertedData
-    }
-  ])
+  // console.log("topLevelDept", [
+  //   {
+  //     value: "0",
+  //     label: "顶级部门",
+  //     children: convertedData
+  //   }
+  // ])
   return [
     {
       value: 0,
@@ -154,7 +133,8 @@ const topLevelDept = (convertedData: GetDeptData[]): any[] => {
 const getDeptData = () => {
   loading.value = true
   getDeptDataApi({
-    name: searchData.name || undefined
+    name: searchData.name || undefined,
+    status: searchData.status || undefined
   })
     .then(({ data }) => {
       deptData.value = data.list
@@ -175,10 +155,6 @@ const resetSearch = () => {
   handleSearch()
 }
 //#endregion
-// 根据icon值返回对应的组件名称
-const getIconComponent = (icon: any) => {
-  return icon
-}
 
 // 在组件实例创建时立即获取数据
 getDeptData()
@@ -218,6 +194,7 @@ getDeptData()
       <div class="table-wrapper">
         <el-table :data="deptData" row-key="id">
           <el-table-column prop="name" label="部门名称" align="left" />
+          <el-table-column prop="id" label="ID" align="center" />
           <el-table-column prop="aliasname" label="别名" align="center" />
           <el-table-column prop="listorder" label="排序" align="center" />
           <el-table-column prop="status" label="状态" align="status">
@@ -243,15 +220,11 @@ getDeptData()
       width="30%"
     >
       <el-form ref="formRef" :model="formData" :rules="formRules" label-width="100px" label-position="right">
-        <el-form-item prop="type" label="部门类型">
-          <el-radio-group v-model="formData.type">
-            <el-radio-button v-for="(type, index) in deptTypeList" :key="index" :value="index">{{
-              type
-            }}</el-radio-button>
-          </el-radio-group>
+        <el-form-item prop="name" label="部门名称">
+          <el-input v-model.trim="formData.name" placeholder="请输入" />
         </el-form-item>
-        <el-form-item prop="title" :label="deptTypeList[formData.type] + '名称'">
-          <el-input v-model.trim="formData.title" placeholder="请输入" />
+        <el-form-item prop="aliasname" label="部门别名">
+          <el-input v-model.trim="formData.aliasname" placeholder="请输入" />
         </el-form-item>
         <el-form-item prop="pid" label="上级部门">
           <el-tree-select
@@ -264,45 +237,15 @@ getDeptData()
             style="width: 240px"
           />
         </el-form-item>
-
-        <el-form-item prop="path" :label="formData.type !== 2 ? '路由' : '操作'">
-          <el-tooltip class="box-item" effect="dark" content="" placement="right-end">
-            <template #content>
-              目录或部门：/sys, /sys/role <br />操作：/sys/user/post, <br />以小写 get,post,put,delete 结尾
-            </template>
-            <el-input
-              v-model.trim="formData.path"
-              :placeholder="deptTypeList[formData.type] + ', 如 /sys, /sys/dept/get'"
-            />
-          </el-tooltip>
-        </el-form-item>
-        <el-form-item prop="name" label="路由别名" v-if="formData.type !== 2">
-          <el-input v-model="formData.name" placeholder="@view component name 必须与该别名一致" />
-        </el-form-item>
-        <el-form-item prop="component" label="组件" v-if="formData.type == 1">
-          <el-input v-model="formData.component" placeholder="对应 @/views 目录, 例 sys/dept/index" />
-        </el-form-item>
-        <el-form-item prop="redirect" label="重定向URL" v-if="formData.type !== 2">
-          <el-input v-model="formData.redirect" placeholder="面包屑组件重定向,例 /sys/dept, 可留空" />
-        </el-form-item>
-        <el-form-item prop="icon" label="图标" v-if="formData.type !== 2">
-          <el-input v-model="formData.icon" placeholder="请输入">
-            <template #suffix>
-              <el-icon class="el-input__icon" v-if="formData.icon"
-                ><component :is="getIconComponent(formData.icon)"
-              /></el-icon>
-            </template>
-          </el-input>
-        </el-form-item>
         <el-form-item prop="listorder" label="排序">
           <el-input-number v-model="formData.listorder" :min="99" controls-position="right" size="large" />
         </el-form-item>
-        <!-- <el-form-item prop="status" label="状态">
+        <el-form-item prop="status" label="状态">
           <el-switch v-model="formData.status" :active-value="1" :inactive-value="0">
             <template #active>启用</template>
             <template #inactive>禁用</template>
           </el-switch>
-        </el-form-item> -->
+        </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>

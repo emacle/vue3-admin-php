@@ -21,23 +21,30 @@ class Dept extends ResourceController
     public function index()
     {
         // $this->request->getVar(); // 该方法首先尝试从 POST 数据中获取参数值,如果不存在,则尝试从 GET 参数中获取。
-        $title = $this->request->getVar('title');
-
-        if (!isset($title)) { // title参数为空
-
-
+        $name = $this->request->getVar('name');
+        $status = $this->request->getVar('status');
+        if (!isset($name) && !isset($status)) {
+            $sql = "SELECT id, pid, name, aliasname, listorder, status FROM sys_dept order by listorder asc";
         } else {
+            $statusSql = "";
+            if (isset($status)) {
+                $statusSql = "status = " . $status . " AND ";
+            }
+            // 该查询需要在 MySQL 8.0 或更高版本中运行,因为它使用了递归公用表表达式 (RCTE) 特性
+            $sql = "WITH RECURSIVE cte AS (
+                SELECT id, pid, name, aliasname, listorder, status
+                FROM sys_dept
+                WHERE $statusSql name LIKE '%" . $name . "%'
+                UNION ALL
+                SELECT d.id, d.pid, d.name, d.aliasname, d.listorder, d.status
+                FROM sys_dept d
+                INNER JOIN cte c ON d.id = c.pid
+              )
+              SELECT DISTINCT * FROM cte;";
         }
-
         // 执行查询
-        $DeptArr = $this->Medoodb->select(
-            "sys_dept",
-            "*",
-            [
-                "status" => 1,
-                "ORDER" => ["listorder" => "ASC"]
-            ]
-        );
+        $DeptArr = $this->Medoodb->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+
         $DeptTreeObj = new \BlueM\Tree(
             $DeptArr,
             ['rootId' => 0, 'id' => 'id', 'parent' => 'pid']
@@ -59,51 +66,40 @@ class Dept extends ResourceController
     {
         $parms = get_object_vars($this->request->getVar());
         // 参数检验/数据预处理
-        // 菜单类型为目录
-        if (!$parms['type']) {
-            $parms['component'] = 'Layout';
-        }
-        $hasDept = $this->Medoodb->has('sys_menu', ['path' => $parms['path']]);
-        if ($hasDept) {
+        // var_dump($parms);
+        // return;
+
+        $this->Medoodb->insert("sys_dept", $parms);
+        $dept_id = $this->Medoodb->id();
+        if (!$dept_id) {
             $response = [
                 "code" => 20403,
                 "type" => 'error',
-                'message' => '菜单路由（' . $parms['path'] . '）已存在，禁止添加'
+                "message" => '部门（' . $parms['name'] . '）新增失败'
             ];
             return $this->respond($response);
         }
 
-        $this->Medoodb->insert("sys_menu", $parms);
-        $menu_id = $this->Medoodb->id();
-        if (!$menu_id) {
-            $response = [
-                "code" => 20403,
-                "type" => 'error',
-                "message" => '菜单（' . $parms['title'] . '）新增失败'
-            ];
-            return $this->respond($response);
-        }
-
-        // 生成该菜单对应的权限: sys_perm, 权限类型为: menu, 生成唯一的 perm_id
-        $this->Medoodb->insert("sys_perm", ['perm_type' => 'menu', "r_id" => $menu_id]);
+        // 生成该部门对应的权限: sys_perm, 权限类型为: dept, 生成唯一的 perm_id
+        $this->Medoodb->insert("sys_perm", ['perm_type' => 'dept', "r_id" => $dept_id]);
         $perm_id = $this->Medoodb->id();
         if (!$perm_id) {
             $response = [
                 "code" => 20403,
                 "type" => 'error',
-                "message" => $this->request->getPath() . ' 生成该角色对应的权限: sys_perm, 失败...' .
-                    json_encode(['perm_type' => 'menu', "r_id" => $menu_id])
+                "message" => $this->request->getPath() . ' 生成该部门对应的权限: sys_perm, 失败...' .
+                    json_encode(['perm_type' => 'dept', "r_id" => $dept_id])
             ];
             return $this->respond($response);
         }
-        // 超级管理员角色自动拥有该权限 perm_id
+        // 超级管理员角色（1）自动拥有该权限 perm_id
         $this->Medoodb->insert("sys_role_perm", ["role_id" => 1, "perm_id" => $perm_id]);
         $role_perm_id = $this->Medoodb->id();
         if (!$role_perm_id) {
             $response = [
                 "code" => 20403,
                 "type" => 'error',
-                "message" => $this->request->getPath() . ' 超级管理员角色自动拥有该权限: perm_id, sys_role_perm, 失败...' .
+                "message" => $this->request->getPath() . ' 超级管理员角色自动拥有该部门权限: perm_id, sys_role_perm, 失败...' .
                     json_encode(["role_id" => 1, "perm_id" => $perm_id])
             ];
             return $this->respond($response);
@@ -112,7 +108,7 @@ class Dept extends ResourceController
         $response = [
             "code" => 20000,
             "type" => 'success',
-            "message" => '菜单（' . $parms['title'] . '）新增成功'
+            "message" => '部门（' . $parms['name'] . '）新增成功'
         ];
         return $this->respondCreated($response);
     }
@@ -128,30 +124,41 @@ class Dept extends ResourceController
         unset($parms['id']);
 
         // 参数检验/数据预处理
-        $hasDept = $this->Medoodb->has('sys_menu', ['id' => $id]);
+        $hasDept = $this->Medoodb->has('sys_dept', ['id' => $id]);
         if (!$hasDept) {
             $response = [
                 "code" => 20404,
                 "type" => 'error',
-                'message' => '菜单（' . $parms['title'] . '）数据表sys_menu中不存在'
+                'message' => '部门（' . $parms['name'] . '）数据表sys_dept中不存在'
             ];
             return $this->respond($response);
         }
 
-        $result = $this->Medoodb->update('sys_menu', $parms, ["id" => $id]);
+        $hasChild = $this->Medoodb->has('sys_dept', ['pid' => $id]);
+        // 存在子节点 则禁用状态 则无法禁用
+        if ($hasChild && $parms['status'] == 0) {
+            $response = [
+                "code" => 20403,
+                "type" => 'error',
+                "message" => '存在子部门不能禁用'
+            ];
+            return $this->respond($response);
+        }
+
+        $result = $this->Medoodb->update('sys_dept', $parms, ["id" => $id]);
 
         if ($result->rowCount() > 0) {
             $response = [
                 "code" => 20000,
                 "type" => 'success',
-                "message" => '菜单（' . $parms['title'] . '）更新成功'
+                "message" => '部门（' . $parms['name'] . '）更新成功'
             ];
             return $this->respond($response);
         } else {
             $response = [
                 "code" => 20204,
                 "type" => 'info',
-                "message" => '菜单数据未更新'
+                "message" => '部门数据未更新'
             ];
             // 对于 PUT 请求,如果数据未发生变化,遵循 HTTP 规范的做法是返回 204 No Content 状态码
             // 返回204时，与前端service.ts约定冲突
@@ -162,58 +169,57 @@ class Dept extends ResourceController
     public function delete($id = null)
     {
         // 参数检验/数据预处理
-        // 处理删除菜单资源的逻辑
-        $hasDept = $this->Medoodb->has('sys_menu', ['id' => $id]);
+        // 处理删除部门资源的逻辑
+        $hasDept = $this->Medoodb->has('sys_dept', ['id' => $id]);
         if ($hasDept) {
-            $hasChild = $this->Medoodb->has('sys_menu', ['pid' => $id]);
+            $hasChild = $this->Medoodb->has('sys_dept', ['pid' => $id]);
             // 存在子节点
             if ($hasChild) {
                 $response = [
                     "code" => 20403,
                     "type" => 'error',
-                    "message" => '存在子节点不能删除'
+                    "message" => '存在子部门不能删除'
                 ];
                 return $this->respond($response);
             }
 
-            // 删除外键关联表 sys_menu_perm, sys_perm, sys_menu 次序有先后
-            // 1. 根据 该menu id及 类型 'menu' 在 sys_perm 表中查找 perm_id
+            // 删除外键关联表 sys_role_perm, sys_perm, sys_dept 次序有先后
+            // 1. 根据 该dept id及 类型 'dept' 在 sys_perm 表中查找 perm_id
             // 2. 删除 sys_role_perm 中perm_id记录
             // 3. 删除 sys_perm 中 perm_type='menu' and r_id = menu_id 记录,即第1步中获取的 perm_id， 一一对应
-            // 4. 删除 sys_menu 中 id = menu_id 的记录
-            $perm_id =  $this->Medoodb->get('sys_perm', 'id', ['perm_type' => 'menu', 'r_id' => $id]);
+            // 4. 删除 sys_dept 中 id = menu_id 的记录
+            $perm_id =  $this->Medoodb->get('sys_perm', 'id', ['perm_type' => 'dept', 'r_id' => $id]);
             $this->Medoodb->delete('sys_role_perm', ['perm_id' => $perm_id]);
             $this->Medoodb->delete('sys_perm', ['id' => $perm_id]);
-            $result = $this->Medoodb->delete('sys_menu', ['id' => $id]);
+            $result = $this->Medoodb->delete('sys_dept', ['id' => $id]);
 
             if ($result->rowCount() > 0) {
                 $response = [
                     "code" => 20000,
                     "type" => 'success',
-                    "message" => '菜单删除成功'
+                    "message" => '部门删除成功'
                 ];
                 return $this->respondDeleted($response);
             } else {
                 $response = [
                     "code" => 20403,
                     "type" => 'error',
-                    "message" => '菜单删除失败'
+                    "message" => '部门删除失败'
                 ];
                 return $this->respond($response);
             }
         } else {
-            // return $this->failNotFound('No employee found');
             $response = [
                 "code" => 20404,
                 "type" => 'error',
-                'message' => '菜单（' . $id . '）不存在'
+                'message' => '部门（' . $id . '）不存在'
             ];
             return $this->respond($response);
         }
     }
 
     /**
-     * 遍历 BlueM\Tree 树对象，将数据格式化成 vue-router 结构的路由树或菜单树
+     * 遍历 BlueM\Tree 树对象，将数据格式化成 vue-router 结构的路由树或部门树
      */
     private function _dumpBlueMTreeNodes($node)
     {
