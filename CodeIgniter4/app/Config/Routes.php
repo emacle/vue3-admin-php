@@ -28,6 +28,13 @@ $routes->group('api/v2/sys', ['namespace' => 'App\Controllers\Api\V2\Sys'], func
 
     $routes->get('role', 'Role::index');
     $routes->post('role', 'Role::create');
+    $routes->get('role/allmenus', 'Role::allmenus');
+    $routes->get('role/allroles', 'Role::allroles');
+    $routes->get('role/alldepts', 'Role::alldepts');
+    $routes->get('role/olemenus', 'Role::rolemenus');
+    $routes->get('role/roleroles', 'Role::roleroles');
+    $routes->get('role/roledepts', 'Role::roledepts');
+
     $routes->put('role/(.*)', 'Role::update/$1');
     $routes->delete('role/(.*)', 'Role::delete/$1');
     $routes->options('role', 'Role::options'); // $routes->resource 不会创建options请求，但是cors里必须要有options的请求接收

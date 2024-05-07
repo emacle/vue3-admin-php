@@ -285,4 +285,112 @@ class Role extends ResourceController
             return $this->respond($response);
         }
     }
+
+    // 获取所有菜单并加入对应的权限id 不需权限验证
+    public function allmenus()
+    {
+        // $sql = "SELECT
+        //             p.id perm_id,
+        //             m.*
+        //         FROM
+        //             sys_menu m,
+        //             sys_perm p
+        //         WHERE
+        //             p.perm_type = 'menu'
+        //         AND p.r_id = m.id
+        //         ORDER BY
+        //             m.listorder";
+        // $MenuArr = $this->Medoodb->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+        $MenuArr = $this->Medoodb->select(
+            "sys_menu(m)",
+            [
+                "[><]sys_perm(p)" => [
+                    "id" => "r_id",
+                    "AND" => [
+                        "perm_type" => "menu"
+                    ]
+                ]
+            ],
+            [
+                "p.id(perm_id)",
+                "m.id",
+                "m.pid",
+                "m.title"
+            ],
+            [
+                "ORDER" => [
+                    "m.listorder" => "ASC"
+                ]
+            ],
+            [
+                "p.id(perm_id)",
+                "m.id",
+                "m.pid",
+                "m.title",
+                "m.type",
+                "m.path",
+                "m.icon"
+            ],
+            [
+                "ORDER" => [
+                    "m.listorder" => "ASC"
+                ]
+            ]
+        );
+        // $sqlCmd = $this->Medoodb->log()[0];
+        // var_dump($sqlCmd);
+        // var_dump($MenuArr);
+        // return;
+        $MenuTreeObj = new \BlueM\Tree(
+            $MenuArr,
+            ['rootId' => 0, 'id' => 'id', 'parent' => 'pid']
+        );
+        $MenuTree = $this->_dumpBlueMTreeNodes($MenuTreeObj->getRootNodes());
+
+        $response = [
+            "code" => 20000,
+            "data" => $MenuTree,
+        ];
+        return $this->respond($response);
+    }
+    public function allroles()
+    {
+    }
+    public function alldepts()
+    {
+    }
+    public function rolemenus()
+    {
+        // $this->request->getVar('id')
+    }
+    public function roleroles()
+    {
+        // $this->request->getVar('id')
+    }
+    public function roledepts()
+    {
+        // $this->request->getVar('id')
+    }
+
+    /**
+     * 遍历 BlueM\Tree 树对象，将数据格式化成 vue-router 结构的路由树或菜单树
+     */
+    private function _dumpBlueMTreeNodes($node)
+    {
+        $tree = array();
+
+        foreach ($node as $k => $v) {
+            $valArr = $v->toArray(); // 获取本节点属性数组
+            // BlueM\Tree 对象 多余去除
+            unset($valArr['parent']);
+
+            if ($v->hasChildren()) { // 存在 children 则构造 children key，否则不添加
+                $valArr['children'] = $this->_dumpBlueMTreeNodes($v->getChildren());
+            }
+
+            $tree[] = $valArr;     // 循环数组添加元素 属于同一层级
+        }
+
+        return $tree;
+    }
 }

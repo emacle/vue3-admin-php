@@ -35,3 +35,22 @@ export function getRoleDataApi(params: Role.GetRoleRequestData) {
     params
   })
 }
+
+export function getAllMenusApi() {
+  return request<Role.GetAllMenusResponseData>({
+    url: "sys/role/allmenus",
+    method: "get"
+  })
+}
+export function getAllRolesApi() {
+  return request<Role.GetRoleResponseData>({
+    url: "sys/role/allroles",
+    method: "get"
+  })
+}
+export function getAllDeptsApi() {
+  return request<Role.GetRoleResponseData>({
+    url: "sys/role/alldepts",
+    method: "get"
+  })
+}

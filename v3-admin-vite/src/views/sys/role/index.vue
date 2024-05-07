@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { reactive, ref, watch } from "vue"
-import { createRoleDataApi, deleteRoleDataApi, getRoleDataApi, updateRoleDataApi } from "@/api/role"
+import { createRoleDataApi, deleteRoleDataApi, getRoleDataApi, updateRoleDataApi, getAllMenusApi } from "@/api/role"
 import { type CreateOrUpdateRoleRequestData, type GetRoleData } from "@/api/role/types/role"
 import { type FormInstance, type FormRules, ElMessage, ElMessageBox } from "element-plus"
 import { Search, Refresh, CirclePlus, Delete, Download, RefreshRight } from "@element-plus/icons-vue"
@@ -169,6 +169,24 @@ const handleRoleSelectChange = (val: GetRoleData | any) => {
   selectRole.value = val
   console.log("selectRole.value", selectRole.value, selectRole.value.name)
 }
+
+const getAllMenusData = () => {
+  loading.value = true
+  getAllMenusApi()
+    .then(({ data }) => {
+      console.log("getAllMenusApi...", data)
+      // menuData.value = data.list
+    })
+    .catch(() => {
+      // menuData.value = []
+    })
+    .finally(() => {
+      loading.value = false
+    })
+}
+
+// 在组件实例创建时立即获取数据
+getAllMenusData()
 </script>
 
 <template>

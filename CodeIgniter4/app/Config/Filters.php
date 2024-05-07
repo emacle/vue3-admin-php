@@ -87,6 +87,19 @@ class Filters extends BaseFilters
                 'api/v2/sys/user/refreshtoken',
                 'api/v2/sys/user/githubauth',
                 'api/v2/sys/user/giteeauth',
+
+                'api/v2/sys/role/allmenus',
+                'api/v2/sys/role/alldepts',
+                'api/v2/sys/role/alldepts',
+                'api/v2/sys/role/rolemenus',
+                'api/v2/sys/role/roleroles',
+                'api/v2/sys/role/roledepts',
+                // '/sys/role/allmenus/get',
+                // '/sys/role/alldepts/get',
+                // '/sys/role/rolemenu/post',
+                // '/sys/role/rolerole/post',
+                // '/sys/role/roledept/post',
+                // '/sys/menu/treeoptions/get',
             ]], // route / 不应用该filter
         ],
         'after' => [
