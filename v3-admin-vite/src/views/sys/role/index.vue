@@ -104,7 +104,7 @@ const getRoleData = () => {
     size: paginationData.pageSize,
     name: searchData.name || undefined,
     status: searchData.status || undefined,
-    fields: "id,name,remark,status,listorder", // 与后端一致 前端指定获取的字段
+    fields: "id,name,remark,scope,status,listorder", // 与后端一致 前端指定获取的字段
     query: "~name,status", // 前端指定模糊查询的字段为name,精确查询字段为status
     sort: "+listorder" // 前面指定按listorder升序排列
   })
@@ -130,6 +130,45 @@ const resetSearch = () => {
 
 /** 监听分页参数的变化 */
 watch([() => paginationData.currentPage, () => paginationData.pageSize], getRoleData, { immediate: true })
+
+// 角色授权
+import type { TabsPaneContext } from "element-plus"
+
+const activeName = ref("menu")
+
+const handleClick = (tab: TabsPaneContext, event: Event) => {
+  console.log(tab, event)
+}
+const selectRole = ref<GetRoleData>({
+  id: "",
+  name: "",
+  pid: "",
+  remark: "",
+  scope: 0,
+  status: 0,
+  listorder: 0
+})
+const menuData = reactive([])
+const menuLoading = ref<boolean>(false)
+
+const handleRoleSelectChange = (val: GetRoleData | any) => {
+  if (val === null) {
+    selectRole.value = {
+      id: "",
+      name: "",
+      pid: "",
+      remark: "",
+      scope: 0,
+      status: 0,
+      listorder: 0
+    }
+    // this.dataPermScope = ""
+    // this.checkJianlian = false // 保存权限提交后重置此值
+    return
+  }
+  selectRole.value = val
+  console.log("selectRole.value", selectRole.value, selectRole.value.name)
+}
 </script>
 
 <template>
@@ -168,8 +207,8 @@ watch([() => paginationData.currentPage, () => paginationData.pageSize], getRole
         </div>
       </div>
       <div class="table-wrapper">
-        <el-table :data="roleData">
-          <el-table-column type="selection" width="50" align="center" />
+        <el-table :data="roleData" highlight-current-row @current-change="handleRoleSelectChange">
+          <!-- <el-table-column type="selection" width="50" align="center" /> -->
           <el-table-column prop="id" label="ID" align="center" />
           <el-table-column prop="name" label="角色名称" align="center" />
           <el-table-column prop="remark" label="说明" align="center" />
@@ -209,6 +248,25 @@ watch([() => paginationData.currentPage, () => paginationData.pageSize], getRole
           @size-change="handleSizeChange"
           @current-change="handleCurrentChange"
         />
+      </div>
+    </el-card>
+
+    <el-card v-loading="loading" class="auth-wrapper" shadow="never">
+      <div class="table-wrapper">
+        <div class="menu-header">
+          <span>
+            <h2>
+              角色授权
+              <span v-if="selectRole.id != null" class="menu-role">: {{ selectRole.name }}</span>
+            </h2>
+          </span>
+        </div>
+        <el-tabs v-model="activeName" type="border-card" class="demo-tabs" @tab-click="handleClick">
+          <el-tab-pane label="菜单类" name="menu">菜单类</el-tab-pane>
+          <el-tab-pane label="角色类" name="role">角色类</el-tab-pane>
+          <el-tab-pane label="数据权限" name="dept">数据权限</el-tab-pane>
+          <el-tab-pane label="文件类" name="file">文件类</el-tab-pane>
+        </el-tabs>
       </div>
     </el-card>
     <!-- 新增/修改 -->
@@ -253,6 +311,13 @@ watch([() => paginationData.currentPage, () => paginationData.pageSize], getRole
   }
 }
 
+.auth-wrapper {
+  margin-top: 20px;
+  :deep(.el-card__body) {
+    padding-top: 2px;
+  }
+}
+
 .toolbar-wrapper {
   display: flex;
   justify-content: space-between;
@@ -271,5 +336,16 @@ watch([() => paginationData.currentPage, () => paginationData.pageSize], getRole
 .pager-wrapper {
   display: flex;
   justify-content: flex-end;
+}
+
+.demo-tabs > .el-tabs__content {
+  padding: 32px;
+  color: #6b778c;
+  font-size: 32px;
+  font-weight: 600;
+}
+
+.menu-role {
+  color: rgb(211, 66, 22);
 }
 </style>

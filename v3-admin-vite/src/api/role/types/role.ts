@@ -2,6 +2,7 @@ export interface CreateOrUpdateRoleRequestData {
   id?: string
   name: string
   remark?: string
+  scope?: number
   listorder: number
   status: number
 }
@@ -27,6 +28,7 @@ export interface GetRoleData {
   name: string
   pid: string
   remark: string
+  scope: number
   status: number
   listorder: number
 }
