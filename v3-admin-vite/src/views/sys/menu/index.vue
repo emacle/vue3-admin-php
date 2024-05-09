@@ -172,7 +172,10 @@ const getIconComponent = (icon: any) => {
 }
 
 // 在组件实例创建时立即获取数据
-getMenuData()
+import { onMounted } from "vue"
+onMounted(() => {
+  getMenuData()
+})
 </script>
 
 <template>
