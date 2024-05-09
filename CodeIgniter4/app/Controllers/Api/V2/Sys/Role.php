@@ -315,17 +315,6 @@ class Role extends ResourceController
                 "p.id(perm_id)",
                 "m.id",
                 "m.pid",
-                "m.title"
-            ],
-            [
-                "ORDER" => [
-                    "m.listorder" => "ASC"
-                ]
-            ],
-            [
-                "p.id(perm_id)",
-                "m.id",
-                "m.pid",
                 "m.title",
                 "m.type",
                 "m.path",
@@ -349,7 +338,9 @@ class Role extends ResourceController
 
         $response = [
             "code" => 20000,
-            "data" => $MenuTree,
+            "data" => [
+                "list" => $MenuTree
+            ],
         ];
         return $this->respond($response);
     }

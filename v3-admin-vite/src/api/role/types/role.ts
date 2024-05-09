@@ -39,10 +39,13 @@ export type GetRoleResponseData = ApiResponseData<{
 }>
 
 export interface GetAllMenusData {
-  perm_id: string
-  id: string
-  pid: string
+  perm_id: number
+  id: number
+  pid: number
+  type: number
   title: string
+  icon: string
+  path: string
   children: GetAllMenusData[]
 }
 export type GetAllMenusResponseData = ApiResponseData<{

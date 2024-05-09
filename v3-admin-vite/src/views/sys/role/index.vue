@@ -1,7 +1,7 @@
 <script lang="ts" setup>
-import { reactive, ref, watch } from "vue"
+import { reactive, ref, watch, onMounted } from "vue"
 import { createRoleDataApi, deleteRoleDataApi, getRoleDataApi, updateRoleDataApi, getAllMenusApi } from "@/api/role"
-import { type CreateOrUpdateRoleRequestData, type GetRoleData } from "@/api/role/types/role"
+import { type CreateOrUpdateRoleRequestData, type GetRoleData, type GetAllMenusData } from "@/api/role/types/role"
 import { type FormInstance, type FormRules, ElMessage, ElMessageBox } from "element-plus"
 import { Search, Refresh, CirclePlus, Delete, Download, RefreshRight } from "@element-plus/icons-vue"
 import { usePagination } from "@/hooks/usePagination"
@@ -148,8 +148,13 @@ const selectRole = ref<GetRoleData>({
   status: 0,
   listorder: 0
 })
-const menuData = reactive([])
+const menuData = ref<GetAllMenusData[]>([])
 const menuLoading = ref<boolean>(false)
+
+// 根据icon值返回对应的组件名称
+const getIconComponent = (icon: string) => {
+  return icon
+}
 
 const handleRoleSelectChange = (val: GetRoleData | any) => {
   if (val === null) {
@@ -171,22 +176,24 @@ const handleRoleSelectChange = (val: GetRoleData | any) => {
 }
 
 const getAllMenusData = () => {
-  loading.value = true
+  menuLoading.value = true
   getAllMenusApi()
     .then(({ data }) => {
       console.log("getAllMenusApi...", data)
-      // menuData.value = data.list
+      menuData.value = data.list
     })
     .catch(() => {
       // menuData.value = []
     })
     .finally(() => {
-      loading.value = false
+      menuLoading.value = false
     })
 }
 
 // 在组件实例创建时立即获取数据
-getAllMenusData()
+onMounted(() => {
+  getAllMenusData()
+})
 </script>
 
 <template>
@@ -268,8 +275,7 @@ getAllMenusData()
         />
       </div>
     </el-card>
-
-    <el-card v-loading="loading" class="auth-wrapper" shadow="never">
+    <el-card class="auth-wrapper" shadow="never">
       <div class="table-wrapper">
         <div class="menu-header">
           <span>
@@ -279,8 +285,48 @@ getAllMenusData()
             </h2>
           </span>
         </div>
-        <el-tabs v-model="activeName" type="border-card" class="demo-tabs" @tab-click="handleClick">
-          <el-tab-pane label="菜单类" name="menu">菜单类</el-tab-pane>
+        <el-tabs v-model="activeName" type="card" class="demo-tabs" @tab-click="handleClick">
+          <el-tab-pane label="菜单类" name="menu">
+            <!-- <el-tree
+              ref="menuTree"
+              v-loading="menuLoading"
+              :data="menuData"
+              :props="defaultProps"
+              :render-content="renderContent"
+              :check-strictly="true"
+              show-checkbox
+              node-key="id"
+              size="mini"
+              style="width: 100%; pading-top: 20px"
+              element-loading-text="拼命加载中"
+              @check-change="handleMenuCheckChange"
+            /> -->
+            <!-- <el-tree
+              ref="menuTree"
+              v-loading="menuLoading"
+              element-loading-text="拼命加载中"
+              :data="menuData"
+              show-checkbox
+              node-key="id"
+              style="width: 100%; pading-top: 20px"
+              :expand-on-click-node="false"
+            >
+              <template #default="{ data }">
+                <span class="custom-tree-node">
+                  <span>
+                    <el-icon v-if="data.icon"><component :is="getIconComponent(data.icon)" /></el-icon>
+                    {{ data.title }}
+                  </span>
+                  <span>
+                    <el-tag :type="data.type === 0 ? 'primary' : data.type === 1 ? 'success' : 'warning'">
+                      {{ data.type === 0 ? "目录" : data.type === 1 ? "菜单" : "操作" }}
+                    </el-tag>
+                  </span>
+                  <span>{{ data.path }}</span>
+                </span>
+              </template>
+            </el-tree> -->
+          </el-tab-pane>
           <el-tab-pane label="角色类" name="role">角色类</el-tab-pane>
           <el-tab-pane label="数据权限" name="dept">数据权限</el-tab-pane>
           <el-tab-pane label="文件类" name="file">文件类</el-tab-pane>
@@ -365,5 +411,14 @@ getAllMenusData()
 
 .menu-role {
   color: rgb(211, 66, 22);
+}
+
+.custom-tree-node {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 14px;
+  padding-right: 8px;
 }
 </style>
