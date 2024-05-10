@@ -42,6 +42,22 @@ export function getAllMenusApi() {
     method: "get"
   })
 }
+export function getRoleMenusApi(params: { id: string }) {
+  return request<Role.GetAllMenusResponseData>({
+    url: "sys/role/rolemenus",
+    method: "get",
+    params
+  })
+}
+
+export function saveRolePermsApi(roleId: string, rolePerms: { role_id: string; perm_id: any }[], roleScope: string) {
+  return request({
+    url: "sys/role/saveroleperm",
+    method: "post",
+    data: { roleId, rolePerms, roleScope }
+  })
+}
+
 export function getAllRolesApi() {
   return request<Role.GetRoleResponseData>({
     url: "sys/role/allroles",

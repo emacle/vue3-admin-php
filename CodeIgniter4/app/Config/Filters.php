@@ -94,6 +94,7 @@ class Filters extends BaseFilters
                 'api/v2/sys/role/rolemenus',
                 'api/v2/sys/role/roleroles',
                 'api/v2/sys/role/roledepts',
+                'api/v2/sys/role/saveroleperm',
                 // '/sys/role/allmenus/get',
                 // '/sys/role/alldepts/get',
                 // '/sys/role/rolemenu/post',

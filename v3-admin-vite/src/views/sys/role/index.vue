@@ -1,6 +1,14 @@
 <script lang="ts" setup>
 import { reactive, ref, watch, onMounted } from "vue"
-import { createRoleDataApi, deleteRoleDataApi, getRoleDataApi, updateRoleDataApi, getAllMenusApi } from "@/api/role"
+import {
+  createRoleDataApi,
+  deleteRoleDataApi,
+  getRoleDataApi,
+  updateRoleDataApi,
+  getAllMenusApi,
+  getRoleMenusApi,
+  saveRolePermsApi
+} from "@/api/role"
 import { type CreateOrUpdateRoleRequestData, type GetRoleData, type GetAllMenusData } from "@/api/role/types/role"
 import { type FormInstance, type FormRules, ElMessage, ElMessageBox } from "element-plus"
 import { Search, Refresh, CirclePlus, Delete, Download, RefreshRight } from "@element-plus/icons-vue"
@@ -135,6 +143,7 @@ watch([() => paginationData.currentPage, () => paginationData.pageSize], getRole
 import type { TabsPaneContext } from "element-plus"
 
 const activeName = ref("menu")
+const btnsize = ref<"large" | "default" | "small">("small")
 
 const handleClick = (tab: TabsPaneContext, event: Event) => {
   console.log(tab, event)
@@ -142,7 +151,6 @@ const handleClick = (tab: TabsPaneContext, event: Event) => {
 const selectRole = ref<GetRoleData>({
   id: "",
   name: "",
-  pid: "",
   remark: "",
   scope: 0,
   status: 0,
@@ -150,6 +158,10 @@ const selectRole = ref<GetRoleData>({
 })
 const menuData = ref<GetAllMenusData[]>([])
 const menuLoading = ref<boolean>(false)
+const authLoading = ref<boolean>(false)
+const currentRoleMenus = ref<any>([]) // 服务端获取当前角色的菜单类权限
+const menuTree = ref<any>(null) // 确保menuTree被正确引用
+const checkAll = ref<boolean>(false)
 
 // 根据icon值返回对应的组件名称
 const getIconComponent = (icon: string) => {
@@ -161,7 +173,6 @@ const handleRoleSelectChange = (val: GetRoleData | any) => {
     selectRole.value = {
       id: "",
       name: "",
-      pid: "",
       remark: "",
       scope: 0,
       status: 0,
@@ -172,18 +183,120 @@ const handleRoleSelectChange = (val: GetRoleData | any) => {
     return
   }
   selectRole.value = val
-  console.log("selectRole.value", selectRole.value, selectRole.value.name)
+  getRoleMenusData({ id: selectRole.value.id })
 }
 
+// 树节点选择监听
+const handleMenuCheckChange = (data: any, check: any) => {
+  if (check) {
+    // 节点选中时同步选中父节点
+    const parentId = data.pid
+    menuTree.value.setChecked(parentId, true, false)
+  } else {
+    // 节点取消选中时同步取消选中子节点
+    if (data.children != null) {
+      data.children.forEach((element: { id: any }) => {
+        menuTree.value.setChecked(element.id, false, false)
+      })
+    }
+  }
+}
+const handleCheckAll = () => {
+  if (checkAll.value) {
+    const allMenus: any = []
+    checkAllMenu(menuData.value, allMenus)
+    menuTree.value.setCheckedNodes(allMenus)
+  } else {
+    menuTree.value.setCheckedNodes([])
+  }
+}
+const checkAllMenu = (menuData: any[], allMenus: any[]) => {
+  menuData.forEach((menu) => {
+    allMenus.push(menu)
+    if (menu.children) {
+      checkAllMenu(menu.children, allMenus)
+    }
+  })
+}
+const submitAuthForm = () => {
+  const roleId = selectRole.value.id
+
+  // 获取选中的菜单类权限
+  authLoading.value = true // 设置加载状态为 true
+  const rolePerms: { role_id: string; perm_id: any }[] = []
+  const checkedNodes = menuTree.value.getCheckedNodes(false, true)
+  checkedNodes.forEach((node: { perm_id: any }) => {
+    rolePerms.push({ role_id: roleId, perm_id: node.perm_id })
+  })
+  console.log(rolePerms)
+  // [
+  //     {
+  //         "role_id": 2,
+  //         "perm_id": 2
+  //     },
+  //     {
+  //         "role_id": 2,
+  //         "perm_id": 5
+  //     }
+  // ]
+
+  // // 获取选中的角色类权限
+  // const roleSelections = roleTable.value.store.states.selection
+  // roleSelections.forEach((selection) => {
+  //   rolePerms.push({ role_id: roleId, perm_id: selection.perm_id })
+  // })
+
+  // // 获取选中的部门数据权限
+  // if (dataPermScope.value === "4") {
+  //   const checkedDeptNodes = deptTree.value.getCheckedNodes(false, true)
+  //   checkedDeptNodes.forEach((node) => {
+  //     rolePerms.push({ role_id: roleId, perm_id: node.perm_id })
+  //   })
+  // }
+
+  const roleScope: string = "4"
+  saveRolePermsApi(roleId, rolePerms, roleScope)
+    .then((res: any) => {
+      // console.log('saveRolePerms...', res)
+      ElMessage({ message: res.message, type: res.type })
+      getRoleData()
+    })
+    .catch((err) => {
+      console.log(err)
+    })
+    .finally(() => {
+      authLoading.value = false
+    })
+}
+
+const getRoleMenusData = (params: { id: string }) => {
+  menuLoading.value = true
+  getRoleMenusApi(params)
+    .then(({ data }) => {
+      currentRoleMenus.value = data.list
+      // console.log("getRoleMenusApi...", data, cloneDeep(currentRoleMenus.value))
+      // console.log(cloneDeep(menuTree.value))
+      if (menuTree.value) {
+        // 确保menuTree已被赋值
+        menuTree.value.setCheckedNodes(currentRoleMenus.value) // 使用setCheckedNodes设置选中项
+      }
+    })
+    .catch(() => {
+      currentRoleMenus.value = []
+    })
+    .finally(() => {
+      menuLoading.value = false
+    })
+}
 const getAllMenusData = () => {
   menuLoading.value = true
   getAllMenusApi()
     .then(({ data }) => {
-      console.log("getAllMenusApi...", data)
+      // console.log("getAllMenusApi...", data)
       menuData.value = data.list
     })
     .catch(() => {
-      // menuData.value = []
+      menuData.value = []
     })
     .finally(() => {
       menuLoading.value = false
@@ -281,35 +394,22 @@ onMounted(() => {
           <span>
             <h2>
               角色授权
-              <span v-if="selectRole.id != null" class="menu-role">: {{ selectRole.name }}</span>
+              <span v-if="selectRole.id !== ''" class="menu-role">: {{ selectRole.name }}</span>
             </h2>
           </span>
         </div>
         <el-tabs v-model="activeName" type="card" class="demo-tabs" @tab-click="handleClick">
           <el-tab-pane label="菜单类" name="menu">
-            <!-- <el-tree
+            <el-tree
               ref="menuTree"
               v-loading="menuLoading"
+              element-loading-text="拼命加载中"
               :data="menuData"
-              :props="defaultProps"
-              :render-content="renderContent"
               :check-strictly="true"
               show-checkbox
               node-key="id"
-              size="mini"
-              style="width: 100%; pading-top: 20px"
-              element-loading-text="拼命加载中"
+              style="width: 100%; padding-top: 20px"
               @check-change="handleMenuCheckChange"
-            /> -->
-            <!-- <el-tree
-              ref="menuTree"
-              v-loading="menuLoading"
-              element-loading-text="拼命加载中"
-              :data="menuData"
-              show-checkbox
-              node-key="id"
-              style="width: 100%; pading-top: 20px"
-              :expand-on-click-node="false"
             >
               <template #default="{ data }">
                 <span class="custom-tree-node">
@@ -322,14 +422,44 @@ onMounted(() => {
                       {{ data.type === 0 ? "目录" : data.type === 1 ? "菜单" : "操作" }}
                     </el-tag>
                   </span>
-                  <span>{{ data.path }}</span>
+                  <el-tag>{{ data.path }}</el-tag>
                 </span>
               </template>
-            </el-tree> -->
+            </el-tree>
           </el-tab-pane>
           <el-tab-pane label="角色类" name="role">角色类</el-tab-pane>
           <el-tab-pane label="数据权限" name="dept">数据权限</el-tab-pane>
           <el-tab-pane label="文件类" name="file">文件类</el-tab-pane>
+          <div style="float: left; padding-left: 24px; padding-top: 12px; padding-bottom: 4px">
+            <el-checkbox
+              v-if="activeName === 'menu'"
+              v-model="checkAll"
+              :disabled="selectRole.id === ''"
+              @change="handleCheckAll"
+            >
+              <b>全选</b>
+            </el-checkbox>
+          </div>
+          <div style="float: right; padding-right: 15px; padding-top: 15px; padding-bottom: 4px">
+            <!-- <el-button
+              v-perm="['/sys/role/put']"
+              v-waves
+              :disabled="selectRole.id === ''"
+              :size="btnsize"
+              type="primary"
+              @click="resetSelection"
+              >重置</el-button
+            > -->
+            <el-button
+              v-perm="['/sys/role/saveroleperm/post']"
+              :loading="authLoading"
+              :disabled="selectRole.id == ''"
+              :size="btnsize"
+              type="primary"
+              @click="submitAuthForm"
+              >提交</el-button
+            >
+          </div>
         </el-tabs>
       </div>
     </el-card>

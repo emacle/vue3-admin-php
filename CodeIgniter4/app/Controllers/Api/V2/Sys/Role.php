@@ -344,16 +344,66 @@ class Role extends ResourceController
         ];
         return $this->respond($response);
     }
+    // 获取该角色并加入对应的权限id 不需权限验证
+    public function rolemenus()
+    {
+        $RoleId = $this->request->getVar('id');
+        $sql = "SELECT
+                    p.id perm_id,
+                    m.*
+                FROM
+                    sys_menu m,
+                    sys_perm p,
+                    sys_role_perm rp
+                WHERE
+                    rp.perm_id = p.id
+                AND p.perm_type = 'menu'
+                AND p.r_id = m.id
+                AND rp.role_id = " . $RoleId . "
+                ORDER BY
+                    m.listorder";
+        $RoleMenusArr = $this->Medoodb->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+        $response = [
+            "code" => 20000,
+            "data" => [
+                "list" => $RoleMenusArr
+            ],
+        ];
+        return $this->respond($response);
+    }
+    public function saveroleperm()
+    {
+        $parms = get_object_vars($this->request->getVar());
+        $id = $parms['roleId'];
+        // 超级管理员角色不允许修改
+        if ($parms['roleId'] == 1) {
+            $response = [
+                "code" => 20000,
+                "type" => 'error',
+                "message" =>  '超级管理员角色（' . $id . '）不允许修改'
+            ];
+            return $this->respond($response, 200);
+        }
+
+        var_dump($parms);
+        return;
+        $RoleMenusArr = $this->Medoodb->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+        $response = [
+            "code" => 20000,
+            "data" => [
+                "list" => $RoleMenusArr
+            ],
+        ];
+        return $this->respond($response);
+    }
+
     public function allroles()
     {
     }
     public function alldepts()
     {
     }
-    public function rolemenus()
-    {
-        // $this->request->getVar('id')
-    }
+
     public function roleroles()
     {
         // $this->request->getVar('id')

@@ -31,9 +31,10 @@ $routes->group('api/v2/sys', ['namespace' => 'App\Controllers\Api\V2\Sys'], func
     $routes->get('role/allmenus', 'Role::allmenus');
     $routes->get('role/allroles', 'Role::allroles');
     $routes->get('role/alldepts', 'Role::alldepts');
-    $routes->get('role/olemenus', 'Role::rolemenus');
+    $routes->get('role/rolemenus', 'Role::rolemenus');
     $routes->get('role/roleroles', 'Role::roleroles');
     $routes->get('role/roledepts', 'Role::roledepts');
+    $routes->post('role/saveroleperm', 'Role::saveroleperm');
 
     $routes->put('role/(.*)', 'Role::update/$1');
     $routes->delete('role/(.*)', 'Role::delete/$1');

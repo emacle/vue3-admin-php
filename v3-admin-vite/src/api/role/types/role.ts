@@ -26,7 +26,6 @@ export interface GetRoleRequestData {
 export interface GetRoleData {
   id: string
   name: string
-  pid: string
   remark: string
   scope: number
   status: number
