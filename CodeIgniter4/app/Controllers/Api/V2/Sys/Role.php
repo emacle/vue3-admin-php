@@ -400,6 +400,13 @@ class Role extends ResourceController
             }
         }
 
+        // export function saveRolePermsApi(roleId: string, rolePerms: { role_id: string; perm_id: any }[], roleScope: string) {
+        // 如果前端rolePerms传参数为对象数组，ci4中需要将其转换成纯数组形式 　
+        // // 将每个对象转换为纯数组
+        // $rolePermsArr = array_map(function ($obj) {
+        //     return get_object_vars($obj);
+        // }, $parms['rolePerms']);
+
         // 写入将角色->权限对应关系写入 sys_role_perm 表
         $RolePermSqlArr = $this->Medoodb->select(
             'sys_role_perm',
