@@ -681,7 +681,10 @@ class User extends ResourceController
 
         // 添加用户放在最后，先添加角色处理，部门处理，失败后直接提前返回
         $where = ["id" => $id];
-        $parms['password'] = md5($parms['password']);
+        if (!isset($parms['password'])) {
+            $parms['password'] = "";
+            $parms['password'] = md5($parms['password']);
+        }
         $result = $this->Medoodb->update('sys_user', $parms, $where);
 
         if ($result->rowCount() > 0) {
