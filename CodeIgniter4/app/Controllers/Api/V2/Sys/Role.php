@@ -371,6 +371,7 @@ class Role extends ResourceController
         ];
         return $this->respond($response);
     }
+    // 角色授权
     public function saveroleperm()
     {
         $parms = get_object_vars($this->request->getVar());
@@ -385,14 +386,77 @@ class Role extends ResourceController
             return $this->respond($response, 200);
         }
 
-        var_dump($parms);
-        return;
-        $RoleMenusArr = $this->Medoodb->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+        // 部门数据授权范围写入sys_role表
+        $this->Medoodb->update('sys_role', ['scope' => $parms['roleScope']], ["id" => $id]);
+        if ($this->Medoodb->error) {
+            var_dump('部门数据授权范围写入sys_role表失败!');
+            return;
+        }
+
+        $rolePerms = [];
+        if (isset($parms['rolePerms'])) {
+            foreach ($parms['rolePerms'] as $k => $v) {
+                $rolePerms[$k] = ['role_id' => $id, 'perm_id' => $v];
+            }
+        }
+
+        // 写入将角色->权限对应关系写入 sys_role_perm 表
+        $RolePermSqlArr = $this->Medoodb->select(
+            'sys_role_perm',
+            ['role_id', 'perm_id'],
+            [
+                "role_id" => $id
+            ]
+        );
+        $AddArr = $this->array_diff_assoc2($rolePerms, $RolePermSqlArr);
+        // var_dump('------------只存在于前台传参 做添加操作-------------');
+
+        $failed = false;
+        $failedArr = [];
+        foreach ($AddArr as $k => $v) {
+            $this->Medoodb->insert("sys_role_perm", $v);
+            $ret = $this->Medoodb->id();
+            if (!$ret) {
+                $failed = true;
+                array_push($failedArr, $v);
+            }
+        }
+
+        if ($failed) {
+            $response = [
+                "code" => 20403,
+                "type" => 'error',
+                "message" => '角色授权关联权限添加操作失败 ' . json_encode($failedArr)
+            ];
+            $this->respond($response);
+        }
+
+        $DelArr = $this->array_diff_assoc2($RolePermSqlArr, $rolePerms);
+        // var_dump('------------只存在于后台数据库 删除操作-------------');
+        // var_dump($DelArr);
+        $failed = false;
+        $failedArr = [];
+        foreach ($DelArr as $k => $v) {
+            $this->Medoodb->delete("sys_role_perm", $v);
+            $ret = $this->Medoodb->id();
+            if (!$ret) {
+                $failed = true;
+                array_push($failedArr, $v);
+            }
+        }
+        if ($failed) {
+            $response = [
+                "code" => 20403,
+                "type" => 'error',
+                "message" => '角色授权关联权限删除操作失败 ' . json_encode($failedArr)
+            ];
+            $this->respond($response);
+        }
+
         $response = [
             "code" => 20000,
-            "data" => [
-                "list" => $RoleMenusArr
-            ],
+            "type" => 'success',
+            "message" => '角色(' . $id . ')授权成功'
         ];
         return $this->respond($response);
     }
@@ -433,5 +497,32 @@ class Role extends ResourceController
         }
 
         return $tree;
+    }
+
+    /**
+     * 指定格式两个二维数组比较差集, 只存在于array1,不存在于array2
+     * @param $array1
+     * @param $array2
+     * @return array
+     */
+    // $arr1 = [
+    // ['role_id'=>1,'perm_id'=>1],
+    // ['role_id'=>1,'perm_id'=>2]
+    // ];
+    private function array_diff_assoc2($array1, $array2)
+    {
+        $ret = array();
+        foreach ($array1 as $k => $v) {
+            #               var_dump($v);
+            $isExist = false;
+            foreach ($array2 as $k2 => $v2) {
+                if (empty(array_diff_assoc($v, $v2))) {
+                    $isExist = true;
+                    break;
+                }
+            }
+            if (!$isExist) array_push($ret, $v);
+        }
+        return $ret;
     }
 }

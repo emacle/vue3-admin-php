@@ -50,7 +50,7 @@ export function getRoleMenusApi(params: { id: string }) {
   })
 }
 
-export function saveRolePermsApi(roleId: string, rolePerms: { role_id: string; perm_id: any }[], roleScope: string) {
+export function saveRolePermsApi(roleId: string, rolePerms: any[], roleScope: string) {
   return request({
     url: "sys/role/saveroleperm",
     method: "post",

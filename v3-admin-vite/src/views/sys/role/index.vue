@@ -145,9 +145,9 @@ import type { TabsPaneContext } from "element-plus"
 const activeName = ref("menu")
 const btnsize = ref<"large" | "default" | "small">("small")
 
-const handleClick = (tab: TabsPaneContext, event: Event) => {
-  console.log(tab, event)
-}
+// const handleClick = (tab: TabsPaneContext, event: Event) => {
+//   console.log(tab, event)
+// }
 const selectRole = ref<GetRoleData>({
   id: "",
   name: "",
@@ -223,22 +223,13 @@ const submitAuthForm = () => {
 
   // 获取选中的菜单类权限
   authLoading.value = true // 设置加载状态为 true
-  const rolePerms: { role_id: string; perm_id: any }[] = []
+  const rolePerms: any[] = []
   const checkedNodes = menuTree.value.getCheckedNodes(false, true)
   checkedNodes.forEach((node: { perm_id: any }) => {
-    rolePerms.push({ role_id: roleId, perm_id: node.perm_id })
+    rolePerms.push(node.perm_id)
   })
-  console.log(rolePerms)
-  // [
-  //     {
-  //         "role_id": 2,
-  //         "perm_id": 2
-  //     },
-  //     {
-  //         "role_id": 2,
-  //         "perm_id": 5
-  //     }
-  // ]
+  // console.log(rolePerms)
+  // [2,5,18,19,20,21]
 
   // // 获取选中的角色类权限
   // const roleSelections = roleTable.value.store.states.selection
@@ -254,7 +245,7 @@ const submitAuthForm = () => {
   //   })
   // }
 
-  const roleScope: string = "4"
+  const roleScope: string = "3"
   saveRolePermsApi(roleId, rolePerms, roleScope)
     .then((res: any) => {
       // console.log('saveRolePerms...', res)
@@ -398,7 +389,7 @@ onMounted(() => {
             </h2>
           </span>
         </div>
-        <el-tabs v-model="activeName" type="card" class="demo-tabs" @tab-click="handleClick">
+        <el-tabs v-model="activeName" type="card" class="demo-tabs">
           <el-tab-pane label="菜单类" name="menu">
             <el-tree
               ref="menuTree"
