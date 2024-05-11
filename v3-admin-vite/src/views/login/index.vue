@@ -45,7 +45,9 @@ const handleLogin = () => {
         .then(() => {
           router.push({ path: "/" })
         })
-        .catch(() => {
+        .catch((error) => {
+          // service.ts拦截器中拦截的60204错误
+          console.log(error)
           // createCode()
           loginFormData.password = ""
         })

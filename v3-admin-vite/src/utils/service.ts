@@ -37,14 +37,15 @@ function createService() {
         return Promise.reject(new Error("非本系统的接口"))
       }
 
-      return apiData
       // 本系统采用 code === 20000 来表示没有业务错误
       // if (code !== 20000) {
-      //   ElMessage({ message: apiData.message, type: apiData.type })
-      //   return Promise.reject(new Error(apiData.message || "Error"))
-      // } else {
-      //   return apiData
-      // }
+      if (code === 60204) {
+        // 密码错误时，此处中断
+        ElMessage({ message: apiData.message, type: apiData.type })
+        return Promise.reject(new Error(apiData.message || "Error"))
+      } else {
+        return apiData
+      }
     },
     (error) => {
       // console.log(error)

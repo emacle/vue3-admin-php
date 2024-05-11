@@ -24,15 +24,14 @@ class User extends ResourceController
         $password = $this->request->getVar('password'); // POST param
 
         $result = $this->Medoodb->select('sys_user', '*', [
-            "AND" => [
-                "username" => $username,
-                "password" => md5($password)
-            ]
+            "username" => $username,
+            "password" => md5($password)
         ]);
 
         if (empty($result)) {
             $response = [
                 "code" => 60204,
+                "type" => 'error',
                 "message" => 'Account and password are incorrect.',
                 "data" => []
             ];
@@ -682,6 +681,7 @@ class User extends ResourceController
 
         // 添加用户放在最后，先添加角色处理，部门处理，失败后直接提前返回
         $where = ["id" => $id];
+        $parms['password'] = md5($parms['password']);
         $result = $this->Medoodb->update('sys_user', $parms, $where);
 
         if ($result->rowCount() > 0) {
