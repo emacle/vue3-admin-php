@@ -66,17 +66,25 @@ export function getRoleRolesApi(params: { id: string }) {
   })
 }
 
+export function getAllDeptsApi() {
+  return request<Role.GetAllDeptsResponseData>({
+    url: "sys/role/alldepts",
+    method: "get"
+  })
+}
+
+export function getRoleDeptsApi(params: { id: string }) {
+  return request<Role.GetAllDeptsResponseData>({
+    url: "sys/role/roledepts",
+    method: "get",
+    params
+  })
+}
+
 export function saveRolePermsApi(roleId: string, rolePerms: any[], roleScope: string) {
   return request({
     url: "sys/role/saveroleperm",
     method: "post",
     data: { roleId, rolePerms, roleScope }
-  })
-}
-
-export function getAllDeptsApi() {
-  return request<Role.GetRoleResponseData>({
-    url: "sys/role/alldepts",
-    method: "get"
   })
 }

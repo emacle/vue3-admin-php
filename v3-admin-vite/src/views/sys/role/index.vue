@@ -7,15 +7,18 @@ import {
   updateRoleDataApi,
   getAllMenusApi,
   getAllRolesApi,
+  getAllDeptsApi,
   getRoleMenusApi,
   getRoleRolesApi,
+  getRoleDeptsApi,
   saveRolePermsApi
 } from "@/api/role"
 import {
   type CreateOrUpdateRoleRequestData,
   type GetRoleData,
   type GetAllMenusData,
-  type GetAllRolesData
+  type GetAllRolesData,
+  type GetAllDeptsData
 } from "@/api/role/types/role"
 import { type FormInstance, type FormRules, ElMessage, ElMessageBox, ElTable, ElTree } from "element-plus"
 import type Node from "element-plus/es/components/tree/src/model/node"
@@ -144,63 +147,104 @@ const resetSearch = () => {
 }
 //#endregion
 
-/** 监听分页参数的变化 */
-watch([() => paginationData.currentPage, () => paginationData.pageSize], getRoleData, { immediate: true })
-
-//#region 角色授权
-import type { TabsPaneContext } from "element-plus"
-
-const activeName = ref("menu")
-const btnsize = ref<"large" | "default" | "small">("small")
-
-// const handleClick = (tab: TabsPaneContext, event: Event) => {
-//   console.log(tab, event)
-// }
-const selectRole = ref<GetRoleData>({
-  id: "",
-  name: "",
-  remark: "",
-  scope: 0,
-  status: 0,
-  listorder: 0
-})
-
-const menuLoading = ref<boolean>(false)
-const roleLoading = ref<boolean>(false)
-const authLoading = ref<boolean>(false)
-
-const menuData = ref<GetAllMenusData[]>([])
-const roleDataX = ref<GetAllRolesData[]>([])
-const currentRoleMenus = ref<GetAllMenusData[]>([]) // 服务端获取当前角色的菜单类权限
-const currentRoleRoles = ref<GetAllRolesData[]>([]) // 服务端获取当前角色的角色类权限
-
-const menuTree = ref<InstanceType<typeof ElTree>>() // 确保menuTree被正确引用
-const roleTable = ref<InstanceType<typeof ElTable>>() // 确保roleTable被正确引用
-
-const checkAll = ref<boolean>(false)
-
 // 根据icon值返回对应的组件名称
 const getIconComponent = (icon: string) => {
   return icon
 }
 
+/** 监听分页参数的变化 */
+watch([() => paginationData.currentPage, () => paginationData.pageSize], getRoleData, { immediate: true })
+
+//#region 角色授权
+const activeName = ref("menu")
+const btnsize = ref<"large" | "default" | "small">("small")
+
+// 定义初始值
+const initialSelectRoleValue: GetRoleData = {
+  id: "",
+  name: "",
+  remark: "",
+  scope: "0",
+  status: 0,
+  listorder: 0
+}
+
+// 创建 ref
+const selectRole = ref<GetRoleData>(initialSelectRoleValue)
+
+const menuLoading = ref<boolean>(false)
+const roleLoading = ref<boolean>(false)
+const authLoading = ref<boolean>(false)
+const deptLoading = ref<boolean>(false)
+
+const checkAll = ref<boolean>(false)
+const checkJianlian = ref<boolean>(false)
+
+const menuData = ref<GetAllMenusData[]>([])
+const roleDataX = ref<GetAllRolesData[]>([])
+const deptData = ref<GetAllDeptsData[]>([])
+const currentRoleMenus = ref<GetAllMenusData[]>([]) // 服务端获取当前角色的菜单类权限
+const currentRoleRoles = ref<GetAllRolesData[]>([]) // 服务端获取当前角色的角色类权限
+const currentRoleDepts = ref<GetAllDeptsData[]>([]) // 服务端获取当前角色的角色类权限
+
+const menuTree = ref<InstanceType<typeof ElTree>>() // 确保menuTree被正确引用
+const roleTable = ref<InstanceType<typeof ElTable>>() // 确保roleTable被正确引用
+const deptTree = ref<InstanceType<typeof ElTree>>() // 确保deptTree被正确引用
+
+const dataPermScope = ref<string>("")
+const dataPermOption = [
+  {
+    value: "0",
+    label: "全部数据权限"
+  },
+  {
+    value: "1",
+    label: "部门数据权限"
+  },
+  {
+    value: "2",
+    label: "部门及以下数据权限"
+  },
+  {
+    value: "3",
+    label: "仅本人数据权限"
+  },
+  {
+    value: "4",
+    label: "自定数据权限"
+  }
+]
+const scopeLabels = dataPermOption.reduce(
+  (labels, option) => {
+    labels[option.value] = option.label
+    return labels
+  },
+  {} as Record<string, string>
+)
+// 生成以下对象
+// scopeLabels: {
+//       '0': '全部数据权限',
+//       '1': '部门数据权限',
+//       '2': '部门及以下数据权限',
+//       '3': '仅本人数据权限',
+//       '4': '自定数据权限'
+//     }
+
 const handleRoleSelectChange = (val: GetRoleData | any) => {
   if (val === null) {
-    selectRole.value = {
-      id: "",
-      name: "",
-      remark: "",
-      scope: 0,
-      status: 0,
-      listorder: 0
-    }
-    // this.dataPermScope = ""
-    // this.checkJianlian = false // 保存权限提交后重置此值
+    selectRole.value = { ...initialSelectRoleValue }
+    dataPermScope.value = ""
+    checkJianlian.value = false // 保存权限提交后重置此值
     return
   }
+
   selectRole.value = val
-  getRoleMenusData({ id: selectRole.value.id })
-  getRoleRolesData({ id: selectRole.value.id })
+  dataPermScope.value = val.scope
+  // checkJianlian.value = false // 保存权限提交后重置此值
+  // getRoleMenusData({ id: selectRole.value.id })
+  // getRoleRolesData({ id: selectRole.value.id })
+  // getRoleDeptsData({ id: selectRole.value.id })
+  resetSelection()
 }
 
 // 树节点选择监听
@@ -235,11 +279,12 @@ const checkAllMenu = (menuData: any[], allMenus: any[]) => {
     }
   })
 }
+
 const submitAuthForm = () => {
   const roleId = selectRole.value.id
 
   const rolePerms: any[] = []
-  authLoading.value = true // 设置加载状态为 true
+  // authLoading.value = true // 设置加载状态为 true
 
   // 1.获取选中的菜单类权限
   const checkedNodes = menuTree.value!.getCheckedNodes(false, true)
@@ -253,23 +298,24 @@ const submitAuthForm = () => {
   roleSelections.forEach((selection: { perm_id: any }) => {
     rolePerms.push(selection.perm_id)
   })
-  console.log("rolePerms选中的项 含menu,role:", rolePerms)
+
+  const roleScope = dataPermScope.value
+  // 获取选中的部门数据权限
+  if (dataPermScope.value === "4") {
+    const checkedDeptNodes = deptTree.value!.getCheckedNodes(false, true)
+    checkedDeptNodes.forEach((node) => {
+      rolePerms.push(node.perm_id)
+    })
+  }
+
+  // console.log("rolePerms选中的项 含menu,role,dept:", rolePerms)
   // [6, 11, 12, 1, 38]
 
-  // // 获取选中的部门数据权限
-  // if (dataPermScope.value === "4") {
-  //   const checkedDeptNodes = deptTree.value.getCheckedNodes(false, true)
-  //   checkedDeptNodes.forEach((node) => {
-  //     rolePerms.push({ role_id: roleId, perm_id: node.perm_id })
-  //   })
-  // }
-
-  const roleScope: string = "3"
   saveRolePermsApi(roleId, rolePerms, roleScope)
     .then((res: any) => {
       // console.log('saveRolePerms...', res)
       ElMessage({ message: res.message, type: res.type })
-      resetSelection()
+      clearAllSelection()
       getRoleData()
     })
     .catch((err) => {
@@ -279,12 +325,52 @@ const submitAuthForm = () => {
       authLoading.value = false
     })
 }
-
-const resetSelection = () => {
+// 清空所有选择
+const clearAllSelection = () => {
   menuTree.value!.setCheckedNodes([])
   roleTable.value!.clearSelection()
+  deptTree.value!.setCheckedNodes([])
 }
 
+// 重置默认值
+const resetSelection = () => {
+  checkJianlian.value = false
+  getRoleMenusData({ id: selectRole.value.id })
+  getRoleRolesData({ id: selectRole.value.id })
+  getRoleDeptsData({ id: selectRole.value.id })
+}
+
+const getAllDeptsData = () => {
+  deptLoading.value = true
+  getAllDeptsApi()
+    .then(({ data }) => {
+      deptData.value = data.list
+      // console.log(cloneDeep(deptData.value))
+    })
+    .catch(() => {
+      deptData.value = []
+    })
+    .finally(() => {
+      deptLoading.value = false
+    })
+}
+const getRoleDeptsData = (params: { id: string }) => {
+  deptLoading.value = true
+  getRoleDeptsApi(params)
+    .then(({ data }) => {
+      currentRoleDepts.value = data.list
+      if (deptTree.value) {
+        // 确保menuTree已被赋值 然后设置勾选节点
+        deptTree.value.setCheckedNodes(currentRoleDepts.value as unknown as Node[]) // 使用setCheckedNodes设置选中项
+      }
+    })
+    .catch(() => {
+      currentRoleDepts.value = []
+    })
+    .finally(() => {
+      deptLoading.value = false
+    })
+}
 const getRoleRolesData = (params: { id: string }) => {
   roleLoading.value = true
   getRoleRolesApi(params)
@@ -307,7 +393,6 @@ const getRoleRolesData = (params: { id: string }) => {
       roleLoading.value = false
     })
 }
-
 const getAllRolesData = () => {
   roleLoading.value = true
   getAllRolesApi()
@@ -321,6 +406,7 @@ const getAllRolesData = () => {
       roleLoading.value = false
     })
 }
+
 const getRoleMenusData = (params: { id: string }) => {
   menuLoading.value = true
   getRoleMenusApi(params)
@@ -360,6 +446,7 @@ const getAllMenusData = () => {
 onMounted(() => {
   getAllMenusData()
   getAllRolesData()
+  getAllDeptsData()
 })
 </script>
 
@@ -404,6 +491,11 @@ onMounted(() => {
           <el-table-column prop="id" label="ID" align="center" />
           <el-table-column prop="name" label="角色名称" align="center" />
           <el-table-column prop="remark" label="说明" align="center" />
+          <el-table-column prop="scope" label="权限范围" align="center">
+            <template #default="scope">
+              <span>{{ scopeLabels[scope.row.scope] }}</span>
+            </template>
+          </el-table-column>
           <el-table-column prop="listorder" label="排序" align="center" />
           <el-table-column prop="status" label="状态" align="center">
             <template #default="scope">
@@ -499,7 +591,51 @@ onMounted(() => {
               </el-table-column>
             </el-table>
           </el-tab-pane>
-          <el-tab-pane label="数据权限" name="dept">数据权限</el-tab-pane>
+          <el-tab-pane label="数据权限" name="dept">
+            <el-row :gutter="0">
+              <el-form size="default" label-width="100px">
+                <el-col :span="24">
+                  <el-form-item :label="'权限范围(' + dataPermScope + ')'" prop="dataPermScope">
+                    <el-select v-model="dataPermScope" style="width: 180px">
+                      <el-option
+                        v-for="item in dataPermOption"
+                        :key="item.value"
+                        :label="item.label"
+                        :value="item.value"
+                      />
+                    </el-select>
+                  </el-form-item>
+                </el-col>
+                <el-col v-show="dataPermScope == '4'" :span="24">
+                  <el-form-item label="部门数据" prop="dept">
+                    <!-- :props="defaultDeptProps" -->
+                    <el-tree
+                      ref="deptTree"
+                      v-loading="deptLoading"
+                      element-loading-text="拼命加载中"
+                      :data="deptData"
+                      :check-strictly="!checkJianlian"
+                      show-checkbox
+                      node-key="id"
+                      style="width: 100%; padding-top: 20px"
+                    >
+                      <!-- @check-change="handleDeptCheckChange" -->
+                      <template #default="{ data }">
+                        <span class="custom-tree-node">
+                          <span> {{ data.name }}({{ data.perm_id }}) </span>
+                        </span>
+                      </template>
+                    </el-tree>
+                  </el-form-item>
+                </el-col>
+                <el-col v-show="dataPermScope == '4'" :span="16">
+                  <el-form-item label="勾选级联" prop="jilian">
+                    <el-checkbox v-model="checkJianlian" :disabled="selectRole.id == null" toggle />
+                  </el-form-item>
+                </el-col>
+              </el-form>
+            </el-row>
+          </el-tab-pane>
           <el-tab-pane label="文件类" name="file">文件类</el-tab-pane>
           <div style="float: left; padding-left: 24px; padding-top: 12px; padding-bottom: 4px">
             <el-checkbox
@@ -512,15 +648,14 @@ onMounted(() => {
             </el-checkbox>
           </div>
           <div style="float: right; padding-right: 15px; padding-top: 15px; padding-bottom: 4px">
-            <!-- <el-button
-              v-perm="['/sys/role/put']"
-              v-waves
+            <el-button
+              v-perm="['/sys/role/saveroleperm/post']"
               :disabled="selectRole.id === ''"
               :size="btnsize"
               type="primary"
               @click="resetSelection"
               >重置</el-button
-            > -->
+            >
             <el-button
               v-perm="['/sys/role/saveroleperm/post']"
               :loading="authLoading"

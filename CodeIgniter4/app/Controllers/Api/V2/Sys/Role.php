@@ -82,12 +82,15 @@ class Role extends ResourceController
         }
         // 查询字段及字段值获取结束
 
-        // 执行查询
         $RoleArr = $this->Medoodb->select(
             "sys_role",
             $columns,
             $where
         );
+        // 遍历结果数组，将 scope 字段类型强制转换为字符串
+        foreach ($RoleArr as &$role) {
+            $role['scope'] = (string) $role['scope'];
+        }
 
         $sqlCmd = $this->Medoodb->log()[0];
 
@@ -370,6 +373,65 @@ class Role extends ResourceController
         return $this->respond($response);
     }
 
+    // 获取所有部门并加入对应的权限perm_id 不需权限验证
+    public function alldepts()
+    {
+        $sql = "SELECT
+                    p.id perm_id,
+                    d.*
+                FROM
+                    sys_dept d,
+                    sys_perm p
+                WHERE
+                    p.perm_type = 'dept'
+                AND p.r_id = d.id
+                ORDER BY
+                    d.listorder";
+        $AllDeptsArr = $this->Medoodb->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+
+        $DeptTreeObj = new \BlueM\Tree(
+            $AllDeptsArr,
+            ['rootId' => 0, 'id' => 'id', 'parent' => 'pid']
+        );
+        $DeptTree = $this->_dumpBlueMTreeNodes($DeptTreeObj->getRootNodes());
+
+        $response = [
+            "code" => 20000,
+            "data" => [
+                "list" => $DeptTree
+            ],
+        ];
+        return $this->respond($response);
+    }
+
+    public function roledepts()
+    {
+        $RoleId = $this->request->getVar('id');
+        $sql = "SELECT
+                    p.id perm_id,
+                    d.*
+                FROM
+                    sys_dept d,
+                    sys_perm p,
+                    sys_role_perm rp
+                WHERE
+                    rp.perm_id = p.id
+                AND p.perm_type = 'dept'
+                AND p.r_id = d.id
+                AND rp.role_id = " . $RoleId . "
+                ORDER BY
+                    d.listorder";
+        $RoleDeptArr = $this->Medoodb->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+
+        $response = [
+            "code" => 20000,
+            "data" => [
+                "list" => $RoleDeptArr
+            ],
+        ];
+        return $this->respond($response);
+    }
+
     public function roleroles()
     {
         // $this->request->getVar('id')
@@ -396,11 +458,6 @@ class Role extends ResourceController
             ],
         ];
         return $this->respond($response);
-    }
-
-    public function roledepts()
-    {
-        // $this->request->getVar('id')
     }
 
     // 获取该角色并加入对应的权限id 不需权限验证
@@ -526,10 +583,6 @@ class Role extends ResourceController
             "message" => '角色(' . $id . ')授权成功'
         ];
         return $this->respond($response);
-    }
-
-    public function alldepts()
-    {
     }
 
     /**

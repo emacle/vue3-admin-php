@@ -2,7 +2,7 @@ export interface CreateOrUpdateRoleRequestData {
   id?: string
   name: string
   remark?: string
-  scope?: number
+  scope?: string
   listorder: number
   status: number
 }
@@ -27,7 +27,7 @@ export interface GetRoleData {
   id: string
   name: string
   remark: string
-  scope: number
+  scope: string
   status: number
   listorder: number
 }
@@ -51,7 +51,6 @@ export interface GetAllMenusData {
 export type GetAllMenusResponseData = ApiResponseData<{
   list: GetAllMenusData[]
 }>
-
 export interface GetAllRolesData {
   perm_id: number
   id: number
@@ -63,4 +62,18 @@ export interface GetAllRolesData {
 
 export type GetAllRolesResponseData = ApiResponseData<{
   list: GetAllRolesData[]
+}>
+
+export interface GetAllDeptsData {
+  perm_id: number
+  id: number
+  pid: number
+  name: string
+  listorder: number
+  status: number
+  children: GetAllDeptsData[]
+}
+
+export type GetAllDeptsResponseData = ApiResponseData<{
+  list: GetAllDeptsData[]
 }>
