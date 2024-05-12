@@ -42,9 +42,25 @@ export function getAllMenusApi() {
     method: "get"
   })
 }
+
 export function getRoleMenusApi(params: { id: string }) {
   return request<Role.GetAllMenusResponseData>({
     url: "sys/role/rolemenus",
+    method: "get",
+    params
+  })
+}
+
+export function getAllRolesApi() {
+  return request<Role.GetAllRolesResponseData>({
+    url: "sys/role/allroles",
+    method: "get"
+  })
+}
+
+export function getRoleRolesApi(params: { id: string }) {
+  return request<Role.GetAllRolesResponseData>({
+    url: "sys/role/roleroles",
     method: "get",
     params
   })
@@ -58,12 +74,6 @@ export function saveRolePermsApi(roleId: string, rolePerms: any[], roleScope: st
   })
 }
 
-export function getAllRolesApi() {
-  return request<Role.GetRoleResponseData>({
-    url: "sys/role/allroles",
-    method: "get"
-  })
-}
 export function getAllDeptsApi() {
   return request<Role.GetRoleResponseData>({
     url: "sys/role/alldepts",

@@ -344,6 +344,65 @@ class Role extends ResourceController
         ];
         return $this->respond($response);
     }
+
+    // 获取所有角色并加入对应的权限id 不需权限验证
+    public function allroles()
+    {
+        $sql = "SELECT
+                    p.id perm_id,
+                    r.id, r.name, r.remark, r.listorder, r.status
+                FROM
+                    sys_role r,
+                    sys_perm p
+                WHERE
+                    r.id = p.r_id
+                AND p.perm_type = 'role'
+                ORDER BY
+                    r.listorder";
+        $AllRolesArr = $this->Medoodb->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+
+        $response = [
+            "code" => 20000,
+            "data" => [
+                "list" => $AllRolesArr
+            ],
+        ];
+        return $this->respond($response);
+    }
+
+    public function roleroles()
+    {
+        // $this->request->getVar('id')
+        $RoleId = $this->request->getVar('id');
+        $sql = "SELECT
+                    p.id perm_id,
+                    r.id, r.name, r.remark, r.listorder, r.status
+                FROM
+                    sys_role r,
+                    sys_perm p,
+                    sys_role_perm rp
+                WHERE
+                    rp.perm_id = p.id
+                AND p.perm_type = 'role'
+                AND p.r_id = r.id
+                AND rp.role_id =" . $RoleId . "
+                ORDER BY
+                    r.listorder";
+        $RoleRolesArr = $this->Medoodb->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+        $response = [
+            "code" => 20000,
+            "data" => [
+                "list" => $RoleRolesArr
+            ],
+        ];
+        return $this->respond($response);
+    }
+
+    public function roledepts()
+    {
+        // $this->request->getVar('id')
+    }
+
     // 获取该角色并加入对应的权限id 不需权限验证
     public function rolemenus()
     {
@@ -371,6 +430,7 @@ class Role extends ResourceController
         ];
         return $this->respond($response);
     }
+
     // 角色授权
     public function saveroleperm()
     {
@@ -468,20 +528,8 @@ class Role extends ResourceController
         return $this->respond($response);
     }
 
-    public function allroles()
-    {
-    }
     public function alldepts()
     {
-    }
-
-    public function roleroles()
-    {
-        // $this->request->getVar('id')
-    }
-    public function roledepts()
-    {
-        // $this->request->getVar('id')
     }
 
     /**

@@ -47,6 +47,20 @@ export interface GetAllMenusData {
   path: string
   children: GetAllMenusData[]
 }
+
 export type GetAllMenusResponseData = ApiResponseData<{
   list: GetAllMenusData[]
+}>
+
+export interface GetAllRolesData {
+  perm_id: number
+  id: number
+  name: string
+  remark: string
+  status: number
+  listorder: number
+}
+
+export type GetAllRolesResponseData = ApiResponseData<{
+  list: GetAllRolesData[]
 }>
