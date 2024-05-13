@@ -253,12 +253,13 @@ class Role extends ResourceController
             // 删除外键关联表 sys_role_perm, sys_perm, sys_role 次序有先后
             // 1. 根据 该角色id及 类型 'role' 在 sys_perm 表中查找 perm_id
             // 2. 删除 sys_role_perm 中perm_id记录
-            // 3. 删除 sys_perm 中 perm_type='role' and r_id = role_id 记录,即第1步中获取的 perm_id， 一一对应
-            // 4. 删除 sys_user_role 中 该角色id的记录
-            // 5. 删除 sys_role 中 id = role_id 的记录
-
+            // 3. 删除 sys_role_perm 中role_id = $id 记录
+            // 4. 删除 sys_perm 中 perm_type='role' and r_id = role_id 记录,即第1步中获取的 perm_id， 一一对应
+            // 5. 删除 sys_user_role 中 该角色id的记录
+            // 6. 删除 sys_role 中 id = role_id 的记录
             $perm_id =  $this->Medoodb->get('sys_perm', 'id', ['perm_type' => 'role', 'r_id' => $id]);
             $this->Medoodb->delete('sys_role_perm', ['perm_id' => $perm_id]);
+            $this->Medoodb->delete('sys_role_perm', ['role_id' => $id]);  // 防止该角色已经被分配权限导致因外键关联无法删除sys_role
             $this->Medoodb->delete('sys_perm', ['id' => $perm_id]);
             $this->Medoodb->delete('sys_user_role', ['role_id' => $id]);
             $result = $this->Medoodb->delete('sys_role', ['id' => $id]);
