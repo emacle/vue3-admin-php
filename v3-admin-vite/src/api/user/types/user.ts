@@ -4,6 +4,8 @@ export interface CreateOrUpdateUserRequestData {
   password?: string
   email?: string
   tel?: string
+  role?: number[]
+  dept?: number[]
   listorder: number
   status: number
 }
@@ -39,4 +41,13 @@ export interface GetUserData {
 export type GetUserResponseData = ApiResponseData<{
   list: GetUserData[]
   total: number
+}>
+
+export interface GetRoleOptionsData {
+  value: string
+  label: string
+}
+
+export type GetRoleOptionsResponseData = ApiResponseData<{
+  list: GetRoleOptionsData[]
 }>

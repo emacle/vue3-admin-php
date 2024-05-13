@@ -398,7 +398,8 @@ class User extends ResourceController
             );
 
             foreach ($RoleArr as $kk => $vv) {
-                array_push($UserArr[$k]['role'], intval($vv['id'])); // 字符串转数字 前端treeselect value与option 的id 必须类型一致
+                // array_push($UserArr[$k]['role'], intval($vv['id'])); // 字符串转数字 前端treeselect value与option 的id 必须类型一致
+                array_push($UserArr[$k]['role'], (string)$vv['id']); // 数字转字符串 el-select value与option 的id 必须类型一致
             }
         }
 
@@ -750,6 +751,39 @@ class User extends ResourceController
             ];
             return $this->respond($response, 404);
         }
+    }
+
+    // 路由白名单，根据useId 获取该用户拥有的角色权限选项
+    public function roleoptions()
+    {
+        $userId = $this->request->getVar('userId');
+        $sql = "SELECT
+                    CAST(r.id AS CHAR) AS value,
+                    r.name AS label
+                FROM
+                    sys_role r
+                INNER JOIN (
+                    SELECT
+                        DISTINCT p.r_id AS role_id
+                    FROM
+                        sys_perm AS p
+                    INNER JOIN
+                        sys_role_perm AS rp ON p.id = rp.perm_id
+                    INNER JOIN
+                        sys_user_role AS ur ON rp.role_id = ur.role_id
+                    WHERE
+                        p.perm_type = 'role'
+                        AND ur.user_id = :userId
+                ) t ON t.role_id = r.id";
+        $RoleOptionsArr = $this->Medoodb->query($sql, [':userId' => $userId])->fetchAll(PDO::FETCH_ASSOC);
+
+        $response = [
+            "code" => 20000,
+            "data" => [
+                "list" => $RoleOptionsArr
+            ],
+        ];
+        return $this->respond($response);
     }
 
     /**

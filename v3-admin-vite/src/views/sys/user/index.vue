@@ -1,7 +1,7 @@
 <script lang="ts" setup>
-import { reactive, ref, watch } from "vue"
-import { createUserDataApi, deleteUserDataApi, getUserDataApi, updateUserDataApi } from "@/api/user"
-import { type CreateOrUpdateUserRequestData, type GetUserData } from "@/api/user/types/user"
+import { onMounted, reactive, ref, watch } from "vue"
+import { createUserDataApi, deleteUserDataApi, getUserDataApi, updateUserDataApi, getRoleOptionsApi } from "@/api/user"
+import { type CreateOrUpdateUserRequestData, type GetUserData, type GetRoleOptionsData } from "@/api/user/types/user"
 import { type FormInstance, type FormRules, ElMessage, ElMessageBox } from "element-plus"
 import { Search, Refresh, CirclePlus, Delete, Download, RefreshRight } from "@element-plus/icons-vue"
 import { usePagination } from "@/hooks/usePagination"
@@ -21,6 +21,8 @@ const DEFAULT_FORM_DATA: CreateOrUpdateUserRequestData = {
   username: "",
   password: "",
   email: "",
+  role: [],
+  dept: [],
   listorder: 1000,
   status: 1
 }
@@ -28,7 +30,8 @@ const dialogVisible = ref<boolean>(false)
 const formRef = ref<FormInstance | null>(null)
 const formData = ref<CreateOrUpdateUserRequestData>(cloneDeep(DEFAULT_FORM_DATA))
 const formRules: FormRules<CreateOrUpdateUserRequestData> = {
-  username: [{ required: true, trigger: "blur", message: "请输入用户名" }]
+  username: [{ required: true, trigger: "blur", message: "请输入用户名" }],
+  password: [{ required: true, trigger: "blur", message: "请输入密码" }]
 }
 const options = [
   {
@@ -142,6 +145,25 @@ const resetSearch = () => {
 
 /** 监听分页参数的变化 */
 watch([() => paginationData.currentPage, () => paginationData.pageSize], getUserData, { immediate: true })
+
+//#region role选择
+
+const roleOptions = ref<GetRoleOptionsData[]>([])
+const getRoleOptionsData = (params: { userId: string }) => {
+  getRoleOptionsApi(params)
+    .then(({ data }) => {
+      roleOptions.value = data.list
+    })
+    .catch(() => {
+      roleOptions.value = []
+    })
+    .finally(() => {})
+}
+onMounted(() => {
+  getRoleOptionsData({ userId: "1" }) // todo 获取store userId
+})
+
+//#endregion
 </script>
 
 <template>
@@ -238,7 +260,7 @@ watch([() => paginationData.currentPage, () => paginationData.pageSize], getUser
         <el-form-item prop="username" label="用户名">
           <el-input v-model.trim="formData.username" placeholder="请输入" />
         </el-form-item>
-        <el-form-item prop="password" label="密码">
+        <el-form-item prop="password" label="密码" v-if="formData.id === undefined">
           <el-input v-model="formData.password" placeholder="请输入" />
         </el-form-item>
         <el-form-item prop="email" label="邮箱">
@@ -247,6 +269,14 @@ watch([() => paginationData.currentPage, () => paginationData.pageSize], getUser
         <el-form-item prop="tel" label="手机号">
           <el-input v-model="formData.tel" placeholder="请输入" />
         </el-form-item>
+        <el-form-item prop="role" label="角色">
+          <el-select v-model="formData.role" multiple placeholder="请选择" style="width: 240px">
+            <el-option v-for="item in roleOptions" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+        </el-form-item>
+        <!-- <el-form-item prop="dept" label="部门">
+          <el-input v-model="formData.dept" placeholder="请输入" />
+        </el-form-item> -->
         <el-form-item prop="listorder" label="排序">
           <!-- <el-input v-model="formData.listorder" placeholder="请输入" /> -->
           <el-input-number v-model="formData.listorder" :min="99" controls-position="right" size="large" />
