@@ -302,7 +302,6 @@ onMounted(() => {
           <el-select v-model="formData.role" multiple placeholder="请选择" style="width: 240px">
             <el-option v-for="item in roleOptions" :key="item.value" :label="item.label" :value="item.value" />
           </el-select>
-          {{ formData.role }}
         </el-form-item>
         <el-form-item prop="dept" label="部门">
           <el-tree-select
@@ -314,7 +313,6 @@ onMounted(() => {
             check-strictly
             style="width: 240px"
           />
-          {{ formData.dept }}
         </el-form-item>
         <el-form-item prop="listorder" label="排序">
           <el-input-number v-model="formData.listorder" :min="99" controls-position="right" size="large" />
