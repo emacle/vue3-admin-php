@@ -335,6 +335,7 @@ const clearAllSelection = () => {
 // 重置默认值
 const resetSelection = () => {
   checkJianlian.value = false
+  dataPermScope.value = selectRole.value.scope
   getRoleMenusData({ id: selectRole.value.id })
   getRoleRolesData({ id: selectRole.value.id })
   getRoleDeptsData({ id: selectRole.value.id })
@@ -676,7 +677,7 @@ onMounted(() => {
       @closed="resetForm"
       width="30%"
     >
-      <el-form ref="formRef" :model="formData" :rules="formRules" label-width="100px" label-position="left">
+      <el-form ref="formRef" :model="formData" :rules="formRules" label-width="100px" label-position="right">
         <el-form-item prop="name" label="角色名">
           <el-input v-model.trim="formData.name" placeholder="请输入" />
         </el-form-item>

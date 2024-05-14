@@ -219,7 +219,7 @@ class Dept extends ResourceController
     }
 
     /**
-     * 遍历 BlueM\Tree 树对象，将数据格式化成 vue-router 结构的路由树或部门树
+     * 遍历 BlueM\Tree 树对象，将数据格式化部门树
      */
     private function _dumpBlueMTreeNodes($node)
     {

@@ -24,6 +24,7 @@ export const useUserStore = defineStore("user", () => {
   // 声明ref响应式数据变量
   const roles = ref<{ id: number; name: string }[]>([])
 
+  const userId = ref<string>("")
   const username = ref<string>("")
   const avatar = ref<string>("")
   const asyncRouterMap = ref<unknown[]>([])
@@ -54,6 +55,7 @@ export const useUserStore = defineStore("user", () => {
   const getInfo = async () => {
     const { data } = await getUserInfoApi()
     console.log("useUserStore.getInfo", data)
+    userId.value = data.id
     username.value = data.username
     avatar.value = data.avatar
     asyncRouterMap.value = data.asyncRouterMap
@@ -112,6 +114,7 @@ export const useUserStore = defineStore("user", () => {
   return {
     token,
     roles,
+    userId,
     username,
     avatar,
     asyncRouterMap,

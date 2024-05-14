@@ -12,6 +12,7 @@ $routes->group('api/v2/sys', ['namespace' => 'App\Controllers\Api\V2\Sys'], func
     // $routes->resource('user');  // 优先下面精准增删除改查+options 6个方法
     $routes->get('user', 'User::index');
     $routes->get('user/roleoptions', 'User::roleoptions');
+    $routes->get('user/deptoptions', 'User::deptoptions');
     $routes->get('user/info', 'User::info'); // get 与user/(.*) 冲突，必须放在上面，优先选择
     $routes->get('user/(.*)', 'User::show/$1');
     $routes->post('user', 'User::create');

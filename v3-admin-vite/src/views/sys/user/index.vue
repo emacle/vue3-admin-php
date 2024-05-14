@@ -1,17 +1,31 @@
 <script lang="ts" setup>
 import { onMounted, reactive, ref, watch } from "vue"
-import { createUserDataApi, deleteUserDataApi, getUserDataApi, updateUserDataApi, getRoleOptionsApi } from "@/api/user"
-import { type CreateOrUpdateUserRequestData, type GetUserData, type GetRoleOptionsData } from "@/api/user/types/user"
+import {
+  createUserDataApi,
+  deleteUserDataApi,
+  getUserDataApi,
+  updateUserDataApi,
+  getRoleOptionsApi,
+  getDeptOptionsApi
+} from "@/api/user"
+import {
+  type CreateOrUpdateUserRequestData,
+  type GetUserData,
+  type GetRoleOptionsData,
+  type GetDeptOptionsData
+} from "@/api/user/types/user"
 import { type FormInstance, type FormRules, ElMessage, ElMessageBox } from "element-plus"
 import { Search, Refresh, CirclePlus, Delete, Download, RefreshRight } from "@element-plus/icons-vue"
 import { usePagination } from "@/hooks/usePagination"
 import { cloneDeep, isNull } from "lodash-es"
+import { useUserStore } from "@/store/modules/user"
 
 defineOptions({
   // 命名当前组件
   name: "SysUser"
 })
 
+const userStore = useUserStore()
 const loading = ref<boolean>(false)
 const { paginationData, handleCurrentChange, handleSizeChange } = usePagination()
 
@@ -31,7 +45,8 @@ const formRef = ref<FormInstance | null>(null)
 const formData = ref<CreateOrUpdateUserRequestData>(cloneDeep(DEFAULT_FORM_DATA))
 const formRules: FormRules<CreateOrUpdateUserRequestData> = {
   username: [{ required: true, trigger: "blur", message: "请输入用户名" }],
-  password: [{ required: true, trigger: "blur", message: "请输入密码" }]
+  password: [{ required: true, trigger: "blur", message: "请输入密码" }],
+  role: [{ required: true, trigger: "blur", message: "请选择角色" }]
 }
 const options = [
   {
@@ -147,7 +162,6 @@ const resetSearch = () => {
 watch([() => paginationData.currentPage, () => paginationData.pageSize], getUserData, { immediate: true })
 
 //#region role选择
-
 const roleOptions = ref<GetRoleOptionsData[]>([])
 const getRoleOptionsData = (params: { userId: string }) => {
   getRoleOptionsApi(params)
@@ -159,11 +173,26 @@ const getRoleOptionsData = (params: { userId: string }) => {
     })
     .finally(() => {})
 }
-onMounted(() => {
-  getRoleOptionsData({ userId: "1" }) // todo 获取store userId
-})
-
 //#endregion
+
+//#region dept选择
+const deptOptions = ref<GetDeptOptionsData[]>([])
+const getDeptOptionsData = () => {
+  getDeptOptionsApi()
+    .then(({ data }) => {
+      deptOptions.value = data.list
+      console.log("getDeptOptionsApi", cloneDeep(deptOptions.value))
+    })
+    .catch(() => {
+      deptOptions.value = []
+    })
+    .finally(() => {})
+}
+//#endregion
+onMounted(() => {
+  getRoleOptionsData({ userId: userStore.userId })
+  getDeptOptionsData()
+})
 </script>
 
 <template>
@@ -256,7 +285,7 @@ onMounted(() => {
       @closed="resetForm"
       width="30%"
     >
-      <el-form ref="formRef" :model="formData" :rules="formRules" label-width="100px" label-position="left">
+      <el-form ref="formRef" :model="formData" :rules="formRules" label-width="100px" label-position="right">
         <el-form-item prop="username" label="用户名">
           <el-input v-model.trim="formData.username" placeholder="请输入" />
         </el-form-item>
@@ -273,16 +302,24 @@ onMounted(() => {
           <el-select v-model="formData.role" multiple placeholder="请选择" style="width: 240px">
             <el-option v-for="item in roleOptions" :key="item.value" :label="item.label" :value="item.value" />
           </el-select>
+          {{ formData.role }}
         </el-form-item>
-        <!-- <el-form-item prop="dept" label="部门">
-          <el-input v-model="formData.dept" placeholder="请输入" />
-        </el-form-item> -->
+        <el-form-item prop="dept" label="部门">
+          <el-tree-select
+            v-model="formData.dept"
+            :data="deptOptions"
+            multiple
+            :render-after-expand="false"
+            show-checkbox
+            check-strictly
+            style="width: 240px"
+          />
+          {{ formData.dept }}
+        </el-form-item>
         <el-form-item prop="listorder" label="排序">
-          <!-- <el-input v-model="formData.listorder" placeholder="请输入" /> -->
           <el-input-number v-model="formData.listorder" :min="99" controls-position="right" size="large" />
         </el-form-item>
         <el-form-item prop="status" label="状态">
-          <!-- <el-input v-model="formData.remark" placeholder="请输入" /> -->
           <el-switch v-model="formData.status" :active-value="1" :inactive-value="0">
             <template #active>启用</template>
             <template #inactive>禁用</template>

@@ -562,9 +562,9 @@ class Role extends ResourceController
         $failed = false;
         $failedArr = [];
         foreach ($DelArr as $k => $v) {
-            $this->Medoodb->delete("sys_role_perm", $v);
-            $ret = $this->Medoodb->id();
-            if (!$ret) {
+            $result = $this->Medoodb->delete("sys_role_perm", $v);
+
+            if (!$result->rowCount()) {
                 $failed = true;
                 array_push($failedArr, $v);
             }

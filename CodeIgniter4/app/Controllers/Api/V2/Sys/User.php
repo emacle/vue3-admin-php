@@ -381,26 +381,35 @@ class User extends ResourceController
         foreach ($UserArr as $k => $v) {
             $UserArr[$k]['role'] = [];
             // 获取用户角色
-            $RoleArr = $this->Medoodb->select(
-                'sys_role',
-                [
-                    "[><]sys_user_role" => ["sys_role.id" => "role_id"] // 表sys_role内联表sys_user_role
-                ],
-                [
-                    "@sys_role.id",
-                    "sys_role.name"
+            // $RoleArr = $this->Medoodb->select(
+            //     'sys_role',
+            //     [
+            //         "[><]sys_user_role" => ["sys_role.id" => "role_id"] // 表sys_role内联表sys_user_role
+            //     ],
+            //     [
+            //         "@sys_role.id",
+            //         "sys_role.name"
 
-                ],
+            //     ],
+            //     [
+            //         "sys_role.status" => 1,
+            //         "sys_user_role.user_id" => $v['id'],
+            //     ]
+            // );
+
+            // foreach ($RoleArr as $kk => $vv) {
+            //     // array_push($UserArr[$k]['role'], intval($vv['id'])); // 字符串转数字 前端treeselect value与option 的id 必须类型一致
+            //     array_push($UserArr[$k]['role'], (string)$vv['id']); // 数字转字符串 el-select value与option 的id 必须类型一致
+            // }		
+
+            $RoleArr = $this->Medoodb->select(
+                'sys_user_role',
+                'role_id [String]',
                 [
-                    "sys_role.status" => 1,
-                    "sys_user_role.user_id" => $v['id'],
+                    "user_id" => $v['id']
                 ]
             );
-
-            foreach ($RoleArr as $kk => $vv) {
-                // array_push($UserArr[$k]['role'], intval($vv['id'])); // 字符串转数字 前端treeselect value与option 的id 必须类型一致
-                array_push($UserArr[$k]['role'], (string)$vv['id']); // 数字转字符串 el-select value与option 的id 必须类型一致
-            }
+            $UserArr[$k]['role'] = $RoleArr;
         }
 
         // 遍历该用户所属部门信息
@@ -413,10 +422,7 @@ class User extends ResourceController
                     "user_id" => $v['id']
                 ]
             );
-
-            foreach ($DeptArr as $kk => $vv) {
-                array_push($UserArr[$k]['dept'], intval($vv['dept_id'])); // 字符串转数字 前端treeselect value与option 的id 必须类型一致
-            }
+            $UserArr[$k]['dept'] = $DeptArr;
         }
 
         $response = [
@@ -613,9 +619,9 @@ class User extends ResourceController
         $failed = false;
         $failedArr = [];
         foreach ($DelArr as $k => $v) {
-            $this->Medoodb->delete("sys_user_role", $v);
-            $ret = $this->Medoodb->id();
-            if (!$ret) {
+            $result = $this->Medoodb->delete("sys_user_role", $v);
+
+            if (!$result->rowCount()) {
                 $failed = true;
                 array_push($failedArr, $v);
             }
@@ -664,9 +670,9 @@ class User extends ResourceController
         $failed = false;
         $failedArr = [];
         foreach ($DelArr as $k => $v) {
-            $this->Medoodb->delete('sys_user_dept', $v);
-            $ret = $this->Medoodb->id();
-            if (!$ret) {
+            $result = $this->Medoodb->delete('sys_user_dept', $v);
+
+            if (!$result->rowCount()) {
                 $failed = true;
                 array_push($failedArr, $v);
             }
@@ -784,6 +790,59 @@ class User extends ResourceController
             ],
         ];
         return $this->respond($response);
+    }
+
+    // 路由白名单，获取所有部门,此接口为用户管理中选择所有部门的接口，与角色选项不同不需要根据权限来设置
+    public function deptoptions()
+    {
+        // 该查询需要在 MySQL 8.0 或更高版本中运行,因为它使用了递归公用表表达式 (RCTE) 特性
+        $sql = "WITH RECURSIVE cte AS (
+                SELECT id, pid, name, aliasname, listorder, status
+                FROM sys_dept
+                UNION ALL
+                SELECT d.id, d.pid, d.name, d.aliasname, d.listorder, d.status
+                FROM sys_dept d
+                INNER JOIN cte c ON d.id = c.pid
+              )
+              SELECT DISTINCT id as value, pid, name as label, aliasname, listorder, status FROM cte;";
+        // 执行查询
+        $DeptArr = $this->Medoodb->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+
+        $DeptTreeObj = new \BlueM\Tree(
+            $DeptArr,
+            ['rootId' => 0, 'id' => 'value', 'parent' => 'pid']
+        );
+        $allDeptsTreeArr = $this->_dumpBlueMTreeNodes_dept($DeptTreeObj->getRootNodes());
+
+        $response = [
+            "code" => 20000,
+            "data" => [
+                "list" => $allDeptsTreeArr
+            ],
+        ];
+        return $this->respond($response);
+    }
+
+    /**
+     * 遍历 BlueM\Tree 树对象，将数据格式化部门树
+     */
+    private function _dumpBlueMTreeNodes_dept($node)
+    {
+        $tree = array();
+
+        foreach ($node as $k => $v) {
+            $valArr = $v->toArray(); // 获取本节点属性数组
+            // BlueM\Tree 对象 多余去除
+            unset($valArr['parent']);
+
+            if ($v->hasChildren()) { // 存在 children 则构造 children key，否则不添加
+                $valArr['children'] = $this->_dumpBlueMTreeNodes_dept($v->getChildren());
+            }
+
+            $tree[] = $valArr;     // 循环数组添加元素 属于同一层级
+        }
+
+        return $tree;
     }
 
     /**

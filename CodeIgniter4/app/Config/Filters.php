@@ -86,11 +86,12 @@ class Filters extends BaseFilters
                 // 'api/v2/sys/user/*', // TODO: 权限完善后需在此处删除 AuthCheckFilter.php
                 'api/v2/sys/user/refreshtoken',
                 'api/v2/sys/user/roleoptions',
+                'api/v2/sys/user/deptoptions',
                 'api/v2/sys/user/githubauth',
                 'api/v2/sys/user/giteeauth',
 
                 'api/v2/sys/role/allmenus',
-                'api/v2/sys/role/alldepts',
+                'api/v2/sys/role/allroles',
                 'api/v2/sys/role/alldepts',
                 'api/v2/sys/role/rolemenus',
                 'api/v2/sys/role/roleroles',

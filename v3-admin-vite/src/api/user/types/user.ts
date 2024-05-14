@@ -51,3 +51,13 @@ export interface GetRoleOptionsData {
 export type GetRoleOptionsResponseData = ApiResponseData<{
   list: GetRoleOptionsData[]
 }>
+
+export interface GetDeptOptionsData {
+  value: string
+  label: string
+  children: GetDeptOptionsData[]
+}
+
+export type GetDeptOptionsResponseData = ApiResponseData<{
+  list: GetDeptOptionsData[]
+}>

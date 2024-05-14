@@ -44,3 +44,12 @@ export function getRoleOptionsApi(params: { userId: string }) {
     params
   })
 }
+
+/** 获取所有部门做为用户管理中 deptoptions 数据 */
+export function getDeptOptionsApi() {
+  return request<User.GetDeptOptionsResponseData>({
+    url: "sys/user/deptoptions",
+    method: "get"
+
+  })
+}
