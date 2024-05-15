@@ -13,6 +13,7 @@ $routes->group('api/v2/sys', ['namespace' => 'App\Controllers\Api\V2\Sys'], func
     $routes->get('user', 'User::index');
     $routes->get('user/roleoptions', 'User::roleoptions');
     $routes->get('user/deptoptions', 'User::deptoptions');
+    $routes->get('user/refreshtoken', 'User::refreshtoken');
     $routes->get('user/info', 'User::info'); // get 与user/(.*) 冲突，必须放在上面，优先选择
     $routes->get('user/(.*)', 'User::show/$1');
     $routes->post('user', 'User::create');
@@ -23,8 +24,6 @@ $routes->group('api/v2/sys', ['namespace' => 'App\Controllers\Api\V2\Sys'], func
     $routes->options('user/login', 'User::login_options'); // $routes->resource 不会创建options请求，但是cors里必须要有options的请求接收
     $routes->post('user/login', 'User::login');
     $routes->post('user/logout', 'User::logout');
-    $routes->post('user/refreshtoken', 'User::refreshtoken');
-
     $routes->post('user/githubauth', 'User::githubauth');
     $routes->post('user/giteeauth', 'User::giteeauth');
 
