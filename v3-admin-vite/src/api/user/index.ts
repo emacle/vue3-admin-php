@@ -50,6 +50,5 @@ export function getDeptOptionsApi() {
   return request<User.GetDeptOptionsResponseData>({
     url: "sys/user/deptoptions",
     method: "get"
-
   })
 }
