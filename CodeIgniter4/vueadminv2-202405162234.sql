@@ -1,6 +1,6 @@
 -- MySQL dump 10.13  Distrib 8.3.0, for macos13.6 (x86_64)
 --
--- Host: localhost    Database: vueadminv2
+-- Host:     Database: vueadminv2
 -- ------------------------------------------------------
 -- Server version	8.3.0
 
@@ -38,32 +38,8 @@ CREATE TABLE `article` (
 
 LOCK TABLES `article` WRITE;
 /*!40000 ALTER TABLE `article` DISABLE KEYS */;
-INSERT INTO `article` VALUES (1,'hello','po','288','2020-04-04 23:14:09'),(2,'wordl','qq','8000','2020-04-04 23:14:25');
+INSERT INTO `article` VALUES (1,'hello','go','288','2020-04-04 23:14:09'),(2,'wordl','qq','8000','2020-04-04 23:14:25');
 /*!40000 ALTER TABLE `article` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `employees`
---
-
-DROP TABLE IF EXISTS `employees`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `employees` (
-  `id` int NOT NULL,
-  `name` varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `email` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `employees`
---
-
-LOCK TABLES `employees` WRITE;
-/*!40000 ALTER TABLE `employees` DISABLE KEYS */;
-INSERT INTO `employees` VALUES (2,'Vanya Hargreeves','vanya@gmail.com'),(3,'Luther Hargreeves','luther@gmail.com'),(4,'hello','qq.co'),(5,'Klaus Hargreeves','klaus@gmail.com'),(6,'Ben Hargreeves','ben@gmail.com'),(7,'hello','qq.co111');
-/*!40000 ALTER TABLE `employees` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -188,7 +164,7 @@ CREATE TABLE `sys_menu` (
 
 LOCK TABLES `sys_menu` WRITE;
 /*!40000 ALTER TABLE `sys_menu` DISABLE KEYS */;
-INSERT INTO `sys_menu` VALUES (1,0,'Sys','/sys','Layout',0,'系统管理','Tools','/sys/menu',0,1,'',99,NULL,NULL),(2,1,'SysMenu','/sys/menu','sys/menu/index',1,'菜单管理','Menu','',0,1,'',80,NULL,NULL),(3,1,'SysRole','/sys/role','sys/role/index',1,'角色管理','role','',0,1,'',99,NULL,NULL),(4,1,'SysUser','/sys/user','sys/user/index',1,'用户管理','user','',0,1,'',99,NULL,NULL),(5,0,'Sysx','/sysx','Layout',0,'测试菜单','github','/sysx/xiangjun',0,1,'',100,NULL,NULL),(6,2,'','/sys/menu/post','',2,'添加','','',0,1,'',90,NULL,NULL),(7,2,'','/sys/menu/put','',2,'编辑','','',0,1,'',95,NULL,NULL),(8,2,'','/sys/menu/delete','',2,'删除','','',0,1,'',99,NULL,NULL),(9,2,'','/sys/menu/get','',2,'查看','','',0,1,'',80,NULL,NULL),(10,5,'SysxXiangjun','/sysx/xiangjun','xiangjun/index',1,'vue测试','form','',0,1,'',95,NULL,NULL),(11,5,'SysxUploadimg','/sysx/uploadimg','uploadimg/index',1,'测试2','yidong','',0,1,'',100,NULL,NULL),(12,1,'SysIcon','/sys/icon','svg-icons/index',1,'图标管理','icon','',0,1,'',100,NULL,NULL),(13,3,'','/sys/role/get','',2,'查看','','',0,1,'',90,NULL,NULL),(14,3,'','/sys/role/post','',2,'添加','','',0,1,'',91,NULL,NULL),(15,3,'','/sys/role/put','',2,'编辑','','',0,1,'',92,NULL,NULL),(16,3,'','/sys/role/delete','',2,'删除','','',0,1,'',101,NULL,NULL),(17,4,'','/sys/user/get','',2,'查看','','',0,1,'',96,NULL,NULL),(18,4,'','/sys/user/post','',2,'添加','','',0,1,'',97,NULL,NULL),(19,4,'','/sys/user/put','',2,'编辑','','',0,1,'',99,NULL,NULL),(20,4,'','/sys/user/delete','',2,'删除','','',0,1,'',100,NULL,NULL),(21,3,'','/sys/role/saveroleperm/post','',2,'角色授权','','',0,1,'',120,NULL,NULL),(23,1,'SysDept','/sys/dept','sys/dept/index',1,'部门管理','dept','',0,1,'',85,NULL,NULL),(24,23,'','/sys/dept/get','',2,'查看','','',0,1,'',99,NULL,NULL),(25,23,'','/sys/dept/post','',2,'添加','','',0,1,'',100,NULL,NULL),(26,23,'','/sys/dept/put','',2,'编辑','','',0,1,'',102,NULL,NULL),(27,23,'','/sys/dept/delete','',2,'删除','','',0,1,'',104,NULL,NULL),(28,1,'SysLog','/sys/log','sys/log/index',1,'系统日志','log','',0,1,'',101,NULL,NULL),(29,28,'','/sys/log/get','',2,'查看','','',0,1,'',99,NULL,NULL);
+INSERT INTO `sys_menu` VALUES (1,0,'Sys','/sys','Layout',0,'系统管理','Tools','/sys/menu',0,1,'',99,NULL,NULL),(2,1,'SysMenu','/sys/menu','sys/menu/index',1,'菜单管理','Menu','',0,1,'',100,NULL,NULL),(3,1,'SysRole','/sys/role','sys/role/index',1,'角色管理','Avatar','',0,1,'',110,NULL,NULL),(4,1,'SysUser','/sys/user','sys/user/index',1,'用户管理','UserFilled','',0,1,'',105,NULL,NULL),(5,0,'Sysx','/sysx','Layout',0,'测试菜单','Apple','/sysx/xiangjun',0,1,'',100,NULL,NULL),(6,2,'','/sys/menu/post','',2,'添加','','',0,1,'',90,NULL,NULL),(7,2,'','/sys/menu/put','',2,'编辑','','',0,1,'',95,NULL,NULL),(8,2,'','/sys/menu/delete','',2,'删除','','',0,1,'',99,NULL,NULL),(9,2,'','/sys/menu/get','',2,'查看','','',0,1,'',80,NULL,NULL),(10,5,'SysxXiangjun','/sysx/xiangjun','xiangjun/index',1,'vue测试','Grape','',0,1,'',99,NULL,NULL),(11,5,'SysxUploadimg','/sysx/uploadimg','uploadimg/index',1,'测试2','Cherry','',0,1,'',100,NULL,NULL),(12,1,'SysIcon','/sys/icon','svg-icons/index',1,'图标管理','PictureFilled','',0,1,'',120,NULL,NULL),(13,3,'','/sys/role/get','',2,'查看','','',0,1,'',90,NULL,NULL),(14,3,'','/sys/role/post','',2,'添加','','',0,1,'',91,NULL,NULL),(15,3,'','/sys/role/put','',2,'编辑','','',0,1,'',92,NULL,NULL),(16,3,'','/sys/role/delete','',2,'删除','','',0,1,'',101,NULL,NULL),(17,4,'','/sys/user/get','',2,'查看','','',0,1,'',96,NULL,NULL),(18,4,'','/sys/user/post','',2,'添加','','',0,1,'',97,NULL,NULL),(19,4,'','/sys/user/put','',2,'编辑','','',0,1,'',99,NULL,NULL),(20,4,'','/sys/user/delete','',2,'删除','','',0,1,'',100,NULL,NULL),(21,3,'','/sys/role/saveroleperm/post','',2,'角色授权','','',0,1,'',120,NULL,NULL),(23,1,'SysDept','/sys/dept','sys/dept/index',1,'部门管理','Grid','',0,1,'',115,NULL,NULL),(24,23,'','/sys/dept/get','',2,'查看','','',0,1,'',99,NULL,NULL),(25,23,'','/sys/dept/post','',2,'添加','','',0,1,'',100,NULL,NULL),(26,23,'','/sys/dept/put','',2,'编辑','','',0,1,'',102,NULL,NULL),(27,23,'','/sys/dept/delete','',2,'删除','','',0,1,'',104,NULL,NULL),(28,1,'SysLog','/sys/log','sys/log/index',1,'系统日志','Calendar','',0,1,'',125,NULL,NULL),(29,28,'','/sys/log/get','',2,'查看','','',0,1,'',99,NULL,NULL);
 /*!40000 ALTER TABLE `sys_menu` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -396,61 +372,6 @@ INSERT INTO `sys_user_role` VALUES (1,1,1),(2,2,2);
 UNLOCK TABLES;
 
 --
--- Table structure for table `sys_user_token`
---
-
-DROP TABLE IF EXISTS `sys_user_token`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `sys_user_token` (
-  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '编号',
-  `user_id` bigint NOT NULL,
-  `token` varchar(100) NOT NULL COMMENT 'token',
-  `expire_time` int DEFAULT NULL COMMENT '过期时间',
-  `create_by` varchar(50) DEFAULT NULL COMMENT '创建人',
-  `create_time` int DEFAULT NULL COMMENT '创建时间',
-  `last_update_by` varchar(50) DEFAULT NULL COMMENT '更新人',
-  `last_update_time` int DEFAULT NULL COMMENT '更新时间',
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `token` (`token`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COMMENT='用户Token';
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `sys_user_token`
---
-
-LOCK TABLES `sys_user_token` WRITE;
-/*!40000 ALTER TABLE `sys_user_token` DISABLE KEYS */;
-/*!40000 ALTER TABLE `sys_user_token` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `upload_tbl`
---
-
-DROP TABLE IF EXISTS `upload_tbl`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `upload_tbl` (
-  `identify` varchar(255) DEFAULT NULL,
-  `phone` varchar(255) DEFAULT NULL,
-  `idinfo` varchar(255) DEFAULT NULL,
-  `bankinfo` varchar(255) DEFAULT NULL,
-  `check` varchar(255) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `upload_tbl`
---
-
-LOCK TABLES `upload_tbl` WRITE;
-/*!40000 ALTER TABLE `upload_tbl` DISABLE KEYS */;
-/*!40000 ALTER TABLE `upload_tbl` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Dumping routines for database 'vueadminv2'
 --
 /*!50003 DROP FUNCTION IF EXISTS `getChildLst` */;
@@ -494,4 +415,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2024-04-13  0:17:14
+-- Dump completed on 2024-05-16 22:34:51

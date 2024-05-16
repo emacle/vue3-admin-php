@@ -4,7 +4,7 @@
 通用后台角色权限管理系统, 基于 [v3-admin-vite](https://github.com/un-pany/v3-admin-vite) 和 [PHP CodeIgniter 4.5.0](https://github.com/codeigniter4/framework) RESTful 实现，采用前后端分离架构的权限管理系统，PHP快速开发平台，目标是搭建一套简洁易用的快速解决方案，可以帮助用户有效降低项目开发难度和成本。
 
 以 [v3-admin-vite](https://github.com/un-pany/v3-admin-vite) 前端模板为基础，修改动态路由部分，实现菜单路由可根据后端角色进行动态加载。
-后端路由权限基于 php-jwt 使用 PHP CI4 AuthFilter 做token及权限认证。
+后端路由权限基于 php-jwt 使用 PHP CI4 AuthFilter 作token及权限认证。
 
 V3 Admin Vite 基于 Vue3、TypeScript、Element Plus、Pinia 和 Vite 等主流技术。
 
@@ -14,7 +14,7 @@ V3 Admin Vite 基于 Vue3、TypeScript、Element Plus、Pinia 和 Vite 等主流
 - [x] 3. 角色管理：新建角色，修改角色，删除角色，查询角色
 - [x] 4. 菜单管理：新建菜单，修改菜单，删除菜单，查询菜单
 - [x] 5. 部门管理：新建部门，修改部门，删除部门，查询部门
-- [x] 6. **jwt生成访问与刷新token， access_token过期后，根据refreshtoken刷新访问token，实现无缝刷新功能。refreshtoken 加入计数器,在有效期内接口调用超过一定次数自动续期** 
+- [x] 6. **JWT生成访问与刷新token， access_token过期后，根据refreshtoken刷新访问token，实现无缝刷新功能。refreshtoken 加入计数器,在有效期内接口调用超过一定次数自动续期** 
 - [ ] 7. 图形验证码（`gregwar/captcha` 包生成）
 - [ ] 8. 系统日志
 
@@ -22,7 +22,37 @@ V3 Admin Vite 基于 Vue3、TypeScript、Element Plus、Pinia 和 Vite 等主流
 ### 目录结构
 v3-admin-vite/ 前端模板
 
-CodeIgniter4/ 后端 Restful API 接口
+**CodeIgniter4 Config文件：** 
+```
+CodeIgniter4/app/Config
+├── App.php
+├── Cors.php      #配置跨域
+├── Database.php  #数据库配置
+├── Filters.php   #定义路由白名单，'AuthCheck'=>'except'里面路由不会进行权限验证
+├── Routes.php    #定义路由
+
+CodeIgniter4/app/Filters/
+└── AuthCheckFilter.php  # 动态权限认证
+
+CodeIgniter4/writable/logs/
+├── index.html
+└── log-2024-05-12.log   # 查看错误日志
+```
+
+**CodeIgniter4 RESTful API：**
+```
+CodeIgniter4/app/Controllers/
+├── Api
+│   └── V2
+│       └── Sys
+│           ├── Dept.php
+│           ├── Employee.php
+│           ├── Menu.php
+│           ├── Role.php
+│           └── User.php
+├── BaseController.php
+└── Home.php
+```
 
 ### 前端
 
@@ -30,37 +60,105 @@ CodeIgniter4/ 后端 Restful API 接口
   2. node 版本 18.x 或 20+
   3. pnpm 版本 8.x 或最新版
 
-	进入项目目录
-
-	```
-	cd v3-admin-vite
-	```
-
+进入项目目录
+```sh
+cd v3-admin-vite
+```
   安装依赖
+```sh
+pnpm i
+```
 
-	```
-	pnpm i
-	```
+启动服务
 
-   启动服务
-
-	```
-	pnpm dev
-	```
+```sh
+pnpm dev
+```
 
 ### 后端
    **php 8.1+**
 
-	```php
-    cd CodeIgniter4
+1. composer 安装PHP依赖包
 
-    composer install  // 根据composer.json 初始安装所有插件包
+```sh
+cd CodeIgniter4
 
-    cp env .env
-    # 根据实际修改 app.baseURL , postman测试 http://{app.baseURL} API配置正确
-	```
+# 根据composer.json 初始安装所有插件包
+composer install
+
+# 根据实际修改 app.baseURL , postman测试 http://{app.baseURL} API配置正确
+cp env .env
+```
+2.创建数据库 vueadminv2, 使用root用户导入 vueadminv2-{date}.sql 文件
+
+3.后端数据库连接配置 修改配置文件
+
+`cat CodeIgniter4\app\Database.php`
+
+```php
+public array $medoodb = [
+    'type' => 'mysql',
+    'host' => 'localhost',
+    'database' => 'vueadminv2',
+    // 根据实际配置
+    'username' => 'vueadmin',
+    'password' => 'vueadmin',
+    'error' => PDO::ERRMODE_EXCEPTION,
+    // ERRMODE_EXCEPTION PDO will throw a PDOException, and all following codes will be terminated, 
+    // quickly pointing the finger at potential problem areas in your code.
+];
+```
 
 ### 生产环境部署
+**Nginx配置**
+```sh
+server {
+    listen 10000;
+    server_name pocoyo.rr.nu;
+
+    root /var/www/vue3-admin-php/v3-admin-vite/dist/;
+    index index.html;
+
+    location ^~ /api/v2 {
+        proxy_pass http://pocoyo.rr.nu:10001;
+    }
+    location / {
+        # 防止直接刷新页面(地址栏回车)服务端会直接报 404 错误。
+        try_files $uri $uri/ /index.html;
+    }
+}
+
+server {
+    listen  10001;
+    server_name pocoyo.rr.nu;
+
+    root  /var/www/vue3-admin-php/CodeIgniter4/public;
+    index index.php index.html index.htm;
+
+    location / {
+        try_files $uri $uri/ /index.php$is_args$args;
+    }
+
+    location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+
+        fastcgi_pass unix:/run/php/php8.1-fpm.sock;
+    }
+    # Enable browser caching of static assets
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico)$ {
+        expires max;
+        log_not_found off;
+    }
+
+    error_page 404 /index.php;
+
+    # deny access to hidden files such as .htaccess
+    location ~ /\. {
+        deny all;
+    }
+
+}
+```
 
 ## 角色权限说明
 1. 这里将权限抽象成三种权限（可扩展更多），菜单类权限（包括控件按钮），角色类权限（用户可分配的角色），部门数据类权限（用户可查看的部门数据），参考 [角色权限组+资源分配](https://blog.csdn.net/qiuziqiqi/article/details/65437123)
@@ -78,35 +176,33 @@ CodeIgniter4/ 后端 Restful API 接口
 
 | Tables_in_vueadminv2 | 说明                                      |
 |---------------------:|----------------------------------------- |
-| keys                 | 未用       |
-| logs                 | 未用       |
-| sys_dept             | 系统部门表                                 |
-| sys_menu             | 系统菜单表                                 |
-| sys_perm             | 系统权限表                                 |
-| sys_perm_type        | 权限类型（暂时未用到）                       |
-| sys_role             | 系统角色表                                 |
-| sys_role_perm        | 角色权限关系表                              |
 | sys_user             | 系统用户表                                 |
+| sys_menu             | 系统菜单表                                 |
+| sys_role             | 系统角色表                                 |
+| sys_dept             | 系统部门表                                 |
+| sys_perm             | 系统权限表                                 |
+| sys_role_perm        | 角色权限关系表                              |
 | sys_user_dept        | 用户所属部门表（可一对多）                    |
-| sys_user_role        | 用户角色对应关系                            |
-| sys_user_token       | 使用JWT token此表无用                       |
-| upload_tbl           | 业务测试表                                  |
+| sys_user_role        | 用户角色对应关系（可一对多）                  |
+| sys_perm_type        | 权限类型（暂时未用到）                       |
+| keys                 | 未用                                      |
+| logs                 | 未用                                      |
+| article              | 测试                                   |
 
 ## RESTful
  - 使用 catfan/medoo 实现 **复杂分页过滤排序**
     
     前端GET请求参数与使用的 table 组件有关
 
-    ```
-    GET /articles?currentPage=1&limit=30&sort=-id&fields=id,title,author&query=~author,title&author=888&title=world
+```
+GET /articles?currentPage=1&limit=30&sort=-id&fields=id,title,author&query=~author,title&author=888&title=world
 
-    size:  每页记录数，后台会配置默认值
-    currentPage: 第几页，后台会配置默认值
-    sort:   支持多个参数 &sort=-id,+author => id降序 author 升序
-    fileds: 指定要获取的显示字段 => 降低网络流量
-    query:  支持多个参数 &query=~author,title => author like 模糊查询， title精确查询 &author=888&title=world 需要配合query参数才有意义
-    ```
-
+size:  每页记录数，后台会配置默认值
+currentPage: 第几页，后台会配置默认值
+sort:   支持多个参数 &sort=-id,+author => id降序 author 升序
+fileds: 指定要获取的显示字段 => 降低网络流量
+query:  支持多个参数 &query=~author,title => author like 模糊查询， title精确查询 &author=888&title=world 需要配合query参数才有意义
+```
 
 
 ## 前端目录树
@@ -121,4 +217,3 @@ CodeIgniter4/ 后端 Restful API 接口
   - TypeScript：JavaScript 语言的超集
   - PNPM：更快速的，节省磁盘空间的包管理工具
  
-
