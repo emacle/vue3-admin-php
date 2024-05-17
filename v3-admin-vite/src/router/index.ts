@@ -62,6 +62,29 @@ export const constantRoutes: RouteRecordRaw[] = [
     ]
   },
   // {
+  //   path: "/profile/index",
+  //   component: () => import("@/views/profile/index.vue"),
+  //   meta: {
+  //     hidden: true
+  //   }
+  // },
+  {
+    path: "/profile",
+    component: Layouts,
+    redirect: "/profile/index",
+    meta: {
+      hidden: true
+    },
+    children: [
+      {
+        path: "index",
+        component: () => import("@/views/profile/index.vue"),
+        name: "Profile",
+        meta: { title: "个人中心", elIcon: "user" }
+      }
+    ]
+  },
+  // {
   //   path: "/unocss",
   //   component: Layouts,
   //   redirect: "/unocss/index",

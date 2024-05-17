@@ -38,6 +38,7 @@ export interface asyncRouterMapData {
 }
 
 export type UserInfoResponseData = ApiResponseData<{
+  email: string
   avatar: string
   id: string
   username: string
