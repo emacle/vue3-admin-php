@@ -23,6 +23,7 @@ const { isLeft, isTop } = useLayoutMode()
       </router-link>
       <router-link v-else key="expand" to="/">
         <img :src="!isLeft ? logoText2 : logoText1" class="layout-logo-text" />
+        <h1 class="sidebar-title">Emacs Org</h1>
       </router-link>
     </transition>
   </div>
@@ -40,8 +41,9 @@ const { isLeft, isTop } = useLayoutMode()
     display: none;
   }
   .layout-logo-text {
-    height: 100%;
+    height: 50%;
     vertical-align: middle;
+    margin-right: 16px;
   }
 }
 
@@ -52,13 +54,30 @@ const { isLeft, isTop } = useLayoutMode()
 
 .collapse {
   .layout-logo {
-    width: 32px;
-    height: 32px;
+    // width: 48px;
+    // height: 48px;
+    height: 50%;
     vertical-align: middle;
     display: inline-block;
   }
   .layout-logo-text {
     display: none;
   }
+}
+
+.sidebar-title {
+  display: inline-block;
+  margin: 0;
+  color: #fff;
+  font-weight: 600;
+  line-height: 50px;
+  font-size: 20px;
+  font-family:
+    Avenir,
+    Helvetica Neue,
+    Arial,
+    Helvetica,
+    sans-serif;
+  vertical-align: middle;
 }
 </style>

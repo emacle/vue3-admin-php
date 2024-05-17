@@ -8,7 +8,7 @@ const dynamicTitle = ref<string>("")
 
 /** 设置标题 */
 const setTitle = (title?: string) => {
-  dynamicTitle.value = title ? `${VITE_APP_TITLE} | ${title}` : VITE_APP_TITLE
+  dynamicTitle.value = title ? `${title} | ${VITE_APP_TITLE}` : VITE_APP_TITLE
 }
 
 /** 监听标题变化 */
