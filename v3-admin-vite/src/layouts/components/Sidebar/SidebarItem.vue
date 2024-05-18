@@ -86,7 +86,7 @@ const resolvePath = (routePath: string) => {
 .svg-icon {
   min-width: 1em;
   margin-right: 12px;
-  font-size: 18px;
+  font-size: 15px;
 }
 
 .el-icon {
