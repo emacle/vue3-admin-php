@@ -561,7 +561,8 @@ onMounted(() => {
               <template #default="{ data }">
                 <span class="custom-tree-node">
                   <span>
-                    <el-icon v-if="data.icon"><component :is="getIconComponent(data.icon)" /></el-icon>
+                    <!-- <el-icon v-if="data.icon"><component :is="getIconComponent(data.icon)" /></el-icon> -->
+                    <SvgIcon v-if="data.icon" :name="data.icon" />
                     {{ data.title }}({{ data.perm_id }})
                   </span>
                   <span>
