@@ -28,5 +28,4 @@ export default function handleClipboard(text: string, event: Event) {
     clipboardError()
     clipboard.destroy()
   })
-  clipboard.onClick(event)
 }
