@@ -18,6 +18,7 @@ class User extends ResourceController
         $this->Medoodb = \Config\Services::medoo();
     }
 
+    #region 登录
     public function login()
     {
         $username = $this->request->getVar('username'); // POST param
@@ -71,7 +72,9 @@ class User extends ResourceController
             return $this->respond($response);
         }
     }
+    #endregion
 
+    #region 获取用户信息
     public function info()
     {
         // /sys/user/info 不用认证但是需要提取出 access_token 中的 user_id 来拉取用户信息
@@ -206,7 +209,9 @@ class User extends ResourceController
             return $this->respond($response);
         }
     }
+    #endregion
 
+    #region 刷新token
     public function refreshtoken()
     {
         // 此处 $Token 应为refresh token 在前端 request 拦截器中做了修改
@@ -290,7 +295,9 @@ class User extends ResourceController
             return $this->respond($response, 401);
         }
     }
+    #endregion
 
+    #region 查
     public function index()
     {
         // $this->request->getVar(); // 该方法首先尝试从 POST 数据中获取参数值,如果不存在,则尝试从 GET 参数中获取。
@@ -446,7 +453,9 @@ class User extends ResourceController
             return $this->failNotFound('No employee found');
         }
     }
+    #endregion
 
+    #region 增
     public function create()
     {
         // --data-raw '{
@@ -540,7 +549,9 @@ class User extends ResourceController
 
         return $this->respondCreated($response);
     }
+    #endregion
 
+    #region 改
     public function update($id = null)
     {
         // $id类型可以在Routes.php中定义  $routes->put('user/(.*)', 'User::update/$1'); 默认$1是字符串
@@ -710,7 +721,9 @@ class User extends ResourceController
             return $this->respond($response);
         }
     }
+    #endregion
 
+    #region 删
     public function delete($id = null)
     {
         $id = intval($id);
@@ -758,8 +771,71 @@ class User extends ResourceController
             return $this->respond($response, 404);
         }
     }
+    #endregion
 
-    // 路由白名单，根据useId 获取该用户拥有的角色权限选项
+    #region 重置密码，路由白名单
+    public function repasswd($id = null)
+    {
+        $parms = get_object_vars($this->request->getVar()); // 获取表单参数，类型为数组
+        // TODO: 后端使用Validator包进行参数密码复杂度校验与前端保持一致
+        // use Respect\Validation\Validator as v;
+        // use Respect\Validation\Exceptions\ValidationException;
+        // try {
+        //     // 使用check 来捕获异常信息 https://respect-validation.readthedocs.io/en/2.0/rules/AnyOf/
+        //     v::keySet(
+        //         v::key('passwordOrig', v::notEmpty()),
+        //         v::key('password', v::regex('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[\S]{8,}$/')),
+        //         v::key('rePassword', v::notEmpty())
+        //     )->check($parms);
+        //     v::keyValue('password_confirmation', 'equals', 'password')->check($parms);
+        // } catch (ValidationException $e) {
+
+        // 根据token获取用户ID
+        $Bearer = $this->request->getHeaderLine('Authorization');
+        list($Token) = sscanf($Bearer, 'Bearer %s');
+        $appConfig = config(App::class); // 获取app/Config/App.php文件夹里变量
+        $decoded = JWT::decode($Token, new Key($appConfig->jwt_key, 'HS256')); //HS256方式，这里要和签发的时候对应
+
+        $userId =  $decoded->user_id;
+
+        // 原密码校验
+        $has = $this->Medoodb->has(
+            'sys_user',
+            [
+                'id' => $userId,
+                'password' => md5($parms['passwordOrig'])
+            ]
+        );
+        if (!$has) {
+            $response = [
+                "code" => 20400,
+                "type" => 'error',
+                "message" => '原密码不正确'
+            ];
+            return $this->respond($response, 200);
+        }
+
+        // 更新密码
+        $result = $this->Medoodb->update(
+            'sys_user',
+            ['password' => md5($parms['password'])],
+            ['id' => $userId]
+        );
+
+        $result->rowCount() ? $response = [
+            "code" => 20000,
+            "type" => 'success',
+            "message" => '密码更新成功'
+        ] : $response = [
+            "code" => 20204,
+            "type" => 'error',
+            "message" => '密码未更新'
+        ];
+        return $this->respond($response);
+    }
+    #endregion
+
+    #region 路由白名单，根据useId 获取该用户拥有的角色权限选项
     public function roleoptions()
     {
         $userId = $this->request->getVar('userId');
@@ -791,8 +867,9 @@ class User extends ResourceController
         ];
         return $this->respond($response);
     }
+    #endregion
 
-    // 路由白名单，获取所有部门,此接口为用户管理中选择所有部门的接口，与角色选项不同不需要根据权限来设置
+    #region 路由白名单，获取所有部门,此接口为用户管理中选择所有部门的接口，与角色选项不同不需要根据权限来设置
     public function deptoptions()
     {
         // 该查询需要在 MySQL 8.0 或更高版本中运行,因为它使用了递归公用表表达式 (RCTE) 特性
@@ -822,7 +899,9 @@ class User extends ResourceController
         ];
         return $this->respond($response);
     }
+    #endregion
 
+    #region 私有函数
     /**
      * 遍历 BlueM\Tree 树对象，将数据格式化部门树
      */
@@ -905,4 +984,5 @@ class User extends ResourceController
         }
         return $ret;
     }
+    #endregion
 }

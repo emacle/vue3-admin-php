@@ -52,3 +52,12 @@ export function getDeptOptionsApi() {
     method: "get"
   })
 }
+
+/** 个人修改密码 */
+export function updatePasswordApi(data: User.UpdateUserPasswordRequestData) {
+  return request({
+    url: "sys/user/repasswd",
+    method: "put",
+    data
+  })
+}

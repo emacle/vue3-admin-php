@@ -2,25 +2,39 @@
 import { ElMessage } from "element-plus"
 import { defineProps, onMounted, ref } from "vue"
 
+interface userInfo {
+  userId: string
+  username: string
+  email: string
+  avatar: string
+  role: string
+}
+
 const props = defineProps<{
-  user: {
-    userId: string
-    username: string
-    email: string
-    avatar: string
-    role: string
-  }
+  user: userInfo
 }>()
 
+// 创建默认值对象的函数
+const createDefaultObject = <T,>(defaultValue: any): T => {
+  return new Proxy(
+    {},
+    {
+      get: () => defaultValue
+    }
+  ) as T
+}
 // 直接修改传入的 props 是不推荐的，因为 props 应该是父组件传递给子组件的只读数据。
 // 为了避免违反这个规则并解决 ESLint 报错，可以将 props 的数据复制到本地状态，然后在本地状态上进行修改。
-const localUser = ref({
-  userId: "",
-  username: "",
-  email: "",
-  avatar: "",
-  role: ""
-})
+const localUser = ref<userInfo>(createDefaultObject<userInfo>(""))
+
+// createDefaultObject 函数 将localUser 创建userInfo类型的属性全部为""空字符串，等价于下面结果
+// const localUser = ref<userInfo>({
+//   userId: "",
+//   username: "",
+//   email: "",
+//   avatar: "",
+//   role: ""
+// })
 
 onMounted(() => {
   localUser.value = { ...props.user }

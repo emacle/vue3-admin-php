@@ -5,6 +5,7 @@ import UserCard from "./components/UserCard.vue"
 import Activity from "./components/Activity.vue"
 import Timeline from "./components/Timeline.vue"
 import Account from "./components/Account.vue"
+import Password from "./components/Password.vue"
 
 defineOptions({
   // 命名当前组件
@@ -49,7 +50,7 @@ const user = {
                 <Account :user="user" />
               </el-tab-pane>
               <el-tab-pane label="Password" name="password">
-                <!-- <password :user="user" /> -->
+                <Password :user="user" />
               </el-tab-pane>
             </el-tabs>
           </el-card>

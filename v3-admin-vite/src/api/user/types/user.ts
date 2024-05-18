@@ -61,3 +61,9 @@ export interface GetDeptOptionsData {
 export type GetDeptOptionsResponseData = ApiResponseData<{
   list: GetDeptOptionsData[]
 }>
+
+export interface UpdateUserPasswordRequestData {
+  passwordOrig: string
+  password: string
+  rePassword: string
+}

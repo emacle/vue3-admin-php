@@ -1,19 +1,21 @@
 <script lang="ts" setup>
 import { defineProps, defineEmits, onMounted, ref } from "vue"
 
+interface userInfo {
+  userId: string
+  username: string
+  email: string
+  avatar: string
+  role: string
+}
+
 const props = defineProps<{
-  user: {
-    userId: string
-    username: string
-    email: string
-    avatar: string
-    role: string
-  }
+  user: userInfo
 }>()
 
 // 直接修改传入的 props 是不推荐的，因为 props 应该是父组件传递给子组件的只读数据。
 // 为了避免违反这个规则并解决 ESLint 报错，可以将 props 的数据复制到本地状态，然后在本地状态上进行修改。
-const localUser = ref({
+const localUser = ref<userInfo>({
   userId: "",
   username: "",
   email: "",
@@ -49,11 +51,11 @@ onMounted(() => {
 
       <div class="user-profile">
         <div class="box-center">
-          <el-image style="width: 100px; height: 100px" :src="user.avatar" fit="cover" />
+          <el-image style="width: 100px; height: 100px" :src="localUser.avatar" fit="cover" />
         </div>
         <div class="box-center">
           <div class="user-name text-center">{{ user.username }}</div>
-          <div class="user-role text-center text-muted">{{ user.role }}</div>
+          <div class="user-role text-center text-muted">{{ localUser.role }}</div>
         </div>
       </div>
 
