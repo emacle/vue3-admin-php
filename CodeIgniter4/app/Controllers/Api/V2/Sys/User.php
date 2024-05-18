@@ -937,7 +937,7 @@ class User extends ResourceController
             // 构造 vue-admin 路由结构 meta
             $valArr['meta'] = [
                 'title' => $valArr['title'],
-                'elIcon' => $valArr['icon'],
+                'svgIcon' => $valArr['icon'],
                 'keepAlive' => true, // 前端默认缓存所有页面
                 'alwaysShow' => $v->countChildren() ? true : false
             ];

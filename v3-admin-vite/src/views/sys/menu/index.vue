@@ -170,6 +170,12 @@ const getMenuData = () => {
 const getIconComponent = (icon: any) => {
   return icon
 }
+import IconSelect from "@/components/IconSelect/index.vue"
+// 选择图标
+const selectedIcon = (iconName: string) => {
+  // console.log(iconName) // menu
+  formData.value.icon = iconName
+}
 
 // 在组件实例创建时立即获取数据
 import { onMounted } from "vue"
@@ -228,9 +234,10 @@ onMounted(() => {
           </el-table-column>
           <el-table-column prop="icon" label="图标" align="center">
             <template #default="scope">
-              <el-icon v-if="scope.row.type !== 2" color="#409efc" :size="20" class="no-inherit">
+              <!-- <el-icon v-if="scope.row.type !== 2" color="#409efc" :size="20" class="no-inherit">
                 <component :is="getIconComponent(scope.row.icon)" />
-              </el-icon>
+              </el-icon> -->
+              <SvgIcon v-if="scope.row.type !== 2" :name="scope.row.icon" />
               <span v-else-if="scope.row.type === 2 && scope.row.path.match(/\/post$/g)">
                 <el-tag size="small" type="success" effect="dark">POST</el-tag>
               </span>
@@ -316,13 +323,23 @@ onMounted(() => {
           <el-input v-model="formData.redirect" placeholder="面包屑组件重定向,例 /sys/menu, 可留空" />
         </el-form-item>
         <el-form-item prop="icon" label="图标" v-if="formData.type !== 2">
-          <el-input v-model="formData.icon" placeholder="请输入">
+          <!-- <el-input v-model="formData.icon" placeholder="请输入">
             <template #suffix>
               <el-icon class="el-input__icon" v-if="formData.icon"
                 ><component :is="getIconComponent(formData.icon)"
               /></el-icon>
             </template>
-          </el-input>
+          </el-input> -->
+          <el-popover :width="500" trigger="click">
+            <IconSelect @selected="selectedIcon" />
+            <template #reference>
+              <el-input v-model="formData.icon" readonly>
+                <template #suffix>
+                  <SvgIcon :name="formData.icon" />
+                </template>
+              </el-input>
+            </template>
+          </el-popover>
         </el-form-item>
         <el-form-item prop="listorder" label="排序">
           <el-input-number v-model="formData.listorder" :min="99" controls-position="right" size="large" />
@@ -368,5 +385,12 @@ onMounted(() => {
 .pager-wrapper {
   display: flex;
   justify-content: flex-end;
+}
+
+.svg-icon {
+  min-width: 1em;
+  margin-right: 12px;
+  font-size: 15px;
+  fill: dodgerblue; // svg图标颜色
 }
 </style>

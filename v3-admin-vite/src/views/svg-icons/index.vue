@@ -38,6 +38,7 @@ const handleClipboard = (text: string, event: Event) => {
 const getIconComponent = (icon: any) => {
   return icon
 }
+
 onMounted(() => {})
 </script>
 
@@ -47,13 +48,13 @@ onMounted(() => {})
       svgIcons图标
       <el-link type="success" href="https://juejin.cn/post/7089377403717287972" target="_blank">Add and use </el-link>
       从 <el-link type="primary" href="https://www.iconfont.cn/" target="_blank">iconfont</el-link> 直接下载svg 图标
-      放入 @icons/svg 目录下, 如plane 单击图标 复制样式即可使用。
+      放入 @icons/svg 目录下（todo:组件动态获取文件名）如plane 单击图标 复制样式即可使用。菜单里的图标使用svg图标。
       <br />
-      Element-UI Icons 需要在页面定义一个函数（全局函数？），复制引用代码
+      Element-UI Icons 需要在页面定义一个函数（getIconComponent全局函数？），复制引用代码
     </el-card>
     <el-card>
       <el-tabs type="border-card">
-        <el-tab-pane label="Icons">
+        <el-tab-pane label="svgIcons">
           <div class="grid">
             <div v-for="item of svgIcons" :key="item" @click="handleClipboard(generateIconCode(item), $event)">
               <!-- <div v-for="item of svgIcons" :key="item"> -->
@@ -122,7 +123,7 @@ onMounted(() => {})
 }
 
 .search-wrapper {
-  margin-bottom: 20px;
+  margin-bottom: 5px;
   :deep(.el-card__body) {
     padding-bottom: 2px;
   }
