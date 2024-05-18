@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { defineProps, defineEmits, onMounted, ref } from "vue"
+import PanThumb from "@/components/PanThumb/index.vue"
 
 interface userInfo {
   userId: string
@@ -51,11 +52,12 @@ onMounted(() => {
 
       <div class="user-profile">
         <div class="box-center">
-          <el-image style="width: 100px; height: 100px" :src="localUser.avatar" fit="cover" />
-        </div>
-        <div class="box-center">
-          <div class="user-name text-center">{{ user.username }}</div>
-          <div class="user-role text-center text-muted">{{ localUser.role }}</div>
+          <PanThumb :image="localUser.avatar" :zIndex="5" width="100px" height="100px">
+            Hello
+            <p>{{ localUser.role }}</p>
+          </PanThumb>
+          <p>{{ localUser.username }}</p>
+          <p>{{ localUser.email }}</p>
         </div>
       </div>
 
