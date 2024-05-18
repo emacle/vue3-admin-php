@@ -79,9 +79,7 @@ const handleLogin = () => {
     <ThemeSwitch class="theme-switch" />
     <Owl :close-eyes="isFocus" />
     <div class="login-card">
-      <div class="title">
-        <img src="@/assets/layouts/logo-text-2.png" />
-      </div>
+      <div class="title"><h1>Emacs Org</h1></div>
       <div class="content">
         <el-form ref="loginFormRef" :model="loginFormData" :rules="loginFormRules" @keyup.enter="handleLogin">
           <el-form-item prop="username">
@@ -133,7 +131,7 @@ const handleLogin = () => {
               </template>
             </el-input>
           </el-form-item> -->
-          <el-button :loading="loading" type="primary" size="large" @click.prevent="handleLogin">登 录</el-button>
+          <el-button :loading="loading" type="success" size="large" @click.prevent="handleLogin">登 录</el-button>
         </el-form>
       </div>
     </div>
@@ -165,7 +163,9 @@ const handleLogin = () => {
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 150px;
+      height: 80px;
+      color: rgba(84, 192, 79, 0.8); // 浅蓝色，透明度80%
+      font-style: italic; // 斜体
       img {
         height: 100%;
       }
