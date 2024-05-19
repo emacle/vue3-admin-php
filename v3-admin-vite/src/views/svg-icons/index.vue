@@ -1,11 +1,11 @@
 <script lang="ts" setup>
-import { onMounted, reactive, ref, watch } from "vue"
-
+import { onMounted, reactive, ref, watch, computed } from "vue"
 // import { ElMessage } from "element-plus"
 import svgIcons from "./svg-icons"
 import elementIcons from "./element-icons"
 import clipboard from "@/utils/clipboard"
-import { ElMessage } from "element-plus"
+import { ElMessage, ElTooltip, ElPagination, TabsPaneContext } from "element-plus"
+import { Search } from "@element-plus/icons-vue"
 
 // const svgIconsRef = ref(svgIcons)
 // const elementIconsRef = ref(elementIcons)
@@ -39,6 +39,58 @@ const getIconComponent = (icon: any) => {
   return icon
 }
 
+// #region 分页
+const activeName = ref("svgIcons")
+
+const searchQuery = ref("")
+const currentPage = ref(1)
+const pageSize = ref(60) // Number of items per page
+
+const filteredSvgIcons = computed(() => {
+  if (searchQuery.value) {
+    return svgIcons.filter((icon) => icon.toLowerCase().includes(searchQuery.value.toLowerCase()))
+  }
+  return svgIcons
+})
+
+const paginatedSvgIcons = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value
+  const end = start + pageSize.value
+  return filteredSvgIcons.value.slice(start, end)
+})
+
+// elementIcons page
+const searchQueryel = ref("")
+
+const filteredElIcons = computed(() => {
+  if (searchQueryel.value) {
+    return elementIcons.filter((icon) => icon.toLowerCase().includes(searchQueryel.value.toLowerCase()))
+  }
+  return elementIcons
+})
+
+const paginatedElIcons = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value
+  const end = start + pageSize.value
+  return filteredElIcons.value.slice(start, end)
+})
+const handleClick = (tab: TabsPaneContext, event: Event) => {
+  currentPage.value = 1
+  pageSize.value = 60
+  searchQuery.value = ""
+  searchQueryel.value = ""
+  // if (tab.paneName == "elementIcons") {
+  //   currentPage.value = 1
+  //   pageSize.value = 30
+  //   searchQueryel.value = ""
+  // } else {
+  //   currentPage.value = 1
+  //   pageSize.value = 40
+  //   searchQuery.value = ""
+  // }
+}
+// #endregion
+
 onMounted(() => {})
 </script>
 
@@ -53,11 +105,17 @@ onMounted(() => {})
       Element-UI Icons 需要在页面定义一个函数（getIconComponent全局函数？），复制引用代码
     </el-card>
     <el-card>
-      <el-tabs type="border-card">
-        <el-tab-pane label="svgIcons">
+      <el-tabs v-model="activeName" @tab-click="handleClick">
+        <el-tab-pane label="svgIcons" name="svgIcons">
+          <el-input
+            v-model="searchQuery"
+            clearable
+            :prefix-icon="Search"
+            placeholder="Search icons..."
+            style="width: 240px"
+          />
           <div class="grid">
-            <div v-for="item of svgIcons" :key="item" @click="handleClipboard(generateIconCode(item), $event)">
-              <!-- <div v-for="item of svgIcons" :key="item"> -->
+            <div v-for="item of paginatedSvgIcons" :key="item" @click="handleClipboard(generateIconCode(item), $event)">
               <el-tooltip placement="top">
                 <template #content>
                   {{ generateIconCode(item) }}
@@ -69,11 +127,27 @@ onMounted(() => {})
               </el-tooltip>
             </div>
           </div>
+          <el-pagination
+            v-model:current-page="currentPage"
+            :page-size="pageSize"
+            :total="filteredSvgIcons.length"
+            layout="prev, pager, next"
+          />
         </el-tab-pane>
-        <el-tab-pane label="Element-UI Icons">
+        <el-tab-pane label="Element-UI Icons" name="elementIcons">
+          <el-input
+            v-model="searchQueryel"
+            clearable
+            :prefix-icon="Search"
+            placeholder="Search icons..."
+            style="width: 240px"
+          />
           <div class="grid">
-            <!-- <div v-for="item of elementIcons" :key="item" @click="handleClipboard(generateElementIconCode(item), $event)"> -->
-            <div v-for="item of elementIcons" :key="item">
+            <div
+              v-for="item of paginatedElIcons"
+              :key="item"
+              @click="handleClipboard(generateElementIconCode(item), $event)"
+            >
               <el-tooltip placement="top">
                 <template #content>
                   {{ generateElementIconCode(item) }}
@@ -85,6 +159,12 @@ onMounted(() => {})
               </el-tooltip>
             </div>
           </div>
+          <el-pagination
+            v-model:current-page="currentPage"
+            :page-size="pageSize"
+            :total="filteredElIcons.length"
+            layout="prev, pager, next"
+          />
         </el-tab-pane>
       </el-tabs>
     </el-card>
