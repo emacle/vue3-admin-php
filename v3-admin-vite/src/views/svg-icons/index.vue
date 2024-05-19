@@ -114,7 +114,7 @@ onMounted(() => {})
     </el-card>
     <el-card>
       <el-tabs v-model="activeName" @tab-click="handleClick">
-        <el-tab-pane label="svgIcons" name="svgIcons">
+        <el-tab-pane :label="'svgIcons（' + svgIcons?.length + '）'" name="svgIcons">
           <el-input
             v-model="searchQuery"
             clearable
@@ -142,7 +142,7 @@ onMounted(() => {})
             layout="prev, pager, next"
           />
         </el-tab-pane>
-        <el-tab-pane label="Element-UI Icons" name="elementIcons">
+        <el-tab-pane :label="'Element-UI Icons（' + elementIcons?.length + '）'" name="elementIcons">
           <el-input
             v-model="searchQueryel"
             clearable
