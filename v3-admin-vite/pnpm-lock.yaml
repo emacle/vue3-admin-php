@@ -50,6 +50,9 @@ dependencies:
   vue:
     specifier: 3.4.21
     version: 3.4.21(typescript@5.4.3)
+  vue-countup-v3:
+    specifier: ^1.4.2
+    version: 1.4.2(vue@3.4.21)
   vue-router:
     specifier: 4.3.0
     version: 4.3.0(vue@3.4.21)
@@ -2182,6 +2185,10 @@ packages:
       object-assign: 4.1.1
       vary: 1.1.2
     dev: true
+
+  /countup.js@2.8.0:
+    resolution: {integrity: sha512-f7xEhX0awl4NOElHulrl4XRfKoNH3rB+qfNSZZyjSZhaAoUk6elvhH+MNxMmlmuUJ2/QNTWPSA7U4mNtIAKljQ==, tarball: https://registry.npmmirror.com/countup.js/-/countup.js-2.8.0.tgz}
+    dev: false
 
   /cross-spawn@7.0.3:
     resolution: {integrity: sha512-iRDPJKUPVEND7dHPO8rkbOnPpyDygcDFtWjpeWNCgy8WP2rXcxXL8TskReQl6OrB2G7+UJrags1q15Fudc7G6w==}
@@ -5168,6 +5175,15 @@ packages:
   /vue-component-type-helpers@2.0.7:
     resolution: {integrity: sha512-7e12Evdll7JcTIocojgnCgwocX4WzIYStGClBQ+QuWPinZo/vQolv2EMq4a3lg16TKfwWafLimG77bxb56UauA==}
     dev: true
+
+  /vue-countup-v3@1.4.2(vue@3.4.21):
+    resolution: {integrity: sha512-nRC65jBcdgwybxqztgd/WaK8ZN5T9ECPyiCFGYFMewCsvqdRVo1CtpT7JREcPNF837Fgu/izTSFiuzrIGD6w0A==, tarball: https://registry.npmmirror.com/vue-countup-v3/-/vue-countup-v3-1.4.2.tgz}
+    peerDependencies:
+      vue: ^3.0.0
+    dependencies:
+      countup.js: 2.8.0
+      vue: 3.4.21(typescript@5.4.3)
+    dev: false
 
   /vue-demi@0.14.7(vue@3.4.21):
     resolution: {integrity: sha512-EOG8KXDQNwkJILkx/gPcoL/7vH+hORoBaKgGe+6W7VFMvCYJfmF2dGbvgDroVnI8LU7/kTu8mbjRZGBU1z9NTA==}
