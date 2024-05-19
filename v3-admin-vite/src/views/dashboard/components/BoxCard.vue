@@ -39,7 +39,7 @@ const avatar = userStore.avatar
 
 <style lang="scss" scoped>
 .box-card-component {
-  ::v-deep .el-card__header {
+  :deep(.el-card__header) {
     padding: 0 !important;
   }
   .box-card-header {
@@ -74,7 +74,7 @@ const avatar = userStore.avatar
     background-color: #fff;
     margin: auto;
     box-shadow: none !important;
-    ::v-deep .pan-info {
+    :deep(.pan-info) {
       box-shadow: none !important;
     }
   }

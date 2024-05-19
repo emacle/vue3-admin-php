@@ -24,11 +24,11 @@ const lineChartData = {
   }
 }
 
-const lineChartDataRef = ref(lineChartData.newVisitis)
+// const lineChartDataRef = ref(lineChartData.newVisitis)
 
 function handleSetLineChartData(type: string) {
-  // console.log("handleSetLineChartData type", type, lineChartData[type])
-  lineChartDataRef.value = lineChartData[type]
+  console.log("handleSetLineChartData type", type)
+  // lineChartDataRef.value = lineChartData[type]
 }
 </script>
 
@@ -97,7 +97,7 @@ function handleSetLineChartData(type: string) {
 <style lang="scss" scoped>
 .dashboard-editor-container {
   padding: 32px;
-  background-color: rgb(240, 242, 245);
+  // background-color: rgb(240, 242, 245);
   position: relative;
 
   .github-corner {
