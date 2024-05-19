@@ -34,10 +34,16 @@ const handleClipboard = (text: string, event: Event) => {
   document.body.removeChild(textarea)
   ElMessage({ message: "已复制", type: "success" })
 }
+
 // 根据icon值返回对应的组件名称
 const getIconComponent = (icon: any) => {
   return icon
 }
+/// 定义全局getIconComponent 更麻烦
+// 见@/plugins/index.ts 去掉注释 loadIconComponent(app)，每个页面再加上下面三行
+// import { getCurrentInstance } from "vue"
+// const { proxy } = getCurrentInstance()
+// const getIconComponent = proxy?.$getIconComponent
 
 // #region 分页
 const activeName = ref("svgIcons")
@@ -100,9 +106,11 @@ onMounted(() => {})
       svgIcons图标
       <el-link type="success" href="https://juejin.cn/post/7089377403717287972" target="_blank">Add and use </el-link>
       从 <el-link type="primary" href="https://www.iconfont.cn/" target="_blank">iconfont</el-link> 直接下载svg 图标
-      放入 @icons/svg 目录下（todo:组件动态获取文件名）如plane 单击图标 复制样式即可使用。菜单里的图标使用svg图标。
+      放入 @/icons/svg 目录下如plane 单击图标复制即可使用。<b>菜单里的图标使用svg图标</b>
       <br />
-      Element-UI Icons 需要在页面定义一个函数（getIconComponent全局函数？），复制引用代码
+      <br />
+      Element-UI Icons 需要在页面定义一个函数（ getIconComponent 全局函数更复杂），复制引用代码
+      <el-icon color="orange" :size="16"><component :is="getIconComponent('Flag')" /></el-icon>
     </el-card>
     <el-card>
       <el-tabs v-model="activeName" @tab-click="handleClick">
@@ -205,7 +213,7 @@ onMounted(() => {})
 .search-wrapper {
   margin-bottom: 5px;
   :deep(.el-card__body) {
-    padding-bottom: 2px;
+    padding-bottom: 15px;
   }
 }
 </style>

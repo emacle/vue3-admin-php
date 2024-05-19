@@ -167,9 +167,10 @@ const getMenuData = () => {
 // }
 //#endregion
 // 根据icon值返回对应的组件名称
-const getIconComponent = (icon: any) => {
-  return icon
-}
+// const getIconComponent = (icon: any) => {
+//   return icon
+// }
+
 import IconSelect from "@/components/IconSelect/index.vue"
 // 选择图标
 const selectedIcon = (iconName: string) => {
