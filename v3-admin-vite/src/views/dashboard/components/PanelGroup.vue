@@ -12,7 +12,7 @@ const handleSetLineChartData = (type: string) => {
 <template>
   <el-row :gutter="40" class="panel-group">
     <el-col :xs="12" :sm="12" :lg="6" class="card-panel-col">
-      <div class="card-panel" @click="handleSetLineChartData('newVisitis')">
+      <div class="card-panel on-dark-background" @click="handleSetLineChartData('newVisitis')">
         <div class="card-panel-icon-wrapper icon-people">
           <SvgIcon name="peoples" class="card-panel-icon" />
         </div>
@@ -23,7 +23,7 @@ const handleSetLineChartData = (type: string) => {
       </div>
     </el-col>
     <el-col :xs="12" :sm="12" :lg="6" class="card-panel-col">
-      <div class="card-panel" @click="handleSetLineChartData('messages')">
+      <div class="card-panel on-dark-background" @click="handleSetLineChartData('messages')">
         <div class="card-panel-icon-wrapper icon-message">
           <SvgIcon name="message" class="card-panel-icon" />
         </div>
@@ -34,7 +34,7 @@ const handleSetLineChartData = (type: string) => {
       </div>
     </el-col>
     <el-col :xs="12" :sm="12" :lg="6" class="card-panel-col">
-      <div class="card-panel" @click="handleSetLineChartData('purchases')">
+      <div class="card-panel on-dark-background" @click="handleSetLineChartData('purchases')">
         <div class="card-panel-icon-wrapper icon-money">
           <SvgIcon name="money" class="card-panel-icon" />
         </div>
@@ -45,7 +45,7 @@ const handleSetLineChartData = (type: string) => {
       </div>
     </el-col>
     <el-col :xs="12" :sm="12" :lg="6" class="card-panel-col">
-      <div class="card-panel" @click="handleSetLineChartData('shoppings')">
+      <div class="card-panel on-dark-background" @click="handleSetLineChartData('shoppings')">
         <div class="card-panel-icon-wrapper icon-shopping">
           <SvgIcon name="shopping" class="card-panel-icon" />
         </div>
@@ -65,7 +65,10 @@ const handleSetLineChartData = (type: string) => {
   .card-panel-col {
     margin-bottom: 32px;
   }
-
+  /* 如果需要在特定背景下调整边框颜色，可以继续使用之前提到的类名方法，例如： */
+  .card-panel.on-dark-background {
+    border-color: rgba(255, 255, 255, 0.1); /* 在深色背景下，边框颜色调整为浅色 */
+  }
   .card-panel {
     height: 108px;
     cursor: pointer;
@@ -74,8 +77,9 @@ const handleSetLineChartData = (type: string) => {
     overflow: hidden;
     color: #666;
     background: #fff;
-    box-shadow: 4px 4px 40px rgba(0, 0, 0, 0.05);
-    border-color: rgba(0, 0, 0, 0.05);
+    background-color: transparent; /* 保持透明背景 */
+    box-shadow: 4px 4px 40px rgba(0, 0, 0, 0.05); /* 维持阴影效果 */
+    border: 1px solid rgba(0, 0, 0, 0.1); /* 添加边框，这里使用半透明黑色作为示例 */
 
     &:hover {
       .card-panel-icon-wrapper {
