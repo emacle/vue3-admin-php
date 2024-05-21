@@ -533,8 +533,13 @@ class Role extends ResourceController
                 "role_id" => $id
             ]
         );
-        $AddArr = $this->array_diff_assoc2($rolePerms, $RolePermSqlArr);
+        $AddArr = array_diff_assoc2($rolePerms, $RolePermSqlArr);
         // var_dump('------------只存在于前台传参 做添加操作-------------');
+        // var_dump($rolePerms);
+        // var_dump('-----------------------');
+        // var_dump($RolePermSqlArr);
+        // var_dump('-----------------------');
+        // var_dump($AddArr);
 
         $failed = false;
         $failedArr = [];
@@ -556,7 +561,7 @@ class Role extends ResourceController
             $this->respond($response);
         }
 
-        $DelArr = $this->array_diff_assoc2($RolePermSqlArr, $rolePerms);
+        $DelArr = array_diff_assoc2($RolePermSqlArr, $rolePerms);
         // var_dump('------------只存在于后台数据库 删除操作-------------');
         // var_dump($DelArr);
         $failed = false;
@@ -587,7 +592,7 @@ class Role extends ResourceController
     }
 
     /**
-     * 遍历 BlueM\Tree 树对象，将数据格式化成 vue-router 结构的路由树或菜单树
+     * 遍历 BlueM\Tree 树对象，将数据格式化所有菜单树带权限
      */
     private function _dumpBlueMTreeNodes($node)
     {
@@ -606,32 +611,5 @@ class Role extends ResourceController
         }
 
         return $tree;
-    }
-
-    /**
-     * 指定格式两个二维数组比较差集, 只存在于array1,不存在于array2
-     * @param $array1
-     * @param $array2
-     * @return array
-     */
-    // $arr1 = [
-    // ['role_id'=>1,'perm_id'=>1],
-    // ['role_id'=>1,'perm_id'=>2]
-    // ];
-    private function array_diff_assoc2($array1, $array2)
-    {
-        $ret = array();
-        foreach ($array1 as $k => $v) {
-            #               var_dump($v);
-            $isExist = false;
-            foreach ($array2 as $k2 => $v2) {
-                if (empty(array_diff_assoc($v, $v2))) {
-                    $isExist = true;
-                    break;
-                }
-            }
-            if (!$isExist) array_push($ret, $v);
-        }
-        return $ret;
     }
 }
