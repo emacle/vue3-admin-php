@@ -561,12 +561,12 @@ class User extends ResourceController
         // 参数检验/数据预处理
         // 超级管理员角色不允许修改
         if ($id == 1) {
-            $message = [
+            $response = [
                 "code" => 20403,
                 "type" => 'error',
                 "message" => $parms['username'] . ' - 超级管理员用户不允许修改'
             ];
-            return $this->respond($message,);
+            return $this->respond($response);
         }
 
         $hasUser = $this->Medoodb->has('sys_user', ['id' => $id]);
@@ -588,6 +588,16 @@ class User extends ResourceController
             unset($parms['role']);  // 剔除role数组
         }
         if (isset($parms['dept'])) {
+            // TODO: 正常情况下一个用户只归属一个部门，多个部门是少数，因此可以将dept_id合并入sys_user基础表中
+            //  这里限制前端只能选一个部门
+            if (count($parms['dept']) > 1) {
+                $response = [
+                    "code" => 20403,
+                    "type" => 'error',
+                    "message" => '用户只能选择一个部门'
+                ];
+                return $this->respond($response);
+            }
             foreach ($parms['dept'] as $k => $v) {
                 $DeptArr[$k] = ['user_id' => $id, 'dept_id' => $v];
             }
@@ -602,7 +612,7 @@ class User extends ResourceController
             ]
         );
 
-        $AddArr = $this->array_diff_assoc2($RoleArr, $RoleSqlArr);
+        $AddArr = array_diff_assoc2($RoleArr, $RoleSqlArr);
         // var_dump('------------只存在于前台传参 做添加操作-------------');
         // var_dump($AddArr);
         $failed = false;
@@ -624,7 +634,7 @@ class User extends ResourceController
             ];
             $this->respond($response);
         }
-        $DelArr = $this->array_diff_assoc2($RoleSqlArr, $RoleArr);
+        $DelArr = array_diff_assoc2($RoleSqlArr, $RoleArr);
         // var_dump('------------只存在于后台数据库 删除操作-------------');
         // var_dump($DelArr);
         $failed = false;
@@ -654,7 +664,7 @@ class User extends ResourceController
                 "user_id" => $id
             ]
         );
-        $AddArr = $this->array_diff_assoc2($DeptArr, $DeptSqlArr);
+        $AddArr = array_diff_assoc2($DeptArr, $DeptSqlArr);
         // var_dump('------------只存在于前台传参 做添加操作-------------');
         // var_dump($AddArr);
         $failed = false;
@@ -675,7 +685,7 @@ class User extends ResourceController
             ];
             $this->respond($response);
         }
-        $DelArr = $this->array_diff_assoc2($DeptSqlArr, $DeptArr);
+        $DelArr = array_diff_assoc2($DeptSqlArr, $DeptArr);
         // var_dump('------------只存在于后台数据库 删除操作-------------');
         // var_dump($DelArr);
         $failed = false;
@@ -956,33 +966,6 @@ class User extends ResourceController
         }
 
         return $tree;
-    }
-
-    /**
-     * 指定格式两个二维数组比较差集, 只存在于array1,不存在于array2
-     * @param $array1
-     * @param $array2
-     * @return array
-     */
-    // $arr1 = [
-    // ['role_id'=>1,'perm_id'=>1],
-    // ['role_id'=>1,'perm_id'=>2]
-    // ];
-    private function array_diff_assoc2($array1, $array2)
-    {
-        $ret = array();
-        foreach ($array1 as $k => $v) {
-            #               var_dump($v);
-            $isExist = false;
-            foreach ($array2 as $k2 => $v2) {
-                if (empty(array_diff_assoc($v, $v2))) {
-                    $isExist = true;
-                    break;
-                }
-            }
-            if (!$isExist) array_push($ret, $v);
-        }
-        return $ret;
     }
     #endregion
 }
