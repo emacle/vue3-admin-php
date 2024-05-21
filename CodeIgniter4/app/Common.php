@@ -1,5 +1,9 @@
 <?php
 
+use Config\App;
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
+
 /**
  * The goal of this file is to allow developers a location
  * where they can overwrite core procedural functions and
@@ -13,6 +17,22 @@
  *
  * @see: https://codeigniter.com/user_guide/extending/common.html
  */
+
+if (!function_exists('getUserIdByToken')) {
+    // 根据request head Authorization 获取用户ID
+    function getUserIdByToken($Authorization)
+    {
+        try {
+            list($Token) = sscanf($Authorization, 'Bearer %s');
+            $appConfig = config(App::class); // 获取app/Config/App.php文件夹里变量
+            $decoded = JWT::decode($Token, new Key($appConfig->jwt_key, 'HS256')); //HS256方式，这里要和签发的时候对应
+            return $decoded->user_id;
+        } catch (Exception $e) {  //其他错误
+            log_message('error', $e->getMessage()); // 记录错误日志在 writable/logs 目录下，并根据配置文件中的设置进行轮转和管理。
+            var_dump($e->getMessage());
+        }
+    }
+}
 
 if (!function_exists('array_diff_assoc2')) {
     /**

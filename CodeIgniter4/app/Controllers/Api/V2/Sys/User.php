@@ -78,11 +78,10 @@ class User extends ResourceController
     public function info()
     {
         // /sys/user/info 不用认证但是需要提取出 access_token 中的 user_id 来拉取用户信息
-        $Bearer = $this->request->getHeaderLine('Authorization');
-        list($Token) = sscanf($Bearer, 'Bearer %s');
-        $appConfig = config(App::class); // 获取app/Config/App.php文件夹里变量
-
         try {
+            $Bearer = $this->request->getHeaderLine('Authorization');
+            list($Token) = sscanf($Bearer, 'Bearer %s');
+            $appConfig = config(App::class); // 获取app/Config/App.php文件夹里变量
             $jwt_obj = JWT::decode($Token, new Key($appConfig->jwt_key, 'HS256')); //HS256方式，这里要和签发的时候对应
         } catch (\Firebase\JWT\ExpiredException $e) {  // access_token过期
             $response = [
@@ -214,13 +213,13 @@ class User extends ResourceController
     #region 刷新token
     public function refreshtoken()
     {
-        // 此处 $Token 应为refresh token 在前端 request 拦截器中做了修改
-        // 刷新token接口需要在控制器内作权限验证,比较特殊,不能使用hook ManageAuth来验证
-        $Bearer = $this->request->getHeaderLine('Authorization');
-        list($Token) = sscanf($Bearer, 'Bearer %s');
-        $appConfig = config(App::class); // 获取app/Config/App.php文件夹里变量
-
         try {
+            // 此处 $Token 应为refresh token 在前端 request 拦截器中做了修改
+            // 刷新token接口需要在控制器内作权限验证,比较特殊,不能使用hook ManageAuth来验证
+            $Bearer = $this->request->getHeaderLine('Authorization');
+            list($Token) = sscanf($Bearer, 'Bearer %s');
+            $appConfig = config(App::class); // 获取app/Config/App.php文件夹里变量
+
             $decoded = JWT::decode($Token, new Key($appConfig->jwt_key, 'HS256')); //HS256方式，这里要和签发的时候对应
 
             // $decoded = JWT::decode($Token, config_item('jwt_key'), ['HS256']); //HS256方式，这里要和签发的时候对应
@@ -799,14 +798,7 @@ class User extends ResourceController
         //     )->check($parms);
         //     v::keyValue('password_confirmation', 'equals', 'password')->check($parms);
         // } catch (ValidationException $e) {
-
-        // 根据token获取用户ID
-        $Bearer = $this->request->getHeaderLine('Authorization');
-        list($Token) = sscanf($Bearer, 'Bearer %s');
-        $appConfig = config(App::class); // 获取app/Config/App.php文件夹里变量
-        $decoded = JWT::decode($Token, new Key($appConfig->jwt_key, 'HS256')); //HS256方式，这里要和签发的时候对应
-
-        $userId =  $decoded->user_id;
+        $userId =  getUserIdByToken($this->request->getHeaderLine('Authorization'));
 
         // 原密码校验
         $has = $this->Medoodb->has(
