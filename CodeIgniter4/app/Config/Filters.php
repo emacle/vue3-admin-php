@@ -84,20 +84,24 @@ class Filters extends BaseFilters
                 'api/v2/sys/user/logout',
                 'api/v2/sys/user/info',
                 // 'api/v2/sys/user/*', // TODO: 权限完善后需在此处删除 AuthCheckFilter.php
-                'api/v2/sys/user/refreshtoken',
-                'api/v2/sys/user/repasswd',
-                'api/v2/sys/user/roleoptions',
-                'api/v2/sys/user/deptoptions',
+
+                // AuCheckFilter str_contains($uri_short, $uri_db)
+                // 用户拥有接口 /sys/user/get 的权限则会拥有/sys/user/**/get 的所有的权限
+                // 限制太精确会使用前端操作勾选过多 TODO:
+                // 'api/v2/sys/user/refreshtoken',
+                // 'api/v2/sys/user/repasswd',
+                // 'api/v2/sys/user/roleoptions',
+                // 'api/v2/sys/user/deptoptions',
                 'api/v2/sys/user/githubauth',
                 'api/v2/sys/user/giteeauth',
 
-                'api/v2/sys/role/allmenus',
-                'api/v2/sys/role/allroles',
-                'api/v2/sys/role/alldepts',
-                'api/v2/sys/role/rolemenus',
-                'api/v2/sys/role/roleroles',
-                'api/v2/sys/role/roledepts',
-                'api/v2/sys/role/saveroleperm',
+                // 'api/v2/sys/role/allmenus',
+                // 'api/v2/sys/role/allroles',
+                // 'api/v2/sys/role/alldepts',
+                // 'api/v2/sys/role/rolemenus',
+                // 'api/v2/sys/role/roleroles',
+                // 'api/v2/sys/role/roledepts',
+                // 'api/v2/sys/role/saveroleperm',
                 // '/sys/role/allmenus/get',
                 // '/sys/role/alldepts/get',
                 // '/sys/role/rolemenu/post',

@@ -81,6 +81,14 @@ class User extends ResourceController
         try {
             $Bearer = $this->request->getHeaderLine('Authorization');
             list($Token) = sscanf($Bearer, 'Bearer %s');
+            if (is_null($Token)) {
+                $response = [
+                    "code" => 50014,
+                    "message" => 'token is null',
+                    "data" => []
+                ];
+                return $this->respond($response, 401);
+            }
             $appConfig = config(App::class); // 获取app/Config/App.php文件夹里变量
             $jwt_obj = JWT::decode($Token, new Key($appConfig->jwt_key, 'HS256')); //HS256方式，这里要和签发的时候对应
         } catch (\Firebase\JWT\ExpiredException $e) {  // access_token过期
@@ -708,10 +716,6 @@ class User extends ResourceController
 
         // 添加用户放在最后，先添加角色处理，部门处理，失败后直接提前返回
         $where = ["id" => $id];
-        if (!isset($parms['password'])) {
-            $parms['password'] = "";
-            $parms['password'] = md5($parms['password']);
-        }
         $result = $this->Medoodb->update('sys_user', $parms, $where);
 
         if ($result->rowCount() > 0) {
