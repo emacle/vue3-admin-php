@@ -127,7 +127,7 @@ CREATE TABLE `sys_dept` (
 
 LOCK TABLES `sys_dept` WRITE;
 /*!40000 ALTER TABLE `sys_dept` DISABLE KEYS */;
-INSERT INTO `sys_dept` VALUES (1,0,'长城','',99,1),(2,0,'黄河','',99,1),(3,1,'敦煌','',99,1),(4,1,'玉门关','',99,1);
+INSERT INTO `sys_dept` VALUES (1,0,'长城','',99,1),(2,1,'黄河','',99,1),(3,1,'敦煌','',99,1),(4,1,'玉门关','',99,1);
 /*!40000 ALTER TABLE `sys_dept` ENABLE KEYS */;
 UNLOCK TABLES;
 

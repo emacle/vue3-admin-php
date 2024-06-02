@@ -134,6 +134,15 @@ class Dept extends ResourceController
             return $this->respond($response);
         }
 
+        if ($id == $parms['pid']) {
+            $response = [
+                "code" => 20403,
+                "type" => 'error',
+                "message" => '上级部门不能为自身'
+            ];
+            return $this->respond($response);
+        }
+
         $hasChild = $this->Medoodb->has('sys_dept', ['pid' => $id]);
         // 存在子节点 则禁用状态 则无法禁用
         if ($hasChild && $parms['status'] == 0) {
