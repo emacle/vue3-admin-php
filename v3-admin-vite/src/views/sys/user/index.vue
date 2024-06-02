@@ -14,7 +14,7 @@ import {
   type GetRoleOptionsData,
   type GetDeptOptionsData
 } from "@/api/user/types/user"
-import { type FormInstance, type FormRules, ElMessage, ElMessageBox } from "element-plus"
+import { type FormInstance, type FormRules, ElMessage, ElMessageBox, ElTree } from "element-plus"
 import { Search, Refresh, CirclePlus, Delete, Download, RefreshRight } from "@element-plus/icons-vue"
 import { usePagination } from "@/hooks/usePagination"
 import { cloneDeep, isNull } from "lodash-es"
@@ -108,11 +108,38 @@ const handleUpdate = (row: GetUserData) => {
 //#endregion
 
 //#region 查
+interface Tree {
+  [key: string]: any
+}
+
+const deptName = ref("")
+const treeRef = ref<InstanceType<typeof ElTree>>()
+
+const defaultProps = {
+  children: "children",
+  label: "label"
+}
+
+watch(deptName, (val) => {
+  treeRef.value!.filter(val)
+})
+
+const filterNode = (value: string, data: Tree) => {
+  if (!value) return true
+  return data.label.includes(value)
+}
+
+const handleNodeClick = (data: Tree) => {
+  searchData.dept_id = data.id
+  handleSearch()
+}
+
 const userData = ref<GetUserData[]>([])
 const searchFormRef = ref<FormInstance | null>(null)
 const searchData = reactive({
   username: "",
   tel: "",
+  dept_id: undefined,
   status: ""
 })
 // 监听排序
@@ -133,6 +160,7 @@ const getUserData = () => {
     size: paginationData.pageSize,
     username: searchData.username || undefined,
     tel: searchData.tel || undefined,
+    dept_id: searchData.dept_id || undefined,
     status: searchData.status || undefined,
     fields: "id,username,email,tel,dept_id,status,listorder", // 与后端一致 前端指定获取的字段
     query: "~username,~tel,dept_id,status", // 前端指定模糊查询的字段为name,精确查询字段为status
@@ -154,6 +182,8 @@ const handleSearch = () => {
 }
 const resetSearch = () => {
   searchFormRef.value?.resetFields()
+  searchData.dept_id = undefined
+  treeRef.value!.setCurrentKey(undefined) // 清除选中
   handleSearch()
 }
 //#endregion
@@ -197,88 +227,121 @@ onMounted(() => {
 
 <template>
   <div class="app-container">
-    <el-card shadow="never" class="search-wrapper" v-perm="['/sys/user/get']">
-      <el-form ref="searchFormRef" :inline="true" :model="searchData">
-        <el-form-item prop="username" label="用户名">
-          <el-input v-model="searchData.username" clearable placeholder="请输入用户名称" />
-        </el-form-item>
-        <el-form-item prop="tel" label="手机号">
-          <el-input v-model="searchData.tel" clearable placeholder="请输入手机号" />
-        </el-form-item>
-        <el-form-item prop="status" label="状态">
-          <el-select v-model="searchData.status" clearable placeholder="请选择">
-            <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value" />
-          </el-select>
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" :icon="Search" @click="handleSearch">查询</el-button>
-          <el-button :icon="Refresh" @click="resetSearch">重置</el-button>
-        </el-form-item>
-      </el-form>
-    </el-card>
-    <el-card v-loading="loading" shadow="never">
-      <div class="toolbar-wrapper">
-        <div>
-          <el-button v-perm="['/sys/user/post']" type="primary" :icon="CirclePlus" @click="dialogVisible = true"
-            >新增用户</el-button
-          >
-          <!-- <el-button type="danger" :icon="Delete">批量删除</el-button> -->
+    <el-row :gutter="20">
+      <!--部门数据-->
+      <el-col :span="4" :xs="24">
+        <div class="left-container">
+          <el-input
+            v-model="deptName"
+            placeholder="请输入部门名称"
+            clearable
+            :prefix-icon="Search"
+            style="margin-bottom: 10px"
+          />
+          <el-tree
+            ref="treeRef"
+            :data="deptOptions"
+            :props="defaultProps"
+            :expand-on-click-node="false"
+            :filter-node-method="filterNode"
+            node-key="id"
+            default-expand-all
+            highlight-current
+            @node-click="handleNodeClick"
+          />
         </div>
-        <div>
-          <!-- <el-tooltip content="下载">
+      </el-col>
+      <el-col :span="20" :xs="24">
+        <el-card shadow="never" class="search-wrapper" v-perm="['/sys/user/get']">
+          <el-form ref="searchFormRef" :inline="true" :model="searchData">
+            <el-form-item prop="username" label="用户名">
+              <el-input v-model="searchData.username" clearable placeholder="请输入用户名称" />
+            </el-form-item>
+            <el-form-item prop="tel" label="手机号">
+              <el-input v-model="searchData.tel" clearable placeholder="请输入手机号" />
+            </el-form-item>
+            <el-form-item prop="status" label="状态">
+              <el-select v-model="searchData.status" clearable placeholder="请选择">
+                <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value" />
+              </el-select>
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" :icon="Search" @click="handleSearch">查询</el-button>
+              <el-button :icon="Refresh" @click="resetSearch">重置</el-button>
+            </el-form-item>
+          </el-form>
+        </el-card>
+        <el-card v-loading="loading" shadow="never">
+          <div class="toolbar-wrapper">
+            <div>
+              <el-button v-perm="['/sys/user/post']" type="primary" :icon="CirclePlus" @click="dialogVisible = true"
+                >新增用户</el-button
+              >
+              <!-- <el-button type="danger" :icon="Delete">批量删除</el-button> -->
+            </div>
+            <div>
+              <!-- <el-tooltip content="下载">
             <el-button type="primary" :icon="Download" circle />
           </el-tooltip> -->
-          <el-tooltip content="刷新当前页">
-            <el-button type="primary" :icon="RefreshRight" circle @click="getUserData" />
-          </el-tooltip>
-        </div>
-      </div>
-      <div class="table-wrapper">
-        <el-table :data="userData" @sort-change="handleSort">
-          <el-table-column type="selection" width="50" align="center" />
-          <el-table-column prop="id" label="ID" sortable="custom" align="center" />
-          <el-table-column prop="username" label="用户名" align="center" />
-          <el-table-column prop="tel" label="电话" align="center" />
-          <el-table-column prop="email" label="邮箱" align="center" />
-          <el-table-column prop="dept.name" label="部门" align="center" />
-          <el-table-column prop="listorder" label="排序" align="center" />
-          <el-table-column prop="status" label="状态" align="center">
-            <template #default="scope">
-              <el-tag v-if="scope.row.status" type="success" effect="plain">启用</el-tag>
-              <el-tag v-else type="danger" effect="plain">禁用</el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column fixed="right" label="操作" width="150" align="center">
-            <template #default="scope">
-              <el-button v-perm="['/sys/user/put']" type="primary" text bg size="small" @click="handleUpdate(scope.row)"
-                >修改</el-button
-              >
-              <el-button
-                v-perm="['/sys/user/delete']"
-                type="danger"
-                text
-                bg
-                size="small"
-                @click="handleDelete(scope.row)"
-                >删除</el-button
-              >
-            </template>
-          </el-table-column>
-        </el-table>
-      </div>
-      <div class="pager-wrapper">
-        <el-pagination
-          background
-          :layout="paginationData.layout"
-          :page-sizes="paginationData.pageSizes"
-          :total="paginationData.total"
-          :page-size="paginationData.pageSize"
-          :currentPage="paginationData.currentPage"
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
-        />
-      </div>
-    </el-card>
+              <el-tooltip content="刷新当前页">
+                <el-button type="primary" :icon="RefreshRight" circle @click="getUserData" />
+              </el-tooltip>
+            </div>
+          </div>
+          <div class="table-wrapper">
+            <el-table :data="userData" @sort-change="handleSort">
+              <el-table-column type="selection" width="50" align="center" />
+              <el-table-column prop="id" label="ID" sortable="custom" align="center" />
+              <el-table-column prop="username" label="用户名" align="center" />
+              <el-table-column prop="tel" label="电话" align="center" />
+              <el-table-column prop="email" label="邮箱" align="center" />
+              <el-table-column prop="dept.name" label="部门" align="center" />
+              <el-table-column prop="listorder" label="排序" align="center" />
+              <el-table-column prop="status" label="状态" align="center">
+                <template #default="scope">
+                  <el-tag v-if="scope.row.status" type="success" effect="plain">启用</el-tag>
+                  <el-tag v-else type="danger" effect="plain">禁用</el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column fixed="right" label="操作" width="150" align="center">
+                <template #default="scope">
+                  <el-button
+                    v-perm="['/sys/user/put']"
+                    type="primary"
+                    text
+                    bg
+                    size="small"
+                    @click="handleUpdate(scope.row)"
+                    >修改</el-button
+                  >
+                  <el-button
+                    v-perm="['/sys/user/delete']"
+                    type="danger"
+                    text
+                    bg
+                    size="small"
+                    @click="handleDelete(scope.row)"
+                    >删除</el-button
+                  >
+                </template>
+              </el-table-column>
+            </el-table>
+          </div>
+          <div class="pager-wrapper">
+            <el-pagination
+              background
+              :layout="paginationData.layout"
+              :page-sizes="paginationData.pageSizes"
+              :total="paginationData.total"
+              :page-size="paginationData.pageSize"
+              :currentPage="paginationData.currentPage"
+              @size-change="handleSizeChange"
+              @current-change="handleCurrentChange"
+            />
+          </div>
+        </el-card>
+      </el-col>
+    </el-row>
     <!-- 新增/修改 -->
     <el-dialog
       v-model="dialogVisible"

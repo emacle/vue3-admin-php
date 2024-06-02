@@ -19,6 +19,7 @@ export interface GetUserRequestData {
   username?: string
   /** 查询参数：手机号 */
   tel?: string
+  dept_id?: number
   listorder?: number
   //** TODO: 查询时status使用 string 与searchData保持一致 */
   status?: string

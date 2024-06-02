@@ -295,6 +295,7 @@ CREATE TABLE `sys_user` (
   `email` varchar(255) DEFAULT NULL,
   `avatar` varchar(255) DEFAULT NULL,
   `sex` smallint DEFAULT NULL,
+  `dept_id` int DEFAULT NULL COMMENT '部门ID',
   `last_login_ip` varchar(16) DEFAULT NULL,
   `last_login_time` int DEFAULT NULL,
   `create_time` int DEFAULT NULL,
@@ -310,36 +311,8 @@ CREATE TABLE `sys_user` (
 
 LOCK TABLES `sys_user` WRITE;
 /*!40000 ALTER TABLE `sys_user` DISABLE KEYS */;
-INSERT INTO `sys_user` VALUES (1,'admin','21232f297a57a5a743894a0e4a801fc3','admin','111@gmail.com','https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif',0,'127.0.0.1',1493103488,1487868050,1,1),(2,'qq','026a4f42edc4e5016daa1f0a263242ee','','49727546@qq.com','https://gw.alipayobjects.com/zos/antfincdn/aPkFc8Sj7n/method-draw-image.svg',NULL,NULL,NULL,1554800129,1,1002),(3,'editor','5aee9dbd2a188839105073571bee1b1f','','','',NULL,'',NULL,1554803362,1,1003);
+INSERT INTO `sys_user` VALUES (1,'admin','21232f297a57a5a743894a0e4a801fc3','admin','111@gmail.com','https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif',0,4,'127.0.0.1',1493103488,1487868050,1,1),(2,'qq','21232f297a57a5a743894a0e4a801fc3','','49727546@qq.com','https://gw.alipayobjects.com/zos/antfincdn/aPkFc8Sj7n/method-draw-image.svg',NULL,5,NULL,NULL,1554800129,1,1002),(3,'editor','5aee9dbd2a188839105073571bee1b1f','','','',NULL,NULL,'',NULL,1554803362,1,1003);
 /*!40000 ALTER TABLE `sys_user` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `sys_user_dept`
---
-
-DROP TABLE IF EXISTS `sys_user_dept`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `sys_user_dept` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `user_id` int NOT NULL,
-  `dept_id` int NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `sys_user_dept_ibfk_1` (`user_id`),
-  KEY `sys_user_dept_ibfk_2` (`dept_id`),
-  CONSTRAINT `sys_user_dept_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `sys_user` (`id`),
-  CONSTRAINT `sys_user_dept_ibfk_2` FOREIGN KEY (`dept_id`) REFERENCES `sys_dept` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `sys_user_dept`
---
-
-LOCK TABLES `sys_user_dept` WRITE;
-/*!40000 ALTER TABLE `sys_user_dept` DISABLE KEYS */;
-/*!40000 ALTER TABLE `sys_user_dept` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
