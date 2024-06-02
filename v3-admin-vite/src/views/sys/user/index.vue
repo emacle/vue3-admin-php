@@ -36,7 +36,7 @@ const DEFAULT_FORM_DATA: CreateOrUpdateUserRequestData = {
   password: "",
   email: "",
   role: [],
-  dept: [],
+  dept_id: undefined,
   listorder: 1000,
   status: 1
 }
@@ -134,8 +134,8 @@ const getUserData = () => {
     username: searchData.username || undefined,
     tel: searchData.tel || undefined,
     status: searchData.status || undefined,
-    fields: "id,username,email,tel,status,listorder", // 与后端一致 前端指定获取的字段
-    query: "~username,~tel,status", // 前端指定模糊查询的字段为name,精确查询字段为status
+    fields: "id,username,email,tel,dept_id,status,listorder", // 与后端一致 前端指定获取的字段
+    query: "~username,~tel,dept_id,status", // 前端指定模糊查询的字段为name,精确查询字段为status
     sort: sortParm.value // 前面指定按listorder升序排列
   })
     .then(({ data }) => {
@@ -240,6 +240,7 @@ onMounted(() => {
           <el-table-column prop="username" label="用户名" align="center" />
           <el-table-column prop="tel" label="电话" align="center" />
           <el-table-column prop="email" label="邮箱" align="center" />
+          <el-table-column prop="dept.name" label="部门" align="center" />
           <el-table-column prop="listorder" label="排序" align="center" />
           <el-table-column prop="status" label="状态" align="center">
             <template #default="scope">
@@ -303,16 +304,15 @@ onMounted(() => {
             <el-option v-for="item in roleOptions" :key="item.value" :label="item.label" :value="item.value" />
           </el-select>
         </el-form-item>
-        <el-form-item prop="dept" label="部门">
+        <el-form-item prop="dept_id" label="部门">
           <el-tree-select
-            v-model="formData.dept"
+            v-model="formData.dept_id"
             :data="deptOptions"
-            multiple
             :render-after-expand="false"
-            show-checkbox
             check-strictly
             style="width: 240px"
           />
+          {{ formData.dept_id }}
         </el-form-item>
         <el-form-item prop="listorder" label="排序">
           <el-input-number v-model="formData.listorder" :min="99" controls-position="right" size="large" />

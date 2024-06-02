@@ -426,18 +426,23 @@ class User extends ResourceController
             $UserArr[$k]['role'] = $RoleArr;
         }
 
-        // 遍历该用户所属部门信息
+        // 获取用户所属部门信息
         foreach ($UserArr as $k => $v) {
             $UserArr[$k]['dept'] = [];
-            $DeptArr = $this->Medoodb->select(
-                'sys_user_dept',
-                'dept_id',
-                [
-                    "user_id" => $v['id']
-                ]
-            );
+            $DeptArr = [];
+            // var_dump($v['dept_id']); return;
+            if ($v['dept_id']) {
+                $DeptArr = $this->Medoodb->get(
+                    'sys_dept',
+                    '*',
+                    [
+                        "id" => $v['dept_id']
+                    ]
+                );
+            }
             $UserArr[$k]['dept'] = $DeptArr;
         }
+
 
         $response = [
             "code" => 20000,
@@ -566,6 +571,9 @@ class User extends ResourceController
         // 处理更新用户资源的逻辑
         $parms = get_object_vars($this->request->getVar()); // 获取表单参数，类型为数组
         // 参数检验/数据预处理
+        if (isset($parms['dept'])) {
+            unset($parms['dept']);  // 剔除关联sys_dept中部门信息
+        }
         // 超级管理员角色不允许修改
         if ($id == 1) {
             $response = [
@@ -587,29 +595,13 @@ class User extends ResourceController
         }
 
         $RoleArr = [];
-        $DeptArr = [];
         if (isset($parms['role'])) {
             foreach ($parms['role'] as $k => $v) {
                 $RoleArr[$k] = ['user_id' => $id, 'role_id' => $v];
             }
             unset($parms['role']);  // 剔除role数组
         }
-        if (isset($parms['dept'])) {
-            // TODO: 正常情况下一个用户只归属一个部门，多个部门是少数，因此可以将dept_id合并入sys_user基础表中
-            //  这里限制前端只能选一个部门
-            if (count($parms['dept']) > 1) {
-                $response = [
-                    "code" => 20403,
-                    "type" => 'error',
-                    "message" => '用户只能选择一个部门'
-                ];
-                return $this->respond($response);
-            }
-            foreach ($parms['dept'] as $k => $v) {
-                $DeptArr[$k] = ['user_id' => $id, 'dept_id' => $v];
-            }
-            unset($parms['dept']);  // 剔除dept数组
-        }
+
         // 处理角色数组编辑操作
         $RoleSqlArr = $this->Medoodb->select(
             'sys_user_role',
@@ -663,58 +655,7 @@ class User extends ResourceController
             $this->respond($response);
         }
 
-        // 处理部门数组编辑操作
-        $DeptSqlArr = $this->Medoodb->select(
-            'sys_user_dept',
-            ['user_id', 'dept_id'],
-            [
-                "user_id" => $id
-            ]
-        );
-        $AddArr = array_diff_assoc2($DeptArr, $DeptSqlArr);
-        // var_dump('------------只存在于前台传参 做添加操作-------------');
-        // var_dump($AddArr);
-        $failed = false;
-        $failedArr = [];
-        foreach ($AddArr as $k => $v) {
-            $this->Medoodb->insert('sys_user_dept', $v);
-            $ret = $this->Medoodb->id();
-            if (!$ret) {
-                $failed = true;
-                array_push($failedArr, $v);
-            }
-        }
-        if ($failed) {
-            $response = [
-                "code" => 20403,
-                "type" => 'error',
-                "message" => '用户添加关联部门失败 ' . json_encode($failedArr)
-            ];
-            $this->respond($response);
-        }
-        $DelArr = array_diff_assoc2($DeptSqlArr, $DeptArr);
-        // var_dump('------------只存在于后台数据库 删除操作-------------');
-        // var_dump($DelArr);
-        $failed = false;
-        $failedArr = [];
-        foreach ($DelArr as $k => $v) {
-            $result = $this->Medoodb->delete('sys_user_dept', $v);
-
-            if (!$result->rowCount()) {
-                $failed = true;
-                array_push($failedArr, $v);
-            }
-        }
-        if ($failed) {
-            $response = [
-                "code" => 20403,
-                "type" => 'error',
-                "message" => '用户删除关联部门失败 ' . json_encode($failedArr)
-            ];
-            return $this->respond($response);
-        }
-
-        // 添加用户放在最后，先添加角色处理，部门处理，失败后直接提前返回
+        // 添加用户放在最后，先添加角色处理，失败后直接提前返回
         $where = ["id" => $id];
         $result = $this->Medoodb->update('sys_user', $parms, $where);
 

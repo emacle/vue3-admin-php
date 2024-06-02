@@ -5,7 +5,7 @@ export interface CreateOrUpdateUserRequestData {
   email?: string
   tel?: string
   role?: number[]
-  dept?: number[]
+  dept_id?: number
   listorder: number
   status: number
 }
@@ -33,7 +33,7 @@ export interface GetUserData {
   email: string
   tel: string
   role: number[]
-  dept: number[]
+  dept_id: number
   listorder: number
   status: number
 }
