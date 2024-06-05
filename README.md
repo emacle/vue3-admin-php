@@ -15,8 +15,9 @@ V3 Admin Vite 基于 Vue3、TypeScript、Element Plus、Pinia 和 Vite 等主流
 - [x] 4. 菜单管理：新建菜单，修改菜单，删除菜单，查询菜单
 - [x] 5. 部门管理：新建部门，修改部门，删除部门，查询部门
 - [x] 6. **JWT生成访问与刷新token， access_token过期后，根据refreshtoken刷新访问token，实现无缝刷新功能。refreshtoken 加入计数器,在有效期内接口调用超过一定次数自动续期** 
-- [ ] 7. 图形验证码（`gregwar/captcha` 包生成）
-- [ ] 8. 系统日志
+- [x] 7. 图标管理：加入svg图标
+- [ ] 8. 图形验证码（`gregwar/captcha` 包生成）
+- [ ] 9. 系统日志
 
 ## 使用说明
 ### 目录结构
@@ -172,6 +173,38 @@ server {
 
  ![角色权限](CodeIgniter4/public/role_perm.png)
 
+这里设计控件按钮操作权限与sys_menu表中path字段为一一对应，也即与route一一对应，通过前置过滤器 AuthCheckFilter.php 进行权限判断认证，`不必在每个路由前添加权限字符判断` eg
+
+```sh
+/sys/user/get		2  控件按钮类型为2
+/sys/user/post		2
+/sys/user/put		2
+/sys/user/delete	2
+
+用户拥有接口 /sys/user/get 的权限则会拥有/sys/user/**/get 的所有的权限，
+// 'api/v2/sys/user/repasswd',  put ,如果有 /sys/user/put 权限则也会拥有 /sys/user/repasswd/put 重置密码的权限
+// 'api/v2/sys/user/roleoptions', get
+```
+
+权限判断逻辑:
+
+1. 先获取token，为空，返回401错误；不为空继续
+2. JWT解析token获取userId,根据userId获取用户所属的角色拥有的控件权限即sys_menu表中 path字段
+3. 根据当前请求uri,获取接口URI，$request->getUri()->getPath();  // string(19) "/apix/v2/sys/user/1"
+4. 步骤2、3的值进行比较 str_contains 判断是否拥有权限，无权限则返回401错误，有则继续进入路由函数执行代码逻辑
+5. 接步骤2，token解析出错，超时、异常等，返回前端，前面可根据refreshtoken继续进行新accesstoken获取，获取成功后前端实现无缝刷新；如果refreshtoken也过期，则前端跳转至登录页面，强制重新登录。（refreshtoken一般比 accesstoken 过期时间要长）
+
+这里比较粗略，见 AuthCheckFilter.php `str_contains($uri_short, $uri_db)` 也可以限制更精确，缺点是用前端角色权限勾选过多。
+
+同时针对不需要进行权限认证的route，可以 app/Config/Filters.php 里指定例外
+```sh
+ 'AuthCheck' => ['except' => [
+                '/',
+                'api/v2/sys/user/login',
+                'api/v2/sys/user/logout',
+                'api/v2/sys/user/info',
+```
+
 ## 数据库表说明
 
 | Tables_in_vueadminv2 | 说明                                      |
@@ -182,7 +215,6 @@ server {
 | sys_dept             | 系统部门表                                 |
 | sys_perm             | 系统权限表                                 |
 | sys_role_perm        | 角色权限关系表                              |
-| sys_user_dept        | 用户所属部门表（可一对多）                    |
 | sys_user_role        | 用户角色对应关系（可一对多）                  |
 | sys_perm_type        | 权限类型（暂时未用到）                       |
 | keys                 | 未用                                      |

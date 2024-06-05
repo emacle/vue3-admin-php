@@ -375,7 +375,6 @@ onMounted(() => {
             check-strictly
             style="width: 240px"
           />
-          {{ formData.dept_id }}
         </el-form-item>
         <el-form-item prop="listorder" label="排序">
           <el-input-number v-model="formData.listorder" :min="99" controls-position="right" size="large" />
