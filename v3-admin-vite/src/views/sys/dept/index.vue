@@ -30,16 +30,10 @@ const formRules: FormRules<CreateOrUpdateDeptRequestData> = {
   name: [{ required: true, trigger: "blur", message: "请输入部门名" }],
   pid: [{ required: true, trigger: "blur", message: "请选择上级机构" }]
 }
-const options = [
-  {
-    value: "1",
-    label: "启用"
-  },
-  {
-    value: "0",
-    label: "禁用"
-  }
-]
+const options = ref([
+  { value: "1", label: "启用" },
+  { value: "0", label: "禁用" }
+])
 const handleCreateOrUpdate = () => {
   formRef.value?.validate((valid: boolean, fields) => {
     if (!valid) return console.error("表单校验不通过", fields)

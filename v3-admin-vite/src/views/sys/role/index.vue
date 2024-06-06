@@ -48,16 +48,11 @@ const formData = ref<CreateOrUpdateRoleRequestData>(cloneDeep(DEFAULT_FORM_DATA)
 const formRules: FormRules<CreateOrUpdateRoleRequestData> = {
   name: [{ required: true, trigger: "blur", message: "请输入角色名" }]
 }
-const options = [
-  {
-    value: "1",
-    label: "启用"
-  },
-  {
-    value: "0",
-    label: "禁用"
-  }
-]
+const options = ref([
+  { value: "1", label: "启用" },
+  { value: "0", label: "禁用" }
+])
+
 const handleCreateOrUpdate = () => {
   formRef.value?.validate((valid: boolean, fields) => {
     if (!valid) return console.error("表单校验不通过", fields)

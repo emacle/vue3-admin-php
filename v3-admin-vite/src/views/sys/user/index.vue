@@ -48,16 +48,11 @@ const formRules: FormRules<CreateOrUpdateUserRequestData> = {
   password: [{ required: true, trigger: "blur", message: "请输入密码" }],
   role: [{ required: true, trigger: "blur", message: "请选择角色" }]
 }
-const options = [
-  {
-    value: "1",
-    label: "启用"
-  },
-  {
-    value: "0",
-    label: "禁用"
-  }
-]
+const options = ref([
+  { value: "1", label: "启用" },
+  { value: "0", label: "禁用" }
+])
+
 const handleCreateOrUpdate = () => {
   formRef.value?.validate((valid: boolean, fields) => {
     if (!valid) return console.error("表单校验不通过", fields)
