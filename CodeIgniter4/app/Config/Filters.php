@@ -88,7 +88,7 @@ class Filters extends BaseFilters
                 // AuCheckFilter str_contains($uri_short, $uri_db)
                 // 用户拥有接口 /sys/user/get 的权限则会拥有/sys/user/**/get 的所有的权限
                 // 限制太精确会使用前端操作勾选过多 TODO:
-                // 'api/v2/sys/user/refreshtoken',
+                'api/v2/sys/user/refreshtoken',  // 此接口须为例外
                 // 'api/v2/sys/user/repasswd',
                 // 'api/v2/sys/user/roleoptions',
                 // 'api/v2/sys/user/deptoptions',

@@ -428,10 +428,9 @@ class User extends ResourceController
 
         // 获取用户所属部门信息
         foreach ($UserArr as $k => $v) {
-            $UserArr[$k]['dept'] = [];
             $DeptArr = [];
             // var_dump($v['dept_id']); return;
-            if ($v['dept_id']) {
+            if (isset($v['dept_id'])) {
                 $DeptArr = $this->Medoodb->get(
                     'sys_dept',
                     '*',
@@ -440,7 +439,7 @@ class User extends ResourceController
                     ]
                 );
             }
-            $UserArr[$k]['dept'] = $DeptArr;
+            $UserArr[$k]['dept'] = empty($DeptArr) ? (object)[] : $DeptArr;
         }
 
 
