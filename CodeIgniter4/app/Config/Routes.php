@@ -65,6 +65,14 @@ $routes->group('api/v2/sys', ['namespace' => 'App\Controllers\Api\V2\Sys'], func
     // $routes->options('employee', 'Employee::options'); // $routes->resource 不会创建options请求，但是cors里必须要有options的请求接收
 });		
 
+$routes->group('api/v2/flow', ['namespace' => 'App\Controllers\Api\V2\Flow'], function ($routes) {
+    $routes->get('leave', 'Leave::index');
+    $routes->post('leave', 'Leave::create');
+    $routes->put('leave/(.*)', 'Leave::update/$1');
+    $routes->delete('leave/(.*)', 'Leave::delete/$1');
+    $routes->options('leave', 'Leave::options'); // $routes->resource 不会创建options请求，但是cors里必须要有options的请求接收
+});
+
 // // 白名单里的uri不认证
 // $config['jwt_white_list'] = [
 //     '/sys/user/login/post',
