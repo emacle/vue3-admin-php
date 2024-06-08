@@ -775,29 +775,40 @@ class User extends ResourceController
     }
     #endregion
 
-    #region 路由白名单，根据useId 获取该用户拥有的角色权限选项
+    #region 路由白名单
     public function roleoptions()
     {
-        $userId = $this->request->getVar('userId');
-        $sql = "SELECT
-                    CAST(r.id AS CHAR) AS value,
-                    r.name AS label
-                FROM
-                    sys_role r
-                INNER JOIN (
-                    SELECT
-                        DISTINCT p.r_id AS role_id
-                    FROM
-                        sys_perm AS p
-                    INNER JOIN
-                        sys_role_perm AS rp ON p.id = rp.perm_id
-                    INNER JOIN
-                        sys_user_role AS ur ON rp.role_id = ur.role_id
-                    WHERE
-                        p.perm_type = 'role'
-                        AND ur.user_id = :userId
-                ) t ON t.role_id = r.id";
-        $RoleOptionsArr = $this->Medoodb->query($sql, [':userId' => $userId])->fetchAll(PDO::FETCH_ASSOC);
+        // 根据useId 获取该用户拥有的角色权限选项，这里还是要简化，不必根据用户ID来获取对应的权限，防止前端显示数字id
+        // $userId =  getUserIdByToken($this->request->getHeaderLine('Authorization'));
+        // $sql = "SELECT
+        //             CAST(r.id AS CHAR) AS value,
+        //             r.name AS label
+        //         FROM
+        //             sys_role r
+        //         INNER JOIN (
+        //             SELECT
+        //                 DISTINCT p.r_id AS role_id
+        //             FROM
+        //                 sys_perm AS p
+        //             INNER JOIN
+        //                 sys_role_perm AS rp ON p.id = rp.perm_id
+        //             INNER JOIN
+        //                 sys_user_role AS ur ON rp.role_id = ur.role_id
+        //             WHERE
+        //                 p.perm_type = 'role'
+        //                 AND ur.user_id = :userId
+        //         ) t ON t.role_id = r.id";
+        // $RoleOptionsArr = $this->Medoodb->query($sql, [':userId' => $userId])->fetchAll(PDO::FETCH_ASSOC);
+        // $sql = "SELECT
+        //             CAST(r.id AS CHAR) AS value,
+        //             r.name AS label
+        //         FROM
+        //             sys_role r";
+        // $RoleOptionsArr = $this->Medoodb->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+        $RoleOptionsArr = $this->Medoodb->select('sys_role', [
+            "id (value) [String]",
+            "name (label)"
+        ]);
 
         $response = [
             "code" => 20000,

@@ -199,8 +199,8 @@ watch([() => paginationData.currentPage, () => paginationData.pageSize], getUser
 
 //#region role选择
 const roleOptions = ref<GetRoleOptionsData[]>([])
-const getRoleOptionsData = (params: { userId: string }) => {
-  getRoleOptionsApi(params)
+const getRoleOptionsData = () => {
+  getRoleOptionsApi()
     .then(({ data }) => {
       roleOptions.value = data.list
     })
@@ -226,7 +226,7 @@ const getDeptOptionsData = () => {
 }
 //#endregion
 onMounted(() => {
-  getRoleOptionsData({ userId: userStore.userId })
+  getRoleOptionsData()
   getDeptOptionsData()
 })
 </script>

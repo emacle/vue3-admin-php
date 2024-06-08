@@ -37,11 +37,10 @@ export function getUserDataApi(params: User.GetUserRequestData) {
 }
 
 /** 获取该用户拥有的角色权限，返回格式化的 el-select options格式 */
-export function getRoleOptionsApi(params: { userId: string }) {
+export function getRoleOptionsApi() {
   return request<User.GetRoleOptionsResponseData>({
     url: "sys/user/roleoptions",
-    method: "get",
-    params
+    method: "get"
   })
 }
 
