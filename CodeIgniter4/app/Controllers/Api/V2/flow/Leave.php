@@ -83,8 +83,12 @@ class Leave extends ResourceController
         }
         // 查询字段及字段值获取结束
 
+        // TODO: 限制当前用户只能查询自己的数据，超级管理员角色可以查看所有或根据用户角色数据权限来确定
+        $userId =  getUserIdByToken($this->request->getHeaderLine('Authorization'));
+        $where['employee_id'] = $userId;
+
         // 执行查询
-        $UserArr = $this->Medoodb->select(
+        $LeaveFormArr = $this->Medoodb->select(
             "adm_leave_form",
             $columns,
             $where
@@ -102,27 +106,27 @@ class Leave extends ResourceController
             return $this->respond($response, 400);
         }
 
-        // 获取记录总数
-        $total = $this->Medoodb->count("adm_leave_form",  $wherecnt);
 
-        // // 遍历该用户所属角色信息
-        // foreach ($UserArr as $k => $v) {
-        //     $UserArr[$k]['role'] = [];
-        //     $RoleArr = $this->Medoodb->select(
-        //         'sys_user_role',
-        //         'role_id [String]',
-        //         [
-        //             "user_id" => $v['id']
-        //         ]
-        //     );
-        //     $UserArr[$k]['role'] = $RoleArr;
-        // }
+        // // 遍历查询结果，并关联相关信息如userName, deptName等
+        foreach ($LeaveFormArr as $k => $v) {
+            $UserArr = [];
+            if (isset($v['employee_id'])) {
+                $UserArr = $this->Medoodb->get(
+                    'sys_user',
+                    ['id [String]', 'username'],
+                    [
+                        "id" => $v['employee_id']
+                    ]
+                );
+            };
+            $LeaveFormArr[$k]['user'] =   empty($UserArr) ? (object)[] : $UserArr;
+        }
 
         $response = [
             "code" => 20000,
             "data" => [
-                'list' => $UserArr,
-                'total' => $total,
+                'list' => $LeaveFormArr,
+                'total' => count($LeaveFormArr),
                 // "sql" => $sqlCmd
             ]
         ];
@@ -144,93 +148,112 @@ class Leave extends ResourceController
     #region 增
     public function create()
     {
-        // --data-raw '{
-        //     "username": "test",
-        //     "password": "test",
-        //      "tel": "",
-        //     "email": "1@test.com",
-        //     "status": 1,
-        //     "listorder": 1000
-        // }'
         $parms = get_object_vars($this->request->getVar());
 
-        // 参数数据预处理
-        $RoleArr = [];
-        $DeptArr = [];
-        if (isset($parms['role'])) {
-            $RoleArr = $parms['role'];
-            unset($parms['role']);    // 剔除role数组
-        }
-        if (isset($parms['dept'])) {
-            $DeptArr = $parms['dept'];
-            unset($parms['dept']);    // 剔除role数组
-        }
-        // 加入新增时间
-        $parms['create_time'] = time();
-        $parms['password'] = md5($parms['password']);
+        $userId =  getUserIdByToken($this->request->getHeaderLine('Authorization'));
 
-        $this->Medoodb->insert("sys_user", $parms);
-        $user_id = $this->Medoodb->id();
+        // 1.创建申请表单记录 adm_leave_form
+        $parms['employee_id'] =  $userId;
+        $parms['state'] =  "processing"; // 申请人提交申请，所以state字段值为processing；表示这个请假表单的当前的状态是正在审批中；
+        // var_dump($parms);
 
-        if (!$user_id) {
+        $this->Medoodb->insert("adm_leave_form", $parms);
+        $form_id = $this->Medoodb->id();
+        if (!$form_id) {
             $response = [
                 "code" => 20403, // 403 的响应，表示禁止访问。告诉客户端某个操作是不允许的
                 "type" => 'error',
-                "message" => $parms['username'] . ' - 用户新增失败'
+                "message" => '请假申请失败'
             ];
             return $this->respond($response);
         }
 
-        // 处理关联角色
-        $failed = false;
-        $failedArr = [];
-        foreach ($RoleArr as $k => $v) {
-            $arr = ['user_id' => $user_id, 'role_id' => $v];
-            $this->Medoodb->insert("sys_user_role", $arr);
-            $ret = $this->Medoodb->id();
+        // 2.根据员工属性添加不同的审批任务流程 adm_process_flow
+        $user = $this->Medoodb->get('sys_user', '*', ["id" => $userId]);
+        // var_dump($user['dept_id']); return;
+        // Define the switch-case logic
+        switch ($user['position_code']) {
+            case 'GM':
+                echo "总经理";
+                break;
+            case 'DGM':
+                echo "副总经理";
+                break;
+            case 'DM':
+                echo "部门经理";
+                break;
+            case 'STAFF':
+                // echo "普通员工"; 
+                // 流程：员工-> 部门经理 -> 副总经理, 审批任务流程需要插入三条记录
+                // step 1:
+                $firstRecord = [
+                    "form_id" => $form_id,
+                    "operator_id" => $userId,  // 经办人编号
+                    "action" => "apply",  // 第一环申请
+                    "result" => "",
+                    "reason" => "",
+                    "audit_time" => "",
+                    "order_no" => 1, // 任务第一环
+                    "state" => "complete", // 第一环申请默认完成
+                    "is_last" => 0
+                ];
+                $this->Medoodb->insert("adm_process_flow", $firstRecord);
 
-            if (!$ret) {
-                $failed = true;
-                array_push($failedArr, $arr);
-            }
-        }
+                // step 2:
+                // 查找申请人部门对应的部门经理userid. adm_audit_role
+                $DM_userId = $this->Medoodb->get('adm_audit_role', 'user_id', [
+                    "dept_id" => $user['dept_id'],
+                    "position_code" => "DM"
+                ]);
+                $secondRecord = [
+                    "form_id" => $form_id,
+                    "operator_id" => $DM_userId,  // 经办人编号
+                    "action" => "audit", // 第二环审批
+                    "result" => "",
+                    "reason" => "",
+                    "audit_time" => "",
+                    "order_no" => 2, // 任务第二环
+                    "state" => "process",
+                    "is_last" => 0
+                ];
+                $this->Medoodb->insert("adm_process_flow", $secondRecord);
+                $process_id = $this->Medoodb->id();
+                // 因为 第一步state complete，第二步 state process， 插入 adm_notice 表
+                if ($process_id) {
+                    $this->Medoodb->insert("adm_notice", [
+                        "receiver_id" => $DM_userId,
+                        "content" => $user['username'] . "员工已发起请假申请，请您审批。"
+                    ]);
+                }
 
-        if ($failed) {
-            $response = [
-                "code" => 20403, // 403 的响应，表示禁止访问。告诉客户端某个操作是不允许的
-                "type" => 'error',
-                "message" => '用户关联角色失败 ' . json_encode($failedArr)
-            ];
-            return $this->respond($response);
-        }
-
-        // 处理关联部门
-        $failed = false;
-        $failedArr = [];
-        foreach ($DeptArr as $k => $v) {
-            $arr = ['user_id' => $user_id, 'dept_id' => $v];
-            $this->Medoodb->insert("sys_user_dept", $arr);
-            $ret = $this->Medoodb->id();
-
-            if (!$ret) {
-                $failed = true;
-                array_push($failedArr, $arr);
-            }
-        }
-
-        if ($failed) {
-            $response = [
-                "code" => 20403,
-                "type" => 'error',
-                "message" => '用户关联部门失败 ' . json_encode($failedArr)
-            ];
-            return $this->respond($response);
+                // step 3:
+                // 查找申请人部门对应的副总经理userid. adm_audit_role
+                $DGM_userId = $this->Medoodb->get('adm_audit_role', 'user_id', [
+                    "dept_id" => $user['dept_id'],
+                    "position_code" => "DGM"
+                ]);
+                $thirdRecord = [
+                    // "form_id" => $form_id,
+                    "operator_id" => $DGM_userId,  // 经办人编号
+                    "action" => "audit", // 第三环审批
+                    "result" => "",
+                    "reason" => "",
+                    "audit_time" => "",
+                    "order_no" => 3, // 任务第三环
+                    "state" => "process",
+                    "is_last" => 1
+                ];
+                $this->Medoodb->insert("adm_process_flow", $thirdRecord);
+                break;
+            default:
+                echo "职务未定义"; // Default case if position_code is empty or not matched
+                break;
         }
 
         $response = [
             "code" => 20000,
             "type" => 'success',
-            "message" => $parms['username'] . ' - 用户新增成功'
+            "message" =>  '请假申请成功'
         ];
 
         return $this->respondCreated($response);

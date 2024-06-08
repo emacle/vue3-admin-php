@@ -53,13 +53,17 @@ const formRules: FormRules<CreateOrUpdateLeaveRequestData> = {
   ]
 }
 
-const options = ref([
+const typeOptions = ref([
   { value: "1", label: "年假" },
   { value: "2", label: "病假" },
   { value: "3", label: "婚假" },
   { value: "4", label: "产假" },
   { value: "5", label: "事假" }
 ])
+const formatType = (row: any, column: any, cellValue: string, index: any) => {
+  const position = typeOptions.value.find((option) => option.value === cellValue.toString())
+  return position ? position.label : cellValue
+}
 
 const handleCreateOrUpdate = () => {
   formRef.value?.validate((valid: boolean, fields) => {
@@ -111,7 +115,7 @@ const handleUpdate = (row: GetLeaveData) => {
 //#endregion
 
 //#region 查
-const userData = ref<GetLeaveData[]>([])
+const leaveData = ref<GetLeaveData[]>([])
 const searchFormRef = ref<FormInstance | null>(null)
 const searchData = reactive({
   form_type: "",
@@ -131,10 +135,10 @@ const getLeaveData = () => {
   })
     .then(({ data }) => {
       paginationData.total = data.total
-      userData.value = data.list
+      leaveData.value = data.list
     })
     .catch(() => {
-      userData.value = []
+      leaveData.value = []
     })
     .finally(() => {
       loading.value = false
@@ -157,15 +161,15 @@ onMounted(() => {})
 
 <template>
   <div class="app-container">
-    <el-card shadow="never" class="search-wrapper" v-perm="['/sys/user/get']">
+    <el-card shadow="never" class="search-wrapper" v-perm="['/flow/leave/get']">
       <el-form ref="searchFormRef" :inline="true" :model="searchData">
         <el-form-item prop="form_type" label="类型">
           <el-select v-model="searchData.form_type" clearable placeholder="请选择">
-            <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value" />
+            <el-option v-for="item in typeOptions" :key="item.value" :label="item.label" :value="item.value" />
           </el-select>
         </el-form-item>
-        <el-form-item prop="create_time" label="时间">
-          <el-input v-model="searchData.create_time" clearable placeholder="请选择创建时间" />
+        <el-form-item prop="create_time" label="日期">
+          <el-input v-model="searchData.create_time" clearable placeholder="请选择申请日期" />
         </el-form-item>
         <el-form-item>
           <el-button type="primary" :icon="Search" @click="handleSearch">查询</el-button>
@@ -187,14 +191,14 @@ onMounted(() => {})
         </div>
       </div>
       <div class="table-wrapper">
-        <el-table :data="userData">
+        <el-table :data="leaveData">
           <el-table-column prop="form_id" label="ID" align="center" />
-          <el-table-column prop="employee_id" label="用户名" align="center" />
-          <el-table-column prop="form_type" label="类型" align="center" />
-          <el-table-column prop="start_time" label="开始时间" align="center" />
-          <el-table-column prop="end_time" label="结束时间" align="center" />
+          <el-table-column prop="user.username" label="用户名" align="center" />
+          <el-table-column prop="form_type" label="类型" align="center" :formatter="formatType" />
+          <el-table-column prop="start_time" label="开始日期" align="center" />
+          <el-table-column prop="end_time" label="结束日期" align="center" />
           <el-table-column prop="reason" label="原因" align="center" />
-          <el-table-column prop="create_time" label="申请时间" align="center" />
+          <el-table-column prop="create_time" label="申请日期" align="center" />
           <el-table-column prop="state" label="状态" align="center" />
           <el-table-column fixed="right" label="操作" width="150" align="center">
             <template #default="scope">
@@ -244,7 +248,7 @@ onMounted(() => {})
       <el-form ref="formRef" :model="formData" :rules="formRules" label-width="100px" label-position="right">
         <el-form-item prop="form_type" label="类型">
           <el-select v-model="formData.form_type" placeholder="请选择类型" style="width: 240px">
-            <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value" />
+            <el-option v-for="item in typeOptions" :key="item.value" :label="item.label" :value="item.value" />
           </el-select>
           {{ formData.form_type }}
         </el-form-item>
