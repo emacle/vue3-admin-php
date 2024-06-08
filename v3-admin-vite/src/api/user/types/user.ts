@@ -6,6 +6,7 @@ export interface CreateOrUpdateUserRequestData {
   tel?: string
   role?: number[]
   dept_id?: number
+  position_code?: string
   listorder: number
   status: number
 }
@@ -20,6 +21,7 @@ export interface GetUserRequestData {
   /** 查询参数：手机号 */
   tel?: string
   dept_id?: number
+  position_code?: string
   listorder?: number
   //** TODO: 查询时status使用 string 与searchData保持一致 */
   status?: string
@@ -35,6 +37,7 @@ export interface GetUserData {
   tel: string
   role: number[]
   dept_id: number
+  position_code?: string
   listorder: number
   status: number
 }

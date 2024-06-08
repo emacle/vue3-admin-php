@@ -37,6 +37,7 @@ const DEFAULT_FORM_DATA: CreateOrUpdateUserRequestData = {
   email: "",
   role: [],
   dept_id: undefined,
+  position_code: "",
   listorder: 1000,
   status: 1
 }
@@ -52,6 +53,16 @@ const options = ref([
   { value: "1", label: "启用" },
   { value: "0", label: "禁用" }
 ])
+const positionOptions = ref([
+  { value: "GM", label: "总经理" },
+  { value: "DGM", label: "副总经理" },
+  { value: "DM", label: "部门经理" },
+  { value: "STAFF", label: "普通员工" }
+])
+const formatPosition = (row: any, column: any, cellValue: string, index: any) => {
+  const position = positionOptions.value.find((option) => option.value === cellValue)
+  return position ? position.label : cellValue
+}
 
 const handleCreateOrUpdate = () => {
   formRef.value?.validate((valid: boolean, fields) => {
@@ -157,7 +168,7 @@ const getUserData = () => {
     tel: searchData.tel || undefined,
     dept_id: searchData.dept_id || undefined,
     status: searchData.status || undefined,
-    fields: "id,username,email,tel,dept_id,status,listorder", // 与后端一致 前端指定获取的字段
+    fields: "id,username,email,tel,dept_id,position_code,status,listorder", // 与后端一致 前端指定获取的字段
     query: "~username,~tel,dept_id,status", // 前端指定模糊查询的字段为name,精确查询字段为status
     sort: sortParm.value // 前面指定按listorder升序排列
   })
@@ -291,6 +302,7 @@ onMounted(() => {
               <el-table-column prop="tel" label="电话" align="center" />
               <el-table-column prop="email" label="邮箱" align="center" />
               <el-table-column prop="dept.name" label="部门" align="center" />
+              <el-table-column prop="position_code" label="职务" align="center" :formatter="formatPosition" />
               <el-table-column prop="listorder" label="排序" align="center" />
               <el-table-column prop="status" label="状态" align="center">
                 <template #default="scope">
@@ -371,6 +383,11 @@ onMounted(() => {
             style="width: 240px"
           />
         </el-form-item>
+        <el-form-item prop="positon_code" label="职务">
+          <el-select v-model="formData.position_code" placeholder="请选择" style="width: 240px">
+            <el-option v-for="item in positionOptions" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+        </el-form-item>
         <el-form-item prop="listorder" label="排序">
           <el-input-number v-model="formData.listorder" :min="99" controls-position="right" size="large" />
         </el-form-item>
@@ -417,3 +434,4 @@ onMounted(() => {
   justify-content: flex-end;
 }
 </style>
+: any: any: string: any
