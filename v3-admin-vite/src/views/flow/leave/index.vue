@@ -92,13 +92,13 @@ const resetForm = () => {
 
 //#region 删
 const handleDelete = (row: GetLeaveData) => {
-  ElMessageBox.confirm(`正在删除用户：${row.username}，确认删除？`, "提示", {
+  ElMessageBox.confirm(`正在删除用户：${row.form_id}，确认删除？`, "提示", {
     confirmButtonText: "确定",
     cancelButtonText: "取消",
     type: "warning"
   })
     .then(() => {
-      deleteLeaveDataApi(row.id).then((res: any) => {
+      deleteLeaveDataApi(row.form_id).then((res: any) => {
         ElMessage({ message: res.message, type: res.type })
         getLeaveData()
       })

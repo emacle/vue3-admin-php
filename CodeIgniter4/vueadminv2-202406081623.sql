@@ -125,7 +125,7 @@ CREATE TABLE `adm_process_flow` (
 
 LOCK TABLES `adm_process_flow` WRITE;
 /*!40000 ALTER TABLE `adm_process_flow` DISABLE KEYS */;
-INSERT INTO `adm_process_flow` VALUES (1,1,4,'apply','','','2024-06-08 15:31:45','',1,'complete',0),(2,1,3,'audit','','','2024-06-08 15:31:45','',2,'process',0),(3,0,2,'audit','','','2024-06-08 15:31:45','',3,'process',1);
+INSERT INTO `adm_process_flow` VALUES (1,1,4,'apply','','','2024-06-08 15:31:45','',1,'complete',0),(2,1,3,'audit','','','2024-06-08 15:31:45','',2,'process',0),(3,1,2,'audit','','','2024-06-08 15:31:45','',3,'process',1);
 /*!40000 ALTER TABLE `adm_process_flow` ENABLE KEYS */;
 UNLOCK TABLES;
 

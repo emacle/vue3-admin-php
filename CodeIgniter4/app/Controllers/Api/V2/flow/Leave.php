@@ -233,7 +233,7 @@ class Leave extends ResourceController
                     "position_code" => "DGM"
                 ]);
                 $thirdRecord = [
-                    // "form_id" => $form_id,
+                    "form_id" => $form_id,
                     "operator_id" => $DGM_userId,  // 经办人编号
                     "action" => "audit", // 第三环审批
                     "result" => "",

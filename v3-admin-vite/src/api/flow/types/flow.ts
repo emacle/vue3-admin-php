@@ -22,7 +22,7 @@ export interface GetLeaveRequestData {
 }
 
 export interface GetLeaveData {
-  form_id?: string
+  form_id: string
   employee_id?: string
   form_type: string
   start_time: string
