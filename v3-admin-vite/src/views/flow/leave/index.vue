@@ -193,7 +193,7 @@ onMounted(() => {})
       <div class="table-wrapper">
         <el-table :data="leaveData">
           <el-table-column prop="form_id" label="ID" align="center" />
-          <el-table-column prop="user.username" label="用户名" align="center" />
+          <el-table-column prop="user.username" label="申请人" align="center" />
           <el-table-column prop="form_type" label="类型" align="center" :formatter="formatType" />
           <el-table-column prop="start_time" label="开始日期" align="center" />
           <el-table-column prop="end_time" label="结束日期" align="center" />

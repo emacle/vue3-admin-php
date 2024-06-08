@@ -84,8 +84,8 @@ class Leave extends ResourceController
         // 查询字段及字段值获取结束
 
         // TODO: 限制当前用户只能查询自己的数据，超级管理员角色可以查看所有或根据用户角色数据权限来确定
-        $userId =  getUserIdByToken($this->request->getHeaderLine('Authorization'));
-        $where['employee_id'] = $userId;
+        // $userId =  getUserIdByToken($this->request->getHeaderLine('Authorization'));
+        // $where['employee_id'] = $userId;
 
         // 执行查询
         $LeaveFormArr = $this->Medoodb->select(
