@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { onMounted, reactive, ref, watch } from "vue"
-import { createLeaveDataApi, deleteLeaveDataApi, getLeaveDataApi, updateLeaveDataApi } from "@/api/flow"
-import { type CreateOrUpdateLeaveRequestData, type GetLeaveData } from "@/api/flow/types/flow"
+import { getLeaveAuditDataApi, updateLeaveAuditDataApi } from "@/api/flow"
+import { type CreateOrUpdateLeaveAuditRequestData, type GetLeaveAuditData } from "@/api/flow/types/flow"
 import { type FormInstance, type FormRules, ElMessage, ElMessageBox, ElTree } from "element-plus"
 import { Search, Refresh, CirclePlus, Delete, Download, RefreshRight } from "@element-plus/icons-vue"
 import { usePagination } from "@/hooks/usePagination"
@@ -10,7 +10,7 @@ import { useUserStore } from "@/store/modules/user"
 
 defineOptions({
   // 命名当前组件
-  name: "FLowLeave"
+  name: "FLowLeaveAudit"
 })
 
 const userStore = useUserStore()
@@ -18,39 +18,18 @@ const loading = ref<boolean>(false)
 const { paginationData, handleCurrentChange, handleSizeChange } = usePagination()
 
 //#region 增
-// 获取当天的日期
-const getToday = () => {
-  const today = new Date()
-  return today.toISOString().split("T")[0]
-}
-const DEFAULT_FORM_DATA: CreateOrUpdateLeaveRequestData = {
-  form_id: undefined,
-  form_type: "",
-  start_time: getToday(),
-  end_time: "",
+const DEFAULT_FORM_DATA: CreateOrUpdateLeaveAuditRequestData = {
+  process_id: undefined,
+  result: "",
   reason: ""
 }
 
 const dialogVisible = ref<boolean>(false)
 const formRef = ref<FormInstance | null>(null)
-const formData = ref<CreateOrUpdateLeaveRequestData>(cloneDeep(DEFAULT_FORM_DATA))
-const formRules: FormRules<CreateOrUpdateLeaveRequestData> = {
-  form_type: [{ required: true, trigger: "blur", message: "请选择类型" }],
-  reason: [{ required: true, trigger: "blur", message: "请输入理由" }],
-  start_time: [{ required: true, trigger: "blur", message: "请选择开始时间" }],
-  end_time: [
-    { required: true, trigger: "blur", message: "请选择结束时间" },
-    {
-      validator: (rule, value, callback) => {
-        if (value <= formData.value.start_time) {
-          callback(new Error("结束时间必须大于开始时间"))
-        } else {
-          callback()
-        }
-      },
-      trigger: "blur"
-    }
-  ]
+const formData = ref<CreateOrUpdateLeaveAuditRequestData>(cloneDeep(DEFAULT_FORM_DATA))
+const formRules: FormRules<CreateOrUpdateLeaveAuditRequestData> = {
+  result: [{ required: true, trigger: "blur", message: "请选择审批结果" }],
+  reason: [{ required: true, trigger: "blur", message: "请输入审批意见" }]
 }
 
 const typeOptions = ref([
@@ -61,20 +40,57 @@ const typeOptions = ref([
   { value: "5", label: "事假" }
 ])
 const formatType = (row: any, column: any, cellValue: string, index: any) => {
-  const position = typeOptions.value.find((option) => option.value === cellValue.toString())
-  return position ? position.label : cellValue
+  const type = typeOptions.value.find((option) => option.value === cellValue.toString())
+  return type ? type.label : cellValue
 }
+
+type TagType = "warning" | "success" | "info" | "primary" | "danger"
+
+interface StateOption {
+  value: string
+  label: string
+  tagType: TagType
+}
+const stateOptions = ref<StateOption[]>([
+  { value: "process", label: "处理中", tagType: "warning" },
+  { value: "complete", label: "已处理", tagType: "success" }
+])
+// const formatState = (row: any, column: any, cellValue: string, index: any) => {
+//   const state = stateOptions.value.find((option) => option.value === cellValue.toString())
+//   return state ? state.label : cellValue
+// }
+const formatState = (state: string) => {
+  const option = stateOptions.value.find((option) => option.value === state)
+  return option ? option.label : state
+}
+
+const getTagType = (state: string) => {
+  const option = stateOptions.value.find((option) => option.value === state)
+  return option ? option.tagType : "info"
+}
+
+const resultOptions = ref([
+  { value: "approved", label: "同意" },
+  { value: "refused", label: "驳回" }
+])
 
 const handleCreateOrUpdate = () => {
   formRef.value?.validate((valid: boolean, fields) => {
     if (!valid) return console.error("表单校验不通过", fields)
     loading.value = true
-    const api = formData.value.form_id === undefined ? createLeaveDataApi : updateLeaveDataApi
-    api(formData.value)
+    const api = formData.value.process_id === undefined ? createLeaveAuditDataApi : updateLeaveAuditDataApi
+    // 提取并保留 result, reason 和 process_id 三项
+    const newFormData = {
+      result: formData.value.result,
+      reason: formData.value.reason,
+      process_id: formData.value.process_id,
+      form_id: formData.value.form_id
+    }
+    api(newFormData)
       .then((res: any) => {
         ElMessage({ message: res.message, type: res.type })
         dialogVisible.value = false
-        getLeaveData()
+        getLeaveAuditData()
       })
       .finally(() => {
         loading.value = false
@@ -90,62 +106,46 @@ const resetForm = () => {
 }
 //#endregion
 
-//#region 删
-const handleDelete = (row: GetLeaveData) => {
-  ElMessageBox.confirm(`正在删除用户：${row.form_id}，确认删除？`, "提示", {
-    confirmButtonText: "确定",
-    cancelButtonText: "取消",
-    type: "warning"
-  })
-    .then(() => {
-      deleteLeaveDataApi(row.form_id).then((res: any) => {
-        ElMessage({ message: res.message, type: res.type })
-        getLeaveData()
-      })
-    })
-    .catch(() => {})
-}
-//#endregion
-
 //#region 改
-const handleUpdate = (row: GetLeaveData) => {
+const handleUpdate = (row: GetLeaveAuditData) => {
   dialogVisible.value = true
   formData.value = cloneDeep(row)
 }
 //#endregion
 
 //#region 查
-const leaveData = ref<GetLeaveData[]>([])
+const leaveAuditData = ref<GetLeaveAuditData[]>([])
 const searchFormRef = ref<FormInstance | null>(null)
 const searchData = reactive({
   form_type: "",
-  create_time: ""
+  create_time: "",
+  state: ""
 })
 
-const getLeaveData = () => {
+const getLeaveAuditData = () => {
   loading.value = true
-  getLeaveDataApi({
+  getLeaveAuditDataApi({
     currentPage: paginationData.currentPage,
     size: paginationData.pageSize,
-    form_type: searchData.form_type || undefined,
+    state: searchData.state || undefined,
     create_time: searchData.create_time || undefined,
-    fields: "form_id,employee_id,form_type,start_time,end_time,reason,create_time,state", // 与后端一致 前端指定获取的字段
-    query: "form_type,create_time", // 前端指定模糊查询的字段为name,精确查询字段为status
+    fields: "process_id,order_no,form_id,operator_id,result,reason,state,audit_time,create_time", // 与后端一致 前端指定获取的字段
+    query: "form_type,create_time,state", // 前端指定模糊查询的字段为name,精确查询字段为status
     sort: "+create_time" // 前面指定按listorder升序排列
   })
     .then(({ data }) => {
       paginationData.total = data.total
-      leaveData.value = data.list
+      leaveAuditData.value = data.list
     })
     .catch(() => {
-      leaveData.value = []
+      leaveAuditData.value = []
     })
     .finally(() => {
       loading.value = false
     })
 }
 const handleSearch = () => {
-  paginationData.currentPage === 1 ? getLeaveData() : (paginationData.currentPage = 1)
+  paginationData.currentPage === 1 ? getLeaveAuditData() : (paginationData.currentPage = 1)
 }
 const resetSearch = () => {
   searchFormRef.value?.resetFields()
@@ -154,7 +154,7 @@ const resetSearch = () => {
 //#endregion
 
 /** 监听分页参数的变化 */
-watch([() => paginationData.currentPage, () => paginationData.pageSize], getLeaveData, { immediate: true })
+watch([() => paginationData.currentPage, () => paginationData.pageSize], getLeaveAuditData, { immediate: true })
 
 onMounted(() => {})
 </script>
@@ -163,14 +163,19 @@ onMounted(() => {})
   <div class="app-container">
     <el-card shadow="never" class="search-wrapper" v-perm="['/flow/leave/get']">
       <el-form ref="searchFormRef" :inline="true" :model="searchData">
-        <el-form-item prop="form_type" label="类型">
+        <el-form-item prop="state" label="类型">
+          <el-select v-model="searchData.state" clearable placeholder="请选择">
+            <el-option v-for="item in stateOptions" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+        </el-form-item>
+        <!-- <el-form-item prop="form_type" label="类型">
           <el-select v-model="searchData.form_type" clearable placeholder="请选择">
             <el-option v-for="item in typeOptions" :key="item.value" :label="item.label" :value="item.value" />
           </el-select>
         </el-form-item>
         <el-form-item prop="create_time" label="日期">
           <el-input v-model="searchData.create_time" clearable placeholder="请选择申请日期" />
-        </el-form-item>
+        </el-form-item> -->
         <el-form-item>
           <el-button type="primary" :icon="Search" @click="handleSearch">查询</el-button>
           <el-button :icon="Refresh" @click="resetSearch">重置</el-button>
@@ -180,48 +185,46 @@ onMounted(() => {})
     <el-card v-loading="loading" shadow="never">
       <div class="toolbar-wrapper">
         <div>
-          <el-button v-perm="['/flow/leave/post']" type="primary" :icon="CirclePlus" @click="dialogVisible = true"
-            >新增申请</el-button
-          >
-        </div>
-        <div>
           <el-tooltip content="刷新当前页">
-            <el-button type="primary" :icon="RefreshRight" circle @click="getLeaveData" />
+            <el-button type="primary" :icon="RefreshRight" circle @click="getLeaveAuditData" />
           </el-tooltip>
         </div>
       </div>
       <div class="table-wrapper">
-        <el-table :data="leaveData">
-          <el-table-column prop="form_id" label="ID" align="center" />
-          <el-table-column prop="user.username" label="申请人" align="center" />
+        <el-table :data="leaveAuditData">
+          <el-table-column prop="process_id" label="process_id" align="center" />
+          <el-table-column prop="form_id" label="form_id" align="center" />
+          <el-table-column prop="order_no" label="步骤" align="center" />
+          <el-table-column prop="employee_name" label="申请人" align="center" />
           <el-table-column prop="form_type" label="类型" align="center" :formatter="formatType" />
           <el-table-column prop="start_time" label="开始日期" align="center" />
           <el-table-column prop="end_time" label="结束日期" align="center" />
-          <el-table-column prop="reason" label="原因" align="center" />
-          <el-table-column prop="create_time" label="申请日期" align="center" />
-          <el-table-column prop="state" label="状态" align="center" />
-          <!-- <el-table-column fixed="right" label="操作" width="150" align="center">
+          <el-table-column prop="apply_reason" label="申请原因" align="center" />
+          <el-table-column prop="apply_time" label="申请时间" align="center" />
+          <el-table-column prop="operator_name" label="处理人" align="center" />
+          <el-table-column prop="result" label="审批结果" align="center" />
+          <el-table-column prop="reason" label="审批意见" align="center" />
+          <el-table-column prop="audit_time" label="审批时间" align="center" />
+          <!-- <el-table-column prop="state" label="状态" align="center" :formatter="formatState" /> -->
+          <el-table-column prop="state" label="状态" align="center">
+            <template #default="{ row }">
+              <el-tag :type="getTagType(row.state)">{{ formatState(row.state) }}</el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column fixed="right" label="操作" width="150" align="center">
             <template #default="scope">
               <el-button
-                v-perm="['/flow/leave/put']"
+                v-if="scope.row.state == 'process'"
+                v-perm="['/flow/leaveaudit/put']"
                 type="primary"
                 text
                 bg
                 size="small"
                 @click="handleUpdate(scope.row)"
-                >修改</el-button
-              >
-              <el-button
-                v-perm="['/flow/leave/delete']"
-                type="danger"
-                text
-                bg
-                size="small"
-                @click="handleDelete(scope.row)"
-                >删除</el-button
+                >审批</el-button
               >
             </template>
-          </el-table-column> -->
+          </el-table-column>
         </el-table>
       </div>
       <div class="pager-wrapper">
@@ -240,21 +243,29 @@ onMounted(() => {})
     <!-- 新增/修改 -->
     <el-dialog
       v-model="dialogVisible"
-      :title="formData.form_id === undefined ? '新增申请' : '修改申请'"
+      :title="formData.process_id === undefined ? '新增' : '审批'"
       @closed="resetForm"
       :close-on-click-modal="false"
       width="30%"
     >
       <el-form ref="formRef" :model="formData" :rules="formRules" label-width="100px" label-position="right">
+        <el-form-item prop="employee_name" label="申请人">
+          <el-input v-model="formData.employee_name" placeholder="请输入" style="width: 240px" readonly />
+        </el-form-item>
         <el-form-item prop="form_type" label="类型">
-          <el-select v-model="formData.form_type" placeholder="请选择类型" style="width: 240px">
+          <el-select v-model="formData.form_type" placeholder="请选择类型" style="width: 240px" disabled>
             <el-option v-for="item in typeOptions" :key="item.value" :label="item.label" :value="item.value" />
           </el-select>
-          {{ formData.form_type }}
         </el-form-item>
-        <el-form-item prop="reason" label="原因">
-          <el-input v-model="formData.reason" placeholder="请输入" style="width: 240px" autosize type="textarea" />
-          {{ formData.reason }}
+        <el-form-item prop="apply_reason" label="申请原因">
+          <el-input
+            v-model="formData.apply_reason"
+            placeholder="请输入"
+            style="width: 240px"
+            autosize
+            type="textarea"
+            readonly
+          />
         </el-form-item>
         <el-form-item prop="start_time" label="开始时间">
           <el-date-picker
@@ -263,6 +274,7 @@ onMounted(() => {})
             placeholder="选择开始日期"
             style="width: 240px"
             value-format="YYYY-MM-DD"
+            disabled
           />
         </el-form-item>
         <el-form-item prop="end_time" label="结束时间">
@@ -272,7 +284,20 @@ onMounted(() => {})
             placeholder="选择结束日期"
             style="width: 240px"
             value-format="YYYY-MM-DD"
+            disabled
           />
+        </el-form-item>
+        <el-form-item prop="result" label="审批结果">
+          <el-radio-group v-model="formData.result">
+            <el-radio-button v-for="(item, index) in resultOptions" :key="index" :value="item.value">{{
+              item.label
+            }}</el-radio-button>
+          </el-radio-group>
+          {{ formData.result }}
+        </el-form-item>
+        <el-form-item prop="reason" label="审批意见">
+          <el-input v-model="formData.reason" placeholder="请输入" style="width: 240px" autosize type="textarea" />
+          {{ formData.reason }}
         </el-form-item>
       </el-form>
       <template #footer>

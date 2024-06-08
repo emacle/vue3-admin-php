@@ -59,7 +59,6 @@ class Leave extends ResourceController
         // 指定条件模糊或搜索查询,author like %zhangsan%, status=1 此时 total $wherecnt 条件也要发生变化
         // 查询字段及字段值获取
         // 如果存在query 参数以,分隔，且每个参数的有值才会增加条件
-        $wherecnt = []; // 计算total使用条件，默认为全部
         $query = $this->request->getVar('query');
         if ($query) { // 存在才进行过滤,否则不过滤
             $queryArr = explode(",", $query);
@@ -70,13 +69,11 @@ class Leave extends ResourceController
                     $tmpValue = $this->request->getVar($tmpKey);
                     if (!is_null($tmpValue)) {
                         $where[$tmpKey . '[~]'] = $tmpValue;
-                        $wherecnt[$tmpKey . '[~]'] = $tmpValue;
                     }
                 } else {
                     $tmpValue = $this->request->getVar($v);
                     if (!is_null($tmpValue)) {
                         $where[$v] = $tmpValue;
-                        $wherecnt[$v] = $tmpValue;
                     }
                 }
             }
@@ -84,8 +81,11 @@ class Leave extends ResourceController
         // 查询字段及字段值获取结束
 
         // TODO: 限制当前用户只能查询自己的数据，超级管理员角色可以查看所有或根据用户角色数据权限来确定
-        // $userId =  getUserIdByToken($this->request->getHeaderLine('Authorization'));
-        // $where['employee_id'] = $userId;
+        $userId =  getUserIdByToken($this->request->getHeaderLine('Authorization'));
+        $userRoleArr = $this->Medoodb->select('sys_user_role', 'role_id', ['user_id' => $userId]);
+        if (!in_array(1, $userRoleArr)) { // 用户没有超级管理员角色则添加限制条件，只有本人可以查看请假申请
+            $where['employee_id'] = $userId;
+        }
 
         // 执行查询
         $LeaveFormArr = $this->Medoodb->select(
@@ -105,7 +105,6 @@ class Leave extends ResourceController
             ];
             return $this->respond($response, 400);
         }
-
 
         // // 遍历查询结果，并关联相关信息如userName, deptName等
         foreach ($LeaveFormArr as $k => $v) {
@@ -149,7 +148,6 @@ class Leave extends ResourceController
     public function create()
     {
         $parms = get_object_vars($this->request->getVar());
-
         $userId =  getUserIdByToken($this->request->getHeaderLine('Authorization'));
 
         // 1.创建申请表单记录 adm_leave_form
@@ -421,185 +419,6 @@ class Leave extends ResourceController
             ];
             return $this->respond($response, 404);
         }
-    }
-    #endregion
-
-    #region 重置密码，路由白名单
-    public function repasswd($id = null)
-    {
-        $parms = get_object_vars($this->request->getVar()); // 获取表单参数，类型为数组
-        // TODO: 后端使用Validator包进行参数密码复杂度校验与前端保持一致
-        // use Respect\Validation\Validator as v;
-        // use Respect\Validation\Exceptions\ValidationException;
-        // try {
-        //     // 使用check 来捕获异常信息 https://respect-validation.readthedocs.io/en/2.0/rules/AnyOf/
-        //     v::keySet(
-        //         v::key('passwordOrig', v::notEmpty()),
-        //         v::key('password', v::regex('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[\S]{8,}$/')),
-        //         v::key('rePassword', v::notEmpty())
-        //     )->check($parms);
-        //     v::keyValue('password_confirmation', 'equals', 'password')->check($parms);
-        // } catch (ValidationException $e) {
-        $userId =  getUserIdByToken($this->request->getHeaderLine('Authorization'));
-
-        // 原密码校验
-        $has = $this->Medoodb->has(
-            'sys_user',
-            [
-                'id' => $userId,
-                'password' => md5($parms['passwordOrig'])
-            ]
-        );
-        if (!$has) {
-            $response = [
-                "code" => 20400,
-                "type" => 'error',
-                "message" => '原密码不正确'
-            ];
-            return $this->respond($response, 200);
-        }
-
-        // 更新密码
-        $result = $this->Medoodb->update(
-            'sys_user',
-            ['password' => md5($parms['password'])],
-            ['id' => $userId]
-        );
-
-        $result->rowCount() ? $response = [
-            "code" => 20000,
-            "type" => 'success',
-            "message" => '密码更新成功'
-        ] : $response = [
-            "code" => 20204,
-            "type" => 'error',
-            "message" => '密码未更新'
-        ];
-        return $this->respond($response);
-    }
-    #endregion
-
-    #region 路由白名单，根据useId 获取该用户拥有的角色权限选项
-    public function roleoptions()
-    {
-        $userId = $this->request->getVar('userId');
-        $sql = "SELECT
-                    CAST(r.id AS CHAR) AS value,
-                    r.name AS label
-                FROM
-                    sys_role r
-                INNER JOIN (
-                    SELECT
-                        DISTINCT p.r_id AS role_id
-                    FROM
-                        sys_perm AS p
-                    INNER JOIN
-                        sys_role_perm AS rp ON p.id = rp.perm_id
-                    INNER JOIN
-                        sys_user_role AS ur ON rp.role_id = ur.role_id
-                    WHERE
-                        p.perm_type = 'role'
-                        AND ur.user_id = :userId
-                ) t ON t.role_id = r.id";
-        $RoleOptionsArr = $this->Medoodb->query($sql, [':userId' => $userId])->fetchAll(PDO::FETCH_ASSOC);
-
-        $response = [
-            "code" => 20000,
-            "data" => [
-                "list" => $RoleOptionsArr
-            ],
-        ];
-        return $this->respond($response);
-    }
-    #endregion
-
-    #region 路由白名单，获取所有部门,此接口为用户管理中选择所有部门的接口，与角色选项不同不需要根据权限来设置
-    public function deptoptions()
-    {
-        // 该查询需要在 MySQL 8.0 或更高版本中运行,因为它使用了递归公用表表达式 (RCTE) 特性
-        $sql = "WITH RECURSIVE cte AS (
-                SELECT id, pid, name, aliasname, listorder, status
-                FROM sys_dept
-                UNION ALL
-                SELECT d.id, d.pid, d.name, d.aliasname, d.listorder, d.status
-                FROM sys_dept d
-                INNER JOIN cte c ON d.id = c.pid
-              )
-              SELECT DISTINCT id as value, pid, name as label, aliasname, listorder, status FROM cte;";
-        // 执行查询
-        $DeptArr = $this->Medoodb->query($sql)->fetchAll(PDO::FETCH_ASSOC);
-
-        $DeptTreeObj = new \BlueM\Tree(
-            $DeptArr,
-            ['rootId' => 0, 'id' => 'value', 'parent' => 'pid']
-        );
-        $allDeptsTreeArr = $this->_dumpBlueMTreeNodes_dept($DeptTreeObj->getRootNodes());
-
-        $response = [
-            "code" => 20000,
-            "data" => [
-                "list" => $allDeptsTreeArr
-            ],
-        ];
-        return $this->respond($response);
-    }
-    #endregion
-
-    #region 私有函数
-    /**
-     * 遍历 BlueM\Tree 树对象，将数据格式化部门树
-     */
-    private function _dumpBlueMTreeNodes_dept($node)
-    {
-        $tree = array();
-
-        foreach ($node as $k => $v) {
-            $valArr = $v->toArray(); // 获取本节点属性数组
-            // BlueM\Tree 对象 多余去除
-            unset($valArr['parent']);
-
-            if ($v->hasChildren()) { // 存在 children 则构造 children key，否则不添加
-                $valArr['children'] = $this->_dumpBlueMTreeNodes_dept($v->getChildren());
-            }
-
-            $tree[] = $valArr;     // 循环数组添加元素 属于同一层级
-        }
-
-        return $tree;
-    }
-
-    /**
-     * 遍历 BlueM\Tree 树对象，将数据格式化成 vue-router 结构的路由树或菜单树
-     */
-    private function _dumpBlueMTreeNodes($node)
-    {
-        $tree = array();
-
-        foreach ($node as $k => $v) {
-            $valArr = $v->toArray(); // 获取本节点属性数组
-
-            // 构造 vue-admin 路由结构 meta
-            $valArr['meta'] = [
-                'title' => $valArr['title'],
-                'svgIcon' => $valArr['icon'],
-                'keepAlive' => true, // 前端默认缓存所有页面
-                'alwaysShow' => $v->countChildren() ? true : false
-            ];
-            // 删除组合成meta的元素title,icon 多余去除
-            unset($valArr['title']);
-            unset($valArr['icon']);
-
-            // BlueM\Tree 对象 多余去除
-            unset($valArr['parent']);
-
-            if ($v->hasChildren()) { // 存在 children 则构造 children key，否则不添加
-                $valArr['children'] = $this->_dumpBlueMTreeNodes($v->getChildren());
-            }
-
-            $tree[] = $valArr;     // 循环数组添加元素 属于同一层级
-        }
-
-        return $tree;
     }
     #endregion
 }

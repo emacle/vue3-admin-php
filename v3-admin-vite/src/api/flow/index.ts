@@ -35,3 +35,22 @@ export function getLeaveDataApi(params: Leave.GetLeaveRequestData) {
     params
   })
 }
+
+/** 请假审批接口 */
+/** 查 */
+export function getLeaveAuditDataApi(params: Leave.GetLeaveAuditRequestData) {
+  return request<Leave.GetLeaveResponseData>({
+    url: "flow/leaveaudit",
+    method: "get",
+    params
+  })
+}
+
+/** 改 */
+export function updateLeaveAuditDataApi(data: Leave.CreateOrUpdateLeaveAuditRequestData) {
+  return request({
+    url: "flow/leaveaudit/" + data.process_id,
+    method: "put",
+    data
+  })
+}

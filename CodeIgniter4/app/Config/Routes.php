@@ -71,6 +71,12 @@ $routes->group('api/v2/flow', ['namespace' => 'App\Controllers\Api\V2\Flow'], fu
     $routes->put('leave/(.*)', 'Leave::update/$1');
     $routes->delete('leave/(.*)', 'Leave::delete/$1');
     $routes->options('leave', 'Leave::options'); // $routes->resource 不会创建options请求，但是cors里必须要有options的请求接收
+
+    $routes->get('leaveaudit', 'Leaveaudit::index');
+    $routes->post('leaveaudit', 'Leaveaudit::create');
+    $routes->put('leaveaudit/(.*)', 'Leaveaudit::update/$1');
+    $routes->delete('leaveaudit/(.*)', 'Leaveaudit::delete/$1');
+    $routes->options('leaveaudit', 'Leaveaudit::options'); // $routes->resource 不会创建options请求，但是cors里必须要有options的请求接收
 });
 
 // // 白名单里的uri不认证
