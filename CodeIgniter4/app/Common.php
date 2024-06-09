@@ -62,3 +62,14 @@ if (!function_exists('array_diff_assoc2')) {
         return $ret;
     }
 }
+
+if (!function_exists('getLabelByKey')) {
+    function getLabelByKey(string $key, array $options): ?string
+    {
+        return $options[$key] ?? null;
+    }
+    // 测试函数
+    // echo getLabelByKey('approved', $auditResultOptions); // 输出: 同意
+    // echo getLabelByKey('refused', $auditResultOptions);  // 输出: 驳回
+    // echo getLabelByKey('unknown', $auditResultOptions);  // 输出: (null)
+}

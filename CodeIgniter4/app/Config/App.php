@@ -216,4 +216,10 @@ class App extends BaseConfig
     // Exception 其他错误
     public array $jwt_token_expired = ["code" => 50014, "message" => "Token 过期了oo"];
     public array $jwt_token_exception = ['code' => 50008, 'message' => "非法的token"];
+
+    // 审批结果选项 adm_process_flow result字段
+    public array $auditResultOptions = ['approved' => '同意', 'refused' => '驳回'];
+
+    // 请假申请 adm_leave_form state字段
+    public array $leaveStateOptions = ['processing' => '正在审批', 'approved' => '审批通过', 'refused' => '审批被驳回'];
 }
