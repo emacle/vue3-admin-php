@@ -316,8 +316,8 @@ class User extends ResourceController
 
         // GET /users?offset=1&limit=20&fields=id,username,email,listorder&sort=-listorder,+id&query=~username,status&username=admin&status=1
         // 分页参数配置
-        $limit = $this->request->getVar('limit') ? $this->request->getVar('limit') : 10;
-        $offset = $this->request->getVar('offset') ?  ($this->request->getVar('offset') - 1) *  $limit : 0; // 第几页
+        $limit = $this->request->getVar('size') ? $this->request->getVar('size') : 10;
+        $offset = $this->request->getVar('currentPage') ?  ($this->request->getVar('currentPage') - 1) *  $limit : 0; // 第几页
         $where = [
             "LIMIT" => [$offset, $limit]
         ];
@@ -345,7 +345,6 @@ class User extends ResourceController
         // 指定条件模糊或搜索查询,author like %zhangsan%, status=1 此时 total $wherecnt 条件也要发生变化
         // 查询字段及字段值获取
         // 如果存在query 参数以,分隔，且每个参数的有值才会增加条件
-        $wherecnt = []; // 计算total使用条件，默认为全部
         $query = $this->request->getVar('query');
         if ($query) { // 存在才进行过滤,否则不过滤
             $queryArr = explode(",", $query);
@@ -356,13 +355,11 @@ class User extends ResourceController
                     $tmpValue = $this->request->getVar($tmpKey);
                     if (!is_null($tmpValue)) {
                         $where[$tmpKey . '[~]'] = $tmpValue;
-                        $wherecnt[$tmpKey . '[~]'] = $tmpValue;
                     }
                 } else {
                     $tmpValue = $this->request->getVar($v);
                     if (!is_null($tmpValue)) {
                         $where[$v] = $tmpValue;
-                        $wherecnt[$v] = $tmpValue;
                     }
                 }
             }
@@ -387,8 +384,9 @@ class User extends ResourceController
             ];
             return $this->respond($response, 400);
         }
-
+    
         // 获取记录总数
+        $wherecnt = array_diff_key($where, array_flip(["LIMIT", "ORDER"])); // 查询total去除排序字段，提高查询效率
         $total = $this->Medoodb->count("sys_user", $wherecnt);
 
         // 遍历该用户所属角色信息

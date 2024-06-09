@@ -56,7 +56,7 @@ class Leave extends ResourceController
         // 排序参数结束
 
         // GET /users?offset=1&limit=20&fields=id,username,email,listorder&sort=-listorder,+id&query=~username,status&username=admin&status=1
-        // 指定条件模糊或搜索查询,author like %zhangsan%, status=1 此时 total $wherecnt 条件也要发生变化
+        // 指定条件模糊或搜索查询,author like %zhangsan%, status=1
         // 查询字段及字段值获取
         // 如果存在query 参数以,分隔，且每个参数的有值才会增加条件
         $query = $this->request->getVar('query');
@@ -106,6 +106,10 @@ class Leave extends ResourceController
             return $this->respond($response, 400);
         }
 
+        // 获取记录总数
+        $wherecnt = array_diff_key($where, array_flip(["LIMIT", "ORDER"])); // 查询total去除排序字段，提高查询效率
+        $total = $this->Medoodb->count("adm_leave_form", $wherecnt);
+
         // // 遍历查询结果，并关联相关信息如userName, deptName等
         foreach ($LeaveFormArr as $k => $v) {
             $UserArr = [];
@@ -125,7 +129,7 @@ class Leave extends ResourceController
             "code" => 20000,
             "data" => [
                 'list' => $LeaveFormArr,
-                'total' => count($LeaveFormArr),
+                'total' => $total,
                 // "sql" => $sqlCmd
             ]
         ];
@@ -144,7 +148,7 @@ class Leave extends ResourceController
     }
     #endregion
 
-    #region 增
+    #region 创建申请表单、流程任务表接口 /flow/leave/post
     public function create()
     {
         $parms = get_object_vars($this->request->getVar());
@@ -158,11 +162,7 @@ class Leave extends ResourceController
         $this->Medoodb->insert("adm_leave_form", $parms);
         $form_id = $this->Medoodb->id();
         if (!$form_id) {
-            $response = [
-                "code" => 20403, // 403 的响应，表示禁止访问。告诉客户端某个操作是不允许的
-                "type" => 'error',
-                "message" => '请假申请失败'
-            ];
+            $response = ["code" => 20403,  "type" => 'error', "message" => '请假申请创建失败'];
             return $this->respond($response);
         }
 
@@ -244,16 +244,13 @@ class Leave extends ResourceController
                 $this->Medoodb->insert("adm_process_flow", $thirdRecord);
                 break;
             default:
-                echo "职务未定义"; // Default case if position_code is empty or not matched
+                echo "职务未定义"; // Default case if position_code is empty or not matched'
+                $response = ["code" => 20403,  "type" => 'error', "message" => '职务未定义，请假申请创建失败'];
+                return $this->respond($response);
                 break;
         }
 
-        $response = [
-            "code" => 20000,
-            "type" => 'success',
-            "message" =>  '请假申请成功'
-        ];
-
+        $response = ["code" => 20000, "type" => 'success', "message" =>  '请假申请创建成功'];
         return $this->respondCreated($response);
     }
     #endregion
