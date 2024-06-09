@@ -65,6 +65,27 @@ const formatType = (row: any, column: any, cellValue: string, index: any) => {
   return position ? position.label : cellValue
 }
 
+type TagType = "warning" | "success" | "info" | "primary" | "danger"
+
+interface StateOption {
+  value: string
+  label: string
+  tagType: TagType
+}
+const stateOptions = ref<StateOption[]>([
+  { value: "processing", label: "正在审批", tagType: "primary" },
+  { value: "approved", label: "审批通过", tagType: "success" },
+  { value: "refused", label: "审批被驳回", tagType: "danger" }
+])
+const getStateProperty = (
+  value: string,
+  options: StateOption[],
+  property: "label" | "tagType"
+): string | TagType | undefined => {
+  const option = options.find((option) => option.value === value)
+  return option ? option[property] : undefined
+}
+
 const handleCreateOrUpdate = () => {
   formRef.value?.validate((valid: boolean, fields) => {
     if (!valid) return console.error("表单校验不通过", fields)
@@ -199,7 +220,13 @@ onMounted(() => {})
           <el-table-column prop="end_time" label="结束日期" align="center" />
           <el-table-column prop="reason" label="原因" align="center" />
           <el-table-column prop="create_time" label="申请日期" align="center" />
-          <el-table-column prop="state" label="状态" align="center" />
+          <el-table-column prop="state" label="状态" align="center">
+            <template #default="{ row }">
+              <el-tag :type="getStateProperty(row.state, stateOptions, 'tagType') as TagType">{{
+                getStateProperty(row.state, stateOptions, "label")
+              }}</el-tag>
+            </template>
+          </el-table-column>
           <!-- <el-table-column fixed="right" label="操作" width="150" align="center">
             <template #default="scope">
               <el-button

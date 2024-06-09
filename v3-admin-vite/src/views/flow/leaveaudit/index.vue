@@ -28,8 +28,8 @@ const dialogVisible = ref<boolean>(false)
 const formRef = ref<FormInstance | null>(null)
 const formData = ref<CreateOrUpdateLeaveAuditRequestData>(cloneDeep(DEFAULT_FORM_DATA))
 const formRules: FormRules<CreateOrUpdateLeaveAuditRequestData> = {
-  result: [{ required: true, trigger: "blur", message: "请选择审批结果" }],
-  reason: [{ required: true, trigger: "blur", message: "请输入审批意见" }]
+  result: [{ required: true, trigger: "blur", message: "请选择审批结果" }]
+  // reason: [{ required: true, trigger: "blur", message: "请输入审批意见" }]
 }
 
 const typeOptions = ref([
@@ -55,23 +55,18 @@ const stateOptions = ref<StateOption[]>([
   { value: "process", label: "处理中", tagType: "warning" },
   { value: "complete", label: "已处理", tagType: "success" }
 ])
-// const formatState = (row: any, column: any, cellValue: string, index: any) => {
-//   const state = stateOptions.value.find((option) => option.value === cellValue.toString())
-//   return state ? state.label : cellValue
-// }
-const formatState = (state: string) => {
-  const option = stateOptions.value.find((option) => option.value === state)
-  return option ? option.label : state
+const getStateProperty = (
+  value: string,
+  options: StateOption[],
+  property: "label" | "tagType"
+): string | TagType | undefined => {
+  const option = options.find((option) => option.value === value)
+  return option ? option[property] : undefined
 }
 
-const getTagType = (state: string) => {
-  const option = stateOptions.value.find((option) => option.value === state)
-  return option ? option.tagType : "info"
-}
-
-const resultOptions = ref([
-  { value: "approved", label: "同意" },
-  { value: "refused", label: "驳回" }
+const resultOptions = ref<StateOption[]>([
+  { value: "approved", label: "同意", tagType: "success" },
+  { value: "refused", label: "驳回", tagType: "danger" }
 ])
 
 const handleCreateOrUpdate = () => {
@@ -202,13 +197,20 @@ onMounted(() => {})
           <el-table-column prop="apply_reason" label="申请原因" align="center" />
           <el-table-column prop="apply_time" label="申请时间" align="center" />
           <el-table-column prop="operator_name" label="处理人" align="center" />
-          <el-table-column prop="result" label="审批结果" align="center" />
+          <el-table-column prop="result" label="审批结果" align="center">
+            <template #default="{ row }">
+              <el-tag :type="getStateProperty(row.result, resultOptions, 'tagType') as TagType">{{
+                getStateProperty(row.result, resultOptions, "label")
+              }}</el-tag>
+            </template>
+          </el-table-column>
           <el-table-column prop="reason" label="审批意见" align="center" />
           <el-table-column prop="audit_time" label="审批时间" align="center" />
-          <!-- <el-table-column prop="state" label="状态" align="center" :formatter="formatState" /> -->
           <el-table-column prop="state" label="状态" align="center">
             <template #default="{ row }">
-              <el-tag :type="getTagType(row.state)">{{ formatState(row.state) }}</el-tag>
+              <el-tag :type="getStateProperty(row.state, stateOptions, 'tagType') as TagType">{{
+                getStateProperty(row.state, stateOptions, "label")
+              }}</el-tag>
             </template>
           </el-table-column>
           <el-table-column fixed="right" label="操作" width="150" align="center">
