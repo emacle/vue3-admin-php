@@ -342,9 +342,10 @@ class User extends ResourceController
         // 排序参数结束
 
         // GET /users?offset=1&limit=20&fields=id,username,email,listorder&sort=-listorder,+id&query=~username,status&username=admin&status=1
-        // 指定条件模糊或搜索查询,author like %zhangsan%, status=1
+        // 指定条件模糊或搜索查询,author like %zhangsan%, status=1 此时 total $wherecnt 条件也要发生变化
         // 查询字段及字段值获取
         // 如果存在query 参数以,分隔，且每个参数的有值才会增加条件
+        $wherecnt = []; // 计算total使用条件，默认为全部
         $query = $this->request->getVar('query');
         if ($query) { // 存在才进行过滤,否则不过滤
             $queryArr = explode(",", $query);
@@ -355,11 +356,13 @@ class User extends ResourceController
                     $tmpValue = $this->request->getVar($tmpKey);
                     if (!is_null($tmpValue)) {
                         $where[$tmpKey . '[~]'] = $tmpValue;
+                        $wherecnt[$tmpKey . '[~]'] = $tmpValue;
                     }
                 } else {
                     $tmpValue = $this->request->getVar($v);
                     if (!is_null($tmpValue)) {
                         $where[$v] = $tmpValue;
+                        $wherecnt[$v] = $tmpValue;
                     }
                 }
             }
@@ -384,6 +387,9 @@ class User extends ResourceController
             ];
             return $this->respond($response, 400);
         }
+
+        // 获取记录总数
+        $total = $this->Medoodb->count("sys_user", $wherecnt);
 
         // 遍历该用户所属角色信息
         foreach ($UserArr as $k => $v) {
@@ -436,12 +442,11 @@ class User extends ResourceController
             $UserArr[$k]['dept'] = empty($DeptArr) ? (object)[] : $DeptArr;
         }
 
-
         $response = [
             "code" => 20000,
             "data" => [
                 'list' => $UserArr,
-                'total' => count($UserArr),
+                'total' => $total,
                 // "sql" => $sqlCmd
             ]
         ];
