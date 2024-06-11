@@ -30,8 +30,8 @@ class Leave extends ResourceController
 
         // GET /users?offset=1&limit=20&fields=id,username,email,listorder&sort=-listorder,+id&query=~username,status&username=admin&status=1
         // 分页参数配置
-        $limit = $this->request->getVar('limit') ? $this->request->getVar('limit') : 10;
-        $offset = $this->request->getVar('offset') ?  ($this->request->getVar('offset') - 1) *  $limit : 0; // 第几页
+        $limit = $this->request->getVar('size') ? $this->request->getVar('size') : 10;
+        $offset = $this->request->getVar('currentPage') ?  ($this->request->getVar('currentPage') - 1) *  $limit : 0; // 第几页
         $where = [
             "LIMIT" => [$offset, $limit]
         ];
@@ -157,8 +157,16 @@ class Leave extends ResourceController
         // 1.创建申请表单记录 adm_leave_form
         $parms['employee_id'] =  $userId;
         $parms['state'] =  "processing"; // 申请人提交申请，所以state字段值为processing；表示这个请假表单的当前的状态是正在审批中；
-        // var_dump($parms);
 
+        $appConfig = config(App::class); // 获取app/Config/App.php文件夹里变量
+        $user = $this->Medoodb->get('sys_user', '*', ["id" => $userId]);
+        // 检查职位代码是否在允许的职位中
+        if (!in_array($user['position_code'], $appConfig->applyPositions)) {
+            // 如果不在数组中，返回错误响应
+            $response = ["code" => 20403, "type" => 'error', "message" => '用户职务未定义，请假申请创建失败'];
+            return $this->respond($response);
+        }
+        // 如果在数组中，执行插入操作
         $this->Medoodb->insert("adm_leave_form", $parms);
         $form_id = $this->Medoodb->id();
         if (!$form_id) {
@@ -167,9 +175,6 @@ class Leave extends ResourceController
         }
 
         // 2.根据员工属性添加不同的审批任务流程 adm_process_flow
-        $user = $this->Medoodb->get('sys_user', '*', ["id" => $userId]);
-        // var_dump($user['dept_id']); return;
-        // Define the switch-case logic
         switch ($user['position_code']) {
             case 'GM':
                 echo "总经理";
@@ -211,7 +216,7 @@ class Leave extends ResourceController
                     "reason" => "",
                     "audit_time" => "",
                     "order_no" => 2, // 任务第二环
-                    "state" => "process",
+                    "state" => "process", // 正常流程只有一个在处理中，前面的是complete,后面的为ready,驳回时后面的均为cancel
                     "is_last" => 0
                 ];
                 $this->Medoodb->insert("adm_process_flow", $secondRecord);
@@ -238,14 +243,14 @@ class Leave extends ResourceController
                     "reason" => "",
                     "audit_time" => "",
                     "order_no" => 3, // 任务第三环
-                    "state" => "process",
+                    "state" => "ready", // 创建流程时process节点后面均默认为ready
                     "is_last" => 1
                 ];
                 $this->Medoodb->insert("adm_process_flow", $thirdRecord);
                 break;
             default:
-                echo "职务未定义"; // Default case if position_code is empty or not matched'
-                $response = ["code" => 20403,  "type" => 'error', "message" => '职务未定义，请假申请创建失败'];
+                // echo "职务未定义"; // Default case if position_code is empty or not matched'
+                $response = ["code" => 20403,  "type" => 'error', "message" => '用户职务未定义，请假流程创建失败'];
                 return $this->respond($response);
                 break;
         }

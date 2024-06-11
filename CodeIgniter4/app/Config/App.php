@@ -217,9 +217,15 @@ class App extends BaseConfig
     public array $jwt_token_expired = ["code" => 50014, "message" => "Token 过期了oo"];
     public array $jwt_token_exception = ['code' => 50008, 'message' => "非法的token"];
 
-    // 审批结果选项 adm_process_flow result字段
+    // adm_process_flow 审批流程 结果选项 result字段
     public array $auditResultOptions = ['approved' => '同意', 'refused' => '驳回'];
+
+    // adm_process_flow 审批流程 状态选项 state字段
+    public array $auditStateOptions = ['ready' => '准备', 'process' => '正在处理', 'complete' => '处理完成', 'cancel' => '取消'];
 
     // 请假申请 adm_leave_form state字段
     public array $leaveStateOptions = ['processing' => '正在审批', 'approved' => '审批通过', 'refused' => '审批被驳回'];
+
+    // 定义请假流程职务数组，只有这些才可以创建申请表单
+    public array $applyPositions = ['GM', 'DGM', 'DM', 'STAFF'];
 }

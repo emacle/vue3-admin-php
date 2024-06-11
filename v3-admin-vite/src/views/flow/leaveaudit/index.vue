@@ -126,7 +126,7 @@ const getLeaveAuditData = () => {
     create_time: searchData.create_time || undefined,
     fields: "process_id,order_no,form_id,operator_id,result,reason,state,audit_time,create_time", // 与后端一致 前端指定获取的字段
     query: "form_type,create_time,state", // 前端指定模糊查询的字段为name,精确查询字段为status
-    sort: "+create_time" // 前面指定按listorder升序排列
+    sort: "-create_time"
   })
     .then(({ data }) => {
       paginationData.total = data.total
@@ -199,7 +199,7 @@ onMounted(() => {})
           <el-table-column prop="operator_name" label="处理人" align="center" />
           <el-table-column prop="result" label="审批结果" align="center">
             <template #default="{ row }">
-              <el-tag :type="getStateProperty(row.result, resultOptions, 'tagType') as TagType">{{
+              <el-tag v-if="row.result" :type="getStateProperty(row.result, resultOptions, 'tagType') as TagType">{{
                 getStateProperty(row.result, resultOptions, "label")
               }}</el-tag>
             </template>
@@ -295,11 +295,9 @@ onMounted(() => {})
               item.label
             }}</el-radio-button>
           </el-radio-group>
-          {{ formData.result }}
         </el-form-item>
         <el-form-item prop="reason" label="审批意见">
           <el-input v-model="formData.reason" placeholder="请输入" style="width: 240px" autosize type="textarea" />
-          {{ formData.reason }}
         </el-form-item>
       </el-form>
       <template #footer>

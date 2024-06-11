@@ -30,8 +30,8 @@ class Leaveaudit extends ResourceController
 
         // GET /users?offset=1&limit=20&fields=id,username,email,listorder&sort=-listorder,+id&query=~username,status&username=admin&status=1
         // 分页参数配置
-        $limit = $this->request->getVar('limit') ? $this->request->getVar('limit') : 10;
-        $offset = $this->request->getVar('offset') ?  ($this->request->getVar('offset') - 1) *  $limit : 0; // 第几页
+        $limit = $this->request->getVar('size') ? $this->request->getVar('size') : 10;
+        $offset = $this->request->getVar('currentPage') ?  ($this->request->getVar('currentPage') - 1) *  $limit : 0; // 第几页
         $where = [
             "LIMIT" => [$offset, $limit]
         ];
@@ -83,28 +83,15 @@ class Leaveaudit extends ResourceController
         $userId =  getUserIdByToken($this->request->getHeaderLine('Authorization'));
         $where["operator_id"] = $userId; // 只能查询本人审批的任务
         $where["action"] = 'audit'; // 查询动作为审批的任务
-        // $where = [
-        //     "operator_id" =>  $userId, // 只能查询本人审批的任务
-        //     "action" =>  'audit', // 查询动作为审批的任务
-        //     // "state" =>  'process', // 查询状态为正在进行中的审批任务
-        // ];
+        $where["state"] = ['complete', 'process']; // 查询状态为正在进行中或完成的审批任务
 
         // 执行查询
-        $LeaveProcessArr = $this->Medoodb->select(
-            "adm_process_flow",
-            $columns,
-            $where
-        );
-
+        $LeaveProcessArr = $this->Medoodb->select("adm_process_flow", $columns, $where);
         $sqlCmd = $this->Medoodb->log()[0];
 
         // 捕获错误信息
         if ($this->Medoodb->error) { // 如果出错 否则为NULL
-            $response = [
-                "code" => 20400,
-                "sql" => $sqlCmd,
-                "message" => $this->Medoodb->error
-            ];
+            $response = ["code" => 20400, "sql" => $sqlCmd, "message" => $this->Medoodb->error];
             return $this->respond($response, 400);
         }
 
@@ -132,11 +119,11 @@ class Leaveaudit extends ResourceController
             $LeaveProcessArr[$k]['operator_name'] =   $operator_name;
 
             // 关联申请人信息
-            $applyUser = "";
+            $applyUserName = "";
             if (isset($LeaveProcessArr[$k]['employee_id'])) {
-                $applyUser = $this->Medoodb->get('sys_user', 'username', ["id" => $LeaveProcessArr[$k]['employee_id']]);
+                $applyUserName = $this->Medoodb->get('sys_user', 'username', ["id" => $LeaveProcessArr[$k]['employee_id']]);
             };
-            $LeaveProcessArr[$k]['employee_name'] =   $applyUser;
+            $LeaveProcessArr[$k]['employee_name'] =   $applyUserName;
         }
 
         $response = [
@@ -159,75 +146,95 @@ class Leaveaudit extends ResourceController
         $form_id = $parms['form_id'];
         unset($parms['process_id']);
         unset($parms['form_id']);
-
         $appConfig = config(App::class); // 获取app/Config/App.php文件夹里变量
+        $userId =  getUserIdByToken($this->request->getHeaderLine('Authorization'));
+        $currentUser = $this->Medoodb->get('sys_user', '*', ['id' => $userId]);
 
         // 参数检验/数据预处理
         $hasRecord = $this->Medoodb->has('adm_process_flow', ['process_id' => $process_id]);
         if (!$hasRecord) {
-            $response = [
-                "code" => 20404,
-                "type" => 'error',
-                'message' => 'process_id(' . $process_id . '）不存在'
-            ];
+            $response = ["code" => 20404, "type" => 'error', 'message' => 'process_id(' . $process_id . '）不存在'];
             return $this->respond($response, 404);
         }
 
         $parms['audit_time'] = date('Y-m-d H:i:s');
         $parms['state'] = 'complete';
+        $result = $this->Medoodb->update('adm_process_flow', $parms, ['process_id' => $process_id]);
 
-        $userId =  getUserIdByToken($this->request->getHeaderLine('Authorization'));
-        $user = $this->Medoodb->get('sys_user', '*', ["id" => $userId]);
-
-        $result = $this->Medoodb->update('adm_process_flow', $parms, ["process_id" => $process_id]);
-
-        // 测试获取 label
+        // process_id
+        // form_id
+        // operator_id
+        // action
+        // result
+        // reason
+        // create_time
+        // audit_time
+        // order_no
+        // state
+        // is_last
         if ($result->rowCount() > 0) {
-            $currentProcessFlow = $this->Medoodb->get('adm_process_flow', ['form_id', 'operator_id', 'order_no', 'action', 'is_last'], [
-                "form_id" => $form_id,
-                "action" => "audit", // 审批人
-                "operator_id" => $userId
-            ]); // TODO: 使用 $process_id 过滤即可？
+            $currentProcessNode = $this->Medoodb->get('adm_process_flow', '*', ['process_id' => $process_id]);
+            // [
+            //     'form_id' => $form_id,
+            //     'action' => 'audit', // 审批人
+            //     'operator_id' => $userId
+            // ]); // TODO: 使用 $process_id 过滤即可？
 
-            if ($parms['result'] = 'approved') { // 当前节点审批通过
-                if ($currentProcessFlow['is_last']) { 
-                // adm_leave_form 中 state = 'approved'
-
+            if ($currentProcessNode['result'] === 'approved') { // 当前节点审批通过
+                // 不是最后一个节点，则下一个节点state由初始化ready置为process,
+                if (!$currentProcessNode['is_last']) {
+                    $this->Medoodb->update('adm_process_flow', ['state' => 'process'], ["form_id" => $form_id, "order_no" => $currentProcessNode['order_no'] + 1]);
                 }
-            } else if ($parms['result'] = 'refused') { // 当前节点(包括最后节点)审批驳回
-                // adm_leave_form 中 state = refused
+                // 且是最后一个节点，整个流程审批完结
+                if ($currentProcessNode['is_last']) {
+                    // adm_leave_form 中 state = 'approved'
+                    $this->Medoodb->update('adm_leave_form', ['state' => 'approved'], ['form_id' => $form_id]);
+                }
+            } else if ($currentProcessNode['result'] === 'refused') { // 当前节点(包括最后节点)审批驳回
+                // adm_leave_form 中 state = 'refused'
+                $this->Medoodb->update('adm_leave_form', ['state' => 'refused'], ['form_id' => $form_id]);
+                // 中间节点驳回时 adm_process_flow 后续节点state = 'cancel'
+                $this->Medoodb->update('adm_process_flow', ['state' => 'cancel'], ['form_id' => $form_id, 'order_no[>]' => $currentProcessNode['order_no']]);
             }
 
-
-
+            #region adm_notice 表，记录通知信息
             // 查找adm_process_flow 表的 form_id 中 apply 申请人 查找对应的 operator_id 插入 adm_notice
-            // 1.通知申请人 "action" => "apply"
-            $apply_userid = $this->Medoodb->get('operator_id', ["form_id" => $form_id, "action" => "apply"]);
-            if ($apply_userid) {
+            // 1. 无论审批结果通过与否，都通知申请人 "action" => "apply"
+            // 当前申请人id
+            $applyUserid = $this->Medoodb->get('adm_process_flow', 'operator_id', ["form_id" => $form_id, 'action' => 'apply']);
+            // 当前审批人信息
+            $auditUser = $this->Medoodb->get(
+                'adm_process_flow',
+                ['[>]sys_user' => ['operator_id' => 'id']],
+                ['id', 'username', 'tel', 'dept_id', 'position_code'],
+                ["adm_process_flow.process_id" => $process_id]
+            );
+
+            if ($applyUserid) {
                 $this->Medoodb->insert("adm_notice", [
-                    "receiver_id" => $apply_userid,
-                    "content" => "您的请假申请已经被" . $user['username'] . "审批。审批结果为" . getLabelByKey($parms['result'],  $appConfig->auditResultOptions)
+                    "receiver_id" => $applyUserid,
+                    "content" => "您的请假申请已经被" . $auditUser['username'] . "审批。审批结果为" . getLabelByKey($currentProcessNode['result'],  $appConfig->auditResultOptions)
                 ]);
             }
             // 2.判断是否是审批动作且是否是最终节点，不是最后节点，需要下一步处理人order_no-1 发消息，最后节点只需要向申请人发送
-
-            if (!$currentProcessFlow['is_last']) {
+            if (!$currentProcessNode['is_last'] && $currentProcessNode['result'] === 'approved') {
                 $next_operator_id = $this->Medoodb->get(
                     'adm_process_flow',
                     'operator_id',
                     [
                         "form_id" => $form_id,
-                        "order_no" => $currentProcessFlow['order_no'] + 1 // 通知申请人
+                        "order_no" => $currentProcessNode['order_no'] + 1
                     ]
                 );
                 if ($next_operator_id) {
-                    $apply_username =  $this->Medoodb->get('sys_user', 'username', ["id" => $apply_userid]);
+                    $apply_username =  $this->Medoodb->get('sys_user', 'username', ["id" => $applyUserid]);
                     $this->Medoodb->insert("adm_notice", [
                         "receiver_id" => $next_operator_id,
                         "content" => $apply_username . "员工已发起请假申请，请您审批。"
                     ]);
                 }
             }
+            #endregion
 
             $response = [
                 "code" => 20000,
@@ -239,7 +246,7 @@ class Leaveaudit extends ResourceController
             $response = [
                 "code" => 20204,
                 "type" => 'info',
-                "message" => '审批未完成'
+                "message" => '审批流程出错'
             ];
             return $this->respond($response);
         }

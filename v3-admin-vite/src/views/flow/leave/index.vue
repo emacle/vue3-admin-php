@@ -36,7 +36,7 @@ const formRef = ref<FormInstance | null>(null)
 const formData = ref<CreateOrUpdateLeaveRequestData>(cloneDeep(DEFAULT_FORM_DATA))
 const formRules: FormRules<CreateOrUpdateLeaveRequestData> = {
   form_type: [{ required: true, trigger: "blur", message: "请选择类型" }],
-  reason: [{ required: true, trigger: "blur", message: "请输入理由" }],
+  reason: [{ required: true, trigger: "blur", message: "请输入原因" }],
   start_time: [{ required: true, trigger: "blur", message: "请选择开始时间" }],
   end_time: [
     { required: true, trigger: "blur", message: "请选择结束时间" },
@@ -152,7 +152,7 @@ const getLeaveData = () => {
     create_time: searchData.create_time || undefined,
     fields: "form_id,employee_id,form_type,start_time,end_time,reason,create_time,state", // 与后端一致 前端指定获取的字段
     query: "form_type,create_time", // 前端指定模糊查询的字段为name,精确查询字段为status
-    sort: "+create_time" // 前面指定按listorder升序排列
+    sort: "-create_time"
   })
     .then(({ data }) => {
       paginationData.total = data.total
@@ -277,11 +277,9 @@ onMounted(() => {})
           <el-select v-model="formData.form_type" placeholder="请选择类型" style="width: 240px">
             <el-option v-for="item in typeOptions" :key="item.value" :label="item.label" :value="item.value" />
           </el-select>
-          {{ formData.form_type }}
         </el-form-item>
         <el-form-item prop="reason" label="原因">
           <el-input v-model="formData.reason" placeholder="请输入" style="width: 240px" autosize type="textarea" />
-          {{ formData.reason }}
         </el-form-item>
         <el-form-item prop="start_time" label="开始时间">
           <el-date-picker
