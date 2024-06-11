@@ -81,9 +81,11 @@ class Leaveaudit extends ResourceController
         // 查询字段及字段值获取结束
 
         $userId =  getUserIdByToken($this->request->getHeaderLine('Authorization'));
+
         $where["operator_id"] = $userId; // 只能查询本人审批的任务
         $where["action"] = 'audit'; // 查询动作为审批的任务
-        $where["state"] = ['complete', 'process']; // 查询状态为正在进行中或完成的审批任务
+        // $where["state"] = ['complete', 'process']; // 查询状态为正在进行中或完成的审批任务 前端传参即可
+        $where["state[!]"] = ['ready', 'cancel'];  // ready，cancel状态表明流程尚未到该节点，不能展示
 
         // 执行查询
         $LeaveProcessArr = $this->Medoodb->select("adm_process_flow", $columns, $where);

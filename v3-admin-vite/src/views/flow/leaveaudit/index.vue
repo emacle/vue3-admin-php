@@ -158,7 +158,7 @@ onMounted(() => {})
   <div class="app-container">
     <el-card shadow="never" class="search-wrapper" v-perm="['/flow/leave/get']">
       <el-form ref="searchFormRef" :inline="true" :model="searchData">
-        <el-form-item prop="state" label="类型">
+        <el-form-item prop="state" label="审批状态">
           <el-select v-model="searchData.state" clearable placeholder="请选择">
             <el-option v-for="item in stateOptions" :key="item.value" :label="item.label" :value="item.value" />
           </el-select>

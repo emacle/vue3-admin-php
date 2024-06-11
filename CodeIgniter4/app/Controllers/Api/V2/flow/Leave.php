@@ -188,6 +188,7 @@ class Leave extends ResourceController
             case 'STAFF':
                 // echo "普通员工"; 
                 // 流程：员工-> 部门经理 -> 副总经理, 审批任务流程需要插入三条记录
+                $order_no = 0;
                 // step 1:
                 $firstRecord = [
                     "form_id" => $form_id,
@@ -196,7 +197,7 @@ class Leave extends ResourceController
                     "result" => "",
                     "reason" => "",
                     "audit_time" => "",
-                    "order_no" => 1, // 任务第一环
+                    "order_no" => ++$order_no, // 任务第一环
                     "state" => "complete", // 第一环申请默认完成
                     "is_last" => 0
                 ];
@@ -215,7 +216,7 @@ class Leave extends ResourceController
                     "result" => "",
                     "reason" => "",
                     "audit_time" => "",
-                    "order_no" => 2, // 任务第二环
+                    "order_no" => ++$order_no, // 任务第二环
                     "state" => "process", // 正常流程只有一个在处理中，前面的是complete,后面的为ready,驳回时后面的均为cancel
                     "is_last" => 0
                 ];
@@ -242,7 +243,7 @@ class Leave extends ResourceController
                     "result" => "",
                     "reason" => "",
                     "audit_time" => "",
-                    "order_no" => 3, // 任务第三环
+                    "order_no" => ++$order_no, // 任务第三环
                     "state" => "ready", // 创建流程时process节点后面均默认为ready
                     "is_last" => 1
                 ];
