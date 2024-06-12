@@ -80,3 +80,22 @@ export type GetLeaveAuditResponseData = ApiResponseData<{
   list: GetLeaveAuditData[]
   total: number
 }>
+
+export interface GetLeaveFlowData {
+  process_id: string
+  form_id: string
+  operator_id: string
+  operator_name: string
+  action: string
+  result: string
+  reason: string
+  create_time: string
+  audit_time: string
+  order_no: number
+  state: string
+  is_last: number
+}
+
+export type GetLeaveFlowResponseData = ApiResponseData<{
+  list: GetLeaveFlowData[]
+}>

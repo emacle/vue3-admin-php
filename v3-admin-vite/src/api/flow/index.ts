@@ -54,3 +54,11 @@ export function updateLeaveAuditDataApi(data: Leave.CreateOrUpdateLeaveAuditRequ
     data
   })
 }
+
+/** 查流程数据 */
+export function getLeaveFlowDataApi(form_id: string) {
+  return request<Leave.GetLeaveFlowResponseData>({
+    url: "flow/leave/process/" + form_id,
+    method: "get"
+  })
+}

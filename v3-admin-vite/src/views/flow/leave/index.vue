@@ -1,7 +1,13 @@
 <script lang="ts" setup>
 import { onMounted, reactive, ref, watch } from "vue"
-import { createLeaveDataApi, deleteLeaveDataApi, getLeaveDataApi, updateLeaveDataApi } from "@/api/flow"
-import { type CreateOrUpdateLeaveRequestData, type GetLeaveData } from "@/api/flow/types/flow"
+import {
+  createLeaveDataApi,
+  deleteLeaveDataApi,
+  getLeaveDataApi,
+  updateLeaveDataApi,
+  getLeaveFlowDataApi
+} from "@/api/flow"
+import { type CreateOrUpdateLeaveRequestData, type GetLeaveData, type GetLeaveFlowData } from "@/api/flow/types/flow"
 import { type FormInstance, type FormRules, ElMessage, ElMessageBox, ElTree } from "element-plus"
 import { Search, Refresh, CirclePlus, Delete, Download, RefreshRight } from "@element-plus/icons-vue"
 import { usePagination } from "@/hooks/usePagination"
@@ -75,8 +81,13 @@ interface StateOption {
 const stateOptions = ref<StateOption[]>([
   { value: "processing", label: "正在审批", tagType: "primary" },
   { value: "approved", label: "审批通过", tagType: "success" },
-  { value: "refused", label: "审批被驳回", tagType: "danger" }
+  { value: "refused", label: "审批驳回", tagType: "danger" }
 ])
+const resultOptions = ref<StateOption[]>([
+  { value: "approved", label: "同意", tagType: "success" },
+  { value: "refused", label: "驳回", tagType: "danger" }
+])
+
 const getStateProperty = (
   value: string,
   options: StateOption[],
@@ -132,6 +143,39 @@ const handleDelete = (row: GetLeaveData) => {
 const handleUpdate = (row: GetLeaveData) => {
   dialogVisible.value = true
   formData.value = cloneDeep(row)
+}
+//#endregion
+
+//#region 查流程
+const dialogFlowVisible = ref<boolean>(false)
+const flowActivities = ref<GetLeaveFlowData[]>()
+const flowloading = ref<boolean>(false)
+
+const handleFlow = (row: GetLeaveData) => {
+  dialogFlowVisible.value = true
+  flowloading.value = true
+  const form_id = cloneDeep(row).form_id
+  getLeaveFlowDataApi(form_id)
+    .then((res: any) => {
+      console.log(res.data.list)
+      flowActivities.value = res.data.list
+    })
+    .finally(() => {
+      flowloading.value = false
+    })
+}
+const getActivityColor = (state: string) => {
+  switch (state) {
+    case "complete":
+      return "#409eff"
+    case "ready":
+    case "cancel":
+      return ""
+    case "process":
+      return "#0bbd87"
+    default:
+      return "" // 默认情况
+  }
 }
 //#endregion
 
@@ -212,7 +256,7 @@ onMounted(() => {})
         </div>
       </div>
       <div class="table-wrapper">
-        <el-table :data="leaveData">
+        <el-table :data="leaveData" stripe>
           <el-table-column prop="form_id" label="ID" align="center" />
           <el-table-column prop="user.username" label="申请人" align="center" />
           <el-table-column prop="form_type" label="类型" align="center" :formatter="formatType" />
@@ -227,18 +271,11 @@ onMounted(() => {})
               }}</el-tag>
             </template>
           </el-table-column>
-          <!-- <el-table-column fixed="right" label="操作" width="150" align="center">
+          <el-table-column fixed="right" label="操作" width="150" align="center">
             <template #default="scope">
-              <el-button
-                v-perm="['/flow/leave/put']"
-                type="primary"
-                text
-                bg
-                size="small"
-                @click="handleUpdate(scope.row)"
-                >修改</el-button
-              >
-              <el-button
+              <el-button type="primary" text bg size="small" @click="handleUpdate(scope.row)">详细</el-button>
+              <el-button type="primary" text bg size="small" @click="handleFlow(scope.row)">流程</el-button>
+              <!-- <el-button
                 v-perm="['/flow/leave/delete']"
                 type="danger"
                 text
@@ -246,9 +283,9 @@ onMounted(() => {})
                 size="small"
                 @click="handleDelete(scope.row)"
                 >删除</el-button
-              >
+              > -->
             </template>
-          </el-table-column> -->
+          </el-table-column>
         </el-table>
       </div>
       <div class="pager-wrapper">
@@ -303,6 +340,38 @@ onMounted(() => {})
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
         <el-button type="primary" @click="handleCreateOrUpdate" :loading="loading">确认</el-button>
+      </template>
+    </el-dialog>
+    <!-- 流程图 -->
+    <el-dialog v-model="dialogFlowVisible" title="流程" :close-on-click-modal="false" width="50%">
+      <el-timeline style="max-width: 600px">
+        <el-timeline-item
+          v-for="(activity, index) in flowActivities"
+          :key="index"
+          :color="getActivityColor(activity.state)"
+          :hollow="activity.state === 'process' ? true : false"
+          :timestamp="activity.action === 'apply' ? activity.create_time : activity.audit_time"
+          placement="top"
+        >
+          <el-descriptions :column="1">
+            <el-descriptions-item label="处理人">{{ activity.operator_name }}</el-descriptions-item>
+            <el-descriptions-item label="状态" v-if="activity.action === 'apply'">发起申请</el-descriptions-item>
+            <el-descriptions-item label="审批结果" v-if="activity.action === 'audit' && activity.result">
+              <el-tag :type="getStateProperty(activity.result, resultOptions, 'tagType') as TagType">{{
+                getStateProperty(activity.result, resultOptions, "label")
+              }}</el-tag>
+            </el-descriptions-item>
+            <el-descriptions-item label="审批意见" v-if="activity.action === 'audit' && activity.reason">
+              {{ activity.reason }}</el-descriptions-item
+            >
+            <el-descriptions-item label="状态" v-if="activity.state === 'cancel'"
+              >前置节点驳回，流程提前结束</el-descriptions-item
+            >
+          </el-descriptions>
+        </el-timeline-item>
+      </el-timeline>
+      <template #footer>
+        <el-button @click="dialogFlowVisible = false">取消</el-button>
       </template>
     </el-dialog>
   </div>

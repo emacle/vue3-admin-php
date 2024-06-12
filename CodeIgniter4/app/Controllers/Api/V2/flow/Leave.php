@@ -32,9 +32,7 @@ class Leave extends ResourceController
         // 分页参数配置
         $limit = $this->request->getVar('size') ? $this->request->getVar('size') : 10;
         $offset = $this->request->getVar('currentPage') ?  ($this->request->getVar('currentPage') - 1) *  $limit : 0; // 第几页
-        $where = [
-            "LIMIT" => [$offset, $limit]
-        ];
+        $where = ["LIMIT" => [$offset, $limit]];
         // 分页参数配置结束
 
         // GET /users?offset=1&limit=20&fields=id,username,email,listorder&sort=-listorder,+id&query=~username,status&username=admin&status=1
@@ -88,21 +86,12 @@ class Leave extends ResourceController
         }
 
         // 执行查询
-        $LeaveFormArr = $this->Medoodb->select(
-            "adm_leave_form",
-            $columns,
-            $where
-        );
+        $LeaveFormArr = $this->Medoodb->select("adm_leave_form", $columns, $where);
 
         $sqlCmd = $this->Medoodb->log()[0];
-
         // 捕获错误信息
         if ($this->Medoodb->error) { // 如果出错 否则为NULL
-            $response = [
-                "code" => 20400,
-                "sql" => $sqlCmd,
-                "message" => $this->Medoodb->error
-            ];
+            $response = ["code" => 20400, "sql" => $sqlCmd, "message" => $this->Medoodb->error];
             return $this->respond($response, 400);
         }
 
@@ -114,37 +103,49 @@ class Leave extends ResourceController
         foreach ($LeaveFormArr as $k => $v) {
             $UserArr = [];
             if (isset($v['employee_id'])) {
-                $UserArr = $this->Medoodb->get(
-                    'sys_user',
-                    ['id [String]', 'username'],
-                    [
-                        "id" => $v['employee_id']
-                    ]
-                );
+                $UserArr = $this->Medoodb->get('sys_user', ['id [String]', 'username'], ["id" => $v['employee_id']]);
             };
             $LeaveFormArr[$k]['user'] =   empty($UserArr) ? (object)[] : $UserArr;
+            $LeaveFormArr[$k]['form_type'] = strval($LeaveFormArr[$k]['form_type']); // 强制类型转成字符
         }
 
         $response = [
             "code" => 20000,
             "data" => [
-                'list' => $LeaveFormArr,
-                'total' => $total,
-                // "sql" => $sqlCmd
+                'list' => $LeaveFormArr, 'total' => $total  // ,"sql" => $sqlCmd
             ]
         ];
         return $this->respond($response);
     }
+    #endregion
 
-    public function show($id = null)
+    #region 查流程  flow/leave/process/(.*)/get
+    public function process($form_id = null)
     {
-        // 处理获取指定用户资源的逻辑
-        $data = [];
-        if ($data) {
-            return $this->respond($data);
-        } else {
-            return $this->failNotFound('No employee found');
+        // 执行查询
+        $processArr = $this->Medoodb->select('adm_process_flow', '*', ['form_id' => $form_id]);
+        $sqlCmd = $this->Medoodb->log()[0];
+
+        // 捕获错误信息
+        if ($this->Medoodb->error) { // 如果出错 否则为NULL
+            $response = ["code" => 20400, "sql" => $sqlCmd, "message" => $this->Medoodb->error];
+            return $this->respond($response, 400);
         }
+        // echo json_encode($processArr, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE); return;
+        // 遍历查询结果，关联相关信息如 userName, deptName等
+        foreach ($processArr as $k => $v) {
+            $operator_name = "";
+            if (isset($v['operator_id'])) {
+                $operator_name = $this->Medoodb->get('sys_user', 'username', ["id" => $v['operator_id']]);
+            };
+            $processArr[$k]['operator_name'] =   $operator_name;
+        }
+
+        $response = [
+            "code" => 20000,
+            "data" => ['list' => $processArr]
+        ];
+        return $this->respond($response);
     }
     #endregion
 
@@ -245,7 +246,7 @@ class Leave extends ResourceController
                     "audit_time" => "",
                     "order_no" => ++$order_no, // 任务第三环
                     "state" => "ready", // 创建流程时process节点后面均默认为ready
-                    "is_last" => 1
+                    "is_last" => 1  // STAFF审批流程至此结束
                 ];
                 $this->Medoodb->insert("adm_process_flow", $thirdRecord);
                 break;
