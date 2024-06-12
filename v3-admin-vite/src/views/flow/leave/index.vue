@@ -149,11 +149,11 @@ const handleUpdate = (row: GetLeaveData) => {
 //#region 查流程
 const dialogFlowVisible = ref<boolean>(false)
 const flowActivities = ref<GetLeaveFlowData[]>()
-const flowloading = ref<boolean>(false)
+const flowLoading = ref<boolean>(false)
 
 const handleFlow = (row: GetLeaveData) => {
   dialogFlowVisible.value = true
-  flowloading.value = true
+  flowLoading.value = true
   const form_id = cloneDeep(row).form_id
   getLeaveFlowDataApi(form_id)
     .then((res: any) => {
@@ -161,7 +161,7 @@ const handleFlow = (row: GetLeaveData) => {
       flowActivities.value = res.data.list
     })
     .finally(() => {
-      flowloading.value = false
+      flowLoading.value = false
     })
 }
 const getActivityColor = (state: string) => {
@@ -344,7 +344,7 @@ onMounted(() => {})
     </el-dialog>
     <!-- 流程图 -->
     <el-dialog v-model="dialogFlowVisible" title="流程" :close-on-click-modal="false" width="50%">
-      <el-timeline style="max-width: 600px">
+      <el-timeline style="max-width: 600px" v-loading="flowLoading">
         <el-timeline-item
           v-for="(activity, index) in flowActivities"
           :key="index"

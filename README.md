@@ -18,7 +18,8 @@ V3 Admin Vite 基于 Vue3、TypeScript、Element Plus、Pinia 和 Vite 等主流
 - [x] 7. 图标管理：加入svg图标
 - [ ] 8. 图形验证码（`gregwar/captcha` 包生成）
 - [ ] 9. 系统日志
-
+- [x] 10. 简易请假审批流程
+ 
 ## 使用说明
 ### 目录结构
 v3-admin-vite/ 前端模板
@@ -203,7 +204,13 @@ server {
                 'api/v2/sys/user/login',
                 'api/v2/sys/user/logout',
                 'api/v2/sys/user/info',
+                'api/v2/sys/user/refreshtoken',  // 此接口必须为例外
 ```
+
+
+## 简易请假审批流程
+完成STAFF请假流程审批，其余流程需要根据实际情况进行代码补充
+参考 [OA审批系统 oa审批流程数据库设计](https://blog.51cto.com/u_13539/8490872)
 
 ## 数据库表说明
 
@@ -217,9 +224,13 @@ server {
 | sys_role_perm        | 角色权限关系表                              |
 | sys_user_role        | 用户角色对应关系（可一对多）                  |
 | sys_perm_type        | 权限类型（暂时未用到）                       |
+| adm_audit_role       | 审批角色表                                 |
+| adm_leave_form       | 请假流程表单                               |
+| adm_process_flow     | 审批任务流程表                              |
+| adm_notice           | 消息通知表                                 |
 | keys                 | 未用                                      |
 | logs                 | 未用                                      |
-| article              | 测试                                   |
+| article              | 测试                                      |
 
 ## RESTful
  - 使用 catfan/medoo 实现 **复杂分页过滤排序**
@@ -235,7 +246,6 @@ sort:   支持多个参数 &sort=-id,+author => id降序 author 升序
 fileds: 指定要获取的显示字段 => 降低网络流量
 query:  支持多个参数 &query=~author,title => author like 模糊查询， title精确查询 &author=888&title=world 需要配合query参数才有意义
 ```
-
 
 ## 前端目录树
 ## 多级菜单配置

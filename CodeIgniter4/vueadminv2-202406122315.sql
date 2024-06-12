@@ -57,18 +57,8 @@ CREATE TABLE `adm_leave_form` (
   `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '当前数据的创建时间',
   `state` varchar(32) COLLATE utf8mb4_general_ci NOT NULL COMMENT 'processing-正在审批 approved-审批通过 refused-审批被驳回',
   PRIMARY KEY (`form_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='请假流程表单';
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='请假流程表单';
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `adm_leave_form`
---
-
-LOCK TABLES `adm_leave_form` WRITE;
-/*!40000 ALTER TABLE `adm_leave_form` DISABLE KEYS */;
-INSERT INTO `adm_leave_form` VALUES (1,4,1,'2024-06-10','2024-06-14','我要去旅行','2024-06-08 15:31:45','processing');
-/*!40000 ALTER TABLE `adm_leave_form` ENABLE KEYS */;
-UNLOCK TABLES;
 
 --
 -- Table structure for table `adm_notice`
@@ -83,18 +73,8 @@ CREATE TABLE `adm_notice` (
   `content` varchar(255) COLLATE utf8mb4_general_ci NOT NULL COMMENT '消息内容',
   `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`notice_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='消息通知表';
+) ENGINE=InnoDB AUTO_INCREMENT=46 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='消息通知表';
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `adm_notice`
---
-
-LOCK TABLES `adm_notice` WRITE;
-/*!40000 ALTER TABLE `adm_notice` DISABLE KEYS */;
-INSERT INTO `adm_notice` VALUES (1,3,'lisi员工已发起请假申请，请您审批。','2024-06-08 15:31:45');
-/*!40000 ALTER TABLE `adm_notice` ENABLE KEYS */;
-UNLOCK TABLES;
 
 --
 -- Table structure for table `adm_process_flow`
@@ -116,18 +96,8 @@ CREATE TABLE `adm_process_flow` (
   `state` varchar(32) COLLATE utf8mb4_general_ci NOT NULL COMMENT 'ready-准备 process-正在处理 complete-处理完成 cancel-取消',
   `is_last` int NOT NULL COMMENT '是否是整个工作流程的最后一个节点; 0-否1-是',
   PRIMARY KEY (`process_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='审批任务流程表';
+) ENGINE=InnoDB AUTO_INCREMENT=40 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='审批任务流程表';
 /*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `adm_process_flow`
---
-
-LOCK TABLES `adm_process_flow` WRITE;
-/*!40000 ALTER TABLE `adm_process_flow` DISABLE KEYS */;
-INSERT INTO `adm_process_flow` VALUES (1,1,4,'apply','','','2024-06-08 15:31:45','',1,'complete',0),(2,1,3,'audit','','','2024-06-08 15:31:45','',2,'process',0),(3,1,2,'audit','','','2024-06-08 15:31:45','',3,'process',1);
-/*!40000 ALTER TABLE `adm_process_flow` ENABLE KEYS */;
-UNLOCK TABLES;
 
 --
 -- Table structure for table `article`
@@ -269,7 +239,7 @@ CREATE TABLE `sys_menu` (
   `create_time` int DEFAULT NULL,
   `update_time` int DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=33 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=35 DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -278,7 +248,7 @@ CREATE TABLE `sys_menu` (
 
 LOCK TABLES `sys_menu` WRITE;
 /*!40000 ALTER TABLE `sys_menu` DISABLE KEYS */;
-INSERT INTO `sys_menu` VALUES (1,0,'Sys','/sys','Layout',0,'系统管理','sysseting','/sys/menu',0,1,'',99,NULL,NULL),(2,1,'SysMenu','/sys/menu','sys/menu/index',1,'菜单管理','menu1','',0,1,'',100,NULL,NULL),(3,1,'SysRole','/sys/role','sys/role/index',1,'角色管理','role','',0,1,'',110,NULL,NULL),(4,1,'SysUser','/sys/user','sys/user/index',1,'用户管理','user','',0,1,'',105,NULL,NULL),(5,0,'Flow','/flow','Layout',0,'审批流程','cascader','/flow/leave',0,1,'',100,NULL,NULL),(6,2,'','/sys/menu/post','',2,'添加','','',0,1,'',90,NULL,NULL),(7,2,'','/sys/menu/put','',2,'编辑','','',0,1,'',95,NULL,NULL),(8,2,'','/sys/menu/delete','',2,'删除','','',0,1,'',99,NULL,NULL),(9,2,'','/sys/menu/get','',2,'查看','','',0,1,'',80,NULL,NULL),(10,5,'FlowLeave','/flow/leave','flow/leave/index',1,'请假申请','slider','',0,1,'',99,NULL,NULL),(11,5,'FlowLeaveAudit','/flow/leaveaudit','/flow/leaveaudit/index',1,'请假审批','unocss','',0,1,'',100,NULL,NULL),(12,1,'SysIcon','/sys/icon','svg-icons/index',1,'图标管理','icon','',0,1,'',120,NULL,NULL),(13,3,'','/sys/role/get','',2,'查看','','',0,1,'',90,NULL,NULL),(14,3,'','/sys/role/post','',2,'添加','','',0,1,'',91,NULL,NULL),(15,3,'','/sys/role/put','',2,'编辑','','',0,1,'',92,NULL,NULL),(16,3,'','/sys/role/delete','',2,'删除','','',0,1,'',101,NULL,NULL),(17,4,'','/sys/user/get','',2,'查看','','',0,1,'',96,NULL,NULL),(18,4,'','/sys/user/post','',2,'添加','','',0,1,'',97,NULL,NULL),(19,4,'','/sys/user/put','',2,'编辑','','',0,1,'',99,NULL,NULL),(20,4,'','/sys/user/delete','',2,'删除','','',0,1,'',100,NULL,NULL),(21,3,'','/sys/role/saveroleperm/post','',2,'角色授权','','',0,1,'',120,NULL,NULL),(23,1,'SysDept','/sys/dept','sys/dept/index',1,'部门管理','dept2','',0,1,'',115,NULL,NULL),(24,23,'','/sys/dept/get','',2,'查看','','',0,1,'',99,NULL,NULL),(25,23,'','/sys/dept/post','',2,'添加','','',0,1,'',100,NULL,NULL),(26,23,'','/sys/dept/put','',2,'编辑','','',0,1,'',102,NULL,NULL),(27,23,'','/sys/dept/delete','',2,'删除','','',0,1,'',104,NULL,NULL),(28,1,'SysLog','/sys/log','sys/log/index',1,'系统日志','date','',0,1,'',125,NULL,NULL),(29,28,'','/sys/log/get','',2,'查看','','',0,1,'',99,NULL,NULL),(30,10,'','/flow/leave/get','',2,'查看','','',0,1,'',99,NULL,NULL),(31,10,'','/flow/leave/post','',2,'添加','','',0,1,'',100,NULL,NULL),(32,10,'','/flow/leave/delete','',2,'删除','','',0,1,'',105,NULL,NULL);
+INSERT INTO `sys_menu` VALUES (1,0,'Sys','/sys','Layout',0,'系统管理','sysseting','/sys/menu',0,1,'',99,NULL,NULL),(2,1,'SysMenu','/sys/menu','sys/menu/index',1,'菜单管理','menu1','',0,1,'',100,NULL,NULL),(3,1,'SysRole','/sys/role','sys/role/index',1,'角色管理','role','',0,1,'',110,NULL,NULL),(4,1,'SysUser','/sys/user','sys/user/index',1,'用户管理','user','',0,1,'',105,NULL,NULL),(5,0,'Flow','/flow','Layout',0,'审批流程','cascader','/flow/leave',0,1,'',100,NULL,NULL),(6,2,'','/sys/menu/post','',2,'添加','','',0,1,'',90,NULL,NULL),(7,2,'','/sys/menu/put','',2,'编辑','','',0,1,'',95,NULL,NULL),(8,2,'','/sys/menu/delete','',2,'删除','','',0,1,'',99,NULL,NULL),(9,2,'','/sys/menu/get','',2,'查看','','',0,1,'',80,NULL,NULL),(10,5,'FlowLeave','/flow/leave','flow/leave/index',1,'请假申请','slider','',0,1,'',99,NULL,NULL),(11,5,'FlowLeaveAudit','/flow/leaveaudit','flow/leaveaudit/index',1,'请假审批','unocss','',0,1,'',100,NULL,NULL),(12,1,'SysIcon','/sys/icon','svg-icons/index',1,'图标管理','icon','',0,1,'',120,NULL,NULL),(13,3,'','/sys/role/get','',2,'查看','','',0,1,'',90,NULL,NULL),(14,3,'','/sys/role/post','',2,'添加','','',0,1,'',91,NULL,NULL),(15,3,'','/sys/role/put','',2,'编辑','','',0,1,'',92,NULL,NULL),(16,3,'','/sys/role/delete','',2,'删除','','',0,1,'',101,NULL,NULL),(17,4,'','/sys/user/get','',2,'查看','','',0,1,'',96,NULL,NULL),(18,4,'','/sys/user/post','',2,'添加','','',0,1,'',97,NULL,NULL),(19,4,'','/sys/user/put','',2,'编辑','','',0,1,'',99,NULL,NULL),(20,4,'','/sys/user/delete','',2,'删除','','',0,1,'',100,NULL,NULL),(21,3,'','/sys/role/saveroleperm/post','',2,'角色授权','','',0,1,'',120,NULL,NULL),(23,1,'SysDept','/sys/dept','sys/dept/index',1,'部门管理','dept2','',0,1,'',115,NULL,NULL),(24,23,'','/sys/dept/get','',2,'查看','','',0,1,'',99,NULL,NULL),(25,23,'','/sys/dept/post','',2,'添加','','',0,1,'',100,NULL,NULL),(26,23,'','/sys/dept/put','',2,'编辑','','',0,1,'',102,NULL,NULL),(27,23,'','/sys/dept/delete','',2,'删除','','',0,1,'',104,NULL,NULL),(28,1,'SysLog','/sys/log','sys/log/index',1,'系统日志','date','',0,1,'',125,NULL,NULL),(29,28,'','/sys/log/get','',2,'查看','','',0,1,'',99,NULL,NULL),(30,10,'','/flow/leave/get','',2,'查看','','',0,1,'',99,NULL,NULL),(31,10,'','/flow/leave/post','',2,'添加','','',0,1,'',100,NULL,NULL),(32,10,'','/flow/leave/delete','',2,'删除','','',0,1,'',105,NULL,NULL),(33,11,'','/flow/leaveaudit/get','',2,'查看','','',0,1,'',99,NULL,NULL),(34,11,'','/flow/leaveaudit/put','',2,'审批','','',0,1,'',100,NULL,NULL);
 /*!40000 ALTER TABLE `sys_menu` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -294,7 +264,7 @@ CREATE TABLE `sys_perm` (
   `perm_type` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL COMMENT '权限类型：menu:菜单路由类,role:角色类,file:文件类',
   `r_id` int NOT NULL COMMENT '实际基础表的关联id，如菜单表ID，角色表ID，文件表ID等',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=46 DEFAULT CHARSET=utf8mb3 ROW_FORMAT=DYNAMIC COMMENT='系统权限表\r\n\r\n基础表（菜单表，角色表，文件表及其他需要权限控制的表）每新增一个记录，此表同时插入一条对应记录，如\r\nsys_menu表加入一条记录，此处需要对应加入  类型 menu 的 r_id 为menu id的记录';
+) ENGINE=InnoDB AUTO_INCREMENT=48 DEFAULT CHARSET=utf8mb3 ROW_FORMAT=DYNAMIC COMMENT='系统权限表\r\n\r\n基础表（菜单表，角色表，文件表及其他需要权限控制的表）每新增一个记录，此表同时插入一条对应记录，如\r\nsys_menu表加入一条记录，此处需要对应加入  类型 menu 的 r_id 为menu id的记录';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -303,7 +273,7 @@ CREATE TABLE `sys_perm` (
 
 LOCK TABLES `sys_perm` WRITE;
 /*!40000 ALTER TABLE `sys_perm` DISABLE KEYS */;
-INSERT INTO `sys_perm` VALUES (1,'role',1),(2,'menu',1),(3,'menu',2),(4,'menu',3),(5,'menu',4),(6,'menu',5),(7,'menu',6),(8,'menu',7),(9,'menu',8),(10,'menu',9),(11,'menu',10),(12,'menu',11),(13,'menu',12),(14,'menu',13),(15,'menu',14),(16,'menu',15),(17,'menu',16),(18,'menu',17),(19,'menu',18),(20,'menu',19),(21,'menu',20),(27,'menu',21),(29,'menu',23),(30,'menu',24),(31,'menu',25),(32,'menu',26),(33,'menu',27),(34,'dept',1),(35,'dept',2),(36,'dept',3),(37,'dept',4),(38,'role',2),(39,'menu',28),(40,'menu',29),(41,'dept',5),(42,'menu',30),(43,'menu',31),(44,'menu',32),(45,'role',3);
+INSERT INTO `sys_perm` VALUES (1,'role',1),(2,'menu',1),(3,'menu',2),(4,'menu',3),(5,'menu',4),(6,'menu',5),(7,'menu',6),(8,'menu',7),(9,'menu',8),(10,'menu',9),(11,'menu',10),(12,'menu',11),(13,'menu',12),(14,'menu',13),(15,'menu',14),(16,'menu',15),(17,'menu',16),(18,'menu',17),(19,'menu',18),(20,'menu',19),(21,'menu',20),(27,'menu',21),(29,'menu',23),(30,'menu',24),(31,'menu',25),(32,'menu',26),(33,'menu',27),(34,'dept',1),(35,'dept',2),(36,'dept',3),(37,'dept',4),(38,'role',2),(39,'menu',28),(40,'menu',29),(41,'dept',5),(42,'menu',30),(43,'menu',31),(44,'menu',32),(45,'role',3),(46,'menu',33),(47,'menu',34);
 /*!40000 ALTER TABLE `sys_perm` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -381,7 +351,7 @@ CREATE TABLE `sys_role_perm` (
   KEY `perm_id` (`perm_id`),
   CONSTRAINT `sys_role_perm_ibfk_1` FOREIGN KEY (`role_id`) REFERENCES `sys_role` (`id`),
   CONSTRAINT `sys_role_perm_ibfk_2` FOREIGN KEY (`perm_id`) REFERENCES `sys_perm` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=80 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=84 DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -390,7 +360,7 @@ CREATE TABLE `sys_role_perm` (
 
 LOCK TABLES `sys_role_perm` WRITE;
 /*!40000 ALTER TABLE `sys_role_perm` DISABLE KEYS */;
-INSERT INTO `sys_role_perm` VALUES (1,1,1),(2,1,2),(3,1,3),(4,1,4),(5,1,5),(6,1,6),(7,1,7),(8,1,8),(9,1,9),(10,1,10),(11,1,11),(12,1,12),(13,1,13),(14,1,14),(15,1,15),(16,1,16),(17,1,17),(18,1,18),(19,1,19),(20,1,20),(21,1,21),(30,1,27),(38,1,29),(39,1,30),(40,1,31),(41,1,32),(42,1,33),(43,1,34),(44,1,35),(45,1,36),(46,1,37),(47,1,38),(48,2,2),(49,2,5),(50,2,18),(51,2,19),(52,2,20),(53,2,21),(57,2,35),(58,2,37),(59,2,36),(60,1,39),(61,1,40),(66,1,41),(67,1,42),(68,1,43),(69,1,44),(70,1,45),(71,3,6),(72,3,11),(73,3,42),(74,3,43),(75,2,6),(76,2,11),(77,2,42),(78,2,43),(79,2,12);
+INSERT INTO `sys_role_perm` VALUES (1,1,1),(2,1,2),(3,1,3),(4,1,4),(5,1,5),(6,1,6),(7,1,7),(8,1,8),(9,1,9),(10,1,10),(11,1,11),(12,1,12),(13,1,13),(14,1,14),(15,1,15),(16,1,16),(17,1,17),(18,1,18),(19,1,19),(20,1,20),(21,1,21),(30,1,27),(38,1,29),(39,1,30),(40,1,31),(41,1,32),(42,1,33),(43,1,34),(44,1,35),(45,1,36),(46,1,37),(47,1,38),(48,2,2),(49,2,5),(50,2,18),(51,2,19),(52,2,20),(53,2,21),(57,2,35),(58,2,37),(59,2,36),(60,1,39),(61,1,40),(66,1,41),(67,1,42),(68,1,43),(69,1,44),(70,1,45),(71,3,6),(72,3,11),(73,3,42),(74,3,43),(75,2,6),(76,2,11),(77,2,42),(78,2,43),(79,2,12),(80,1,46),(81,1,47),(82,2,46),(83,2,47);
 /*!40000 ALTER TABLE `sys_role_perm` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -426,7 +396,7 @@ CREATE TABLE `sys_user` (
 
 LOCK TABLES `sys_user` WRITE;
 /*!40000 ALTER TABLE `sys_user` DISABLE KEYS */;
-INSERT INTO `sys_user` VALUES (1,'admin','21232f297a57a5a743894a0e4a801fc3','admin','111@gmail.com','https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif',0,NULL,NULL,'127.0.0.1',1493103488,1487868050,1,1),(2,'zhaoer','21232f297a57a5a743894a0e4a801fc3','','49727546@qq.com','https://gw.alipayobjects.com/zos/antfincdn/aPkFc8Sj7n/method-draw-image.svg',NULL,3,'DGM',NULL,NULL,1554800129,1,1002),(3,'zhangsan','21232f297a57a5a743894a0e4a801fc3','','','',NULL,4,'DM','',NULL,1554803362,1,1003),(4,'lisi','21232f297a57a5a743894a0e4a801fc3',NULL,'',NULL,NULL,4,'STAFF',NULL,NULL,1717345461,1,1005),(5,'wangwu','21232f297a57a5a743894a0e4a801fc3',NULL,'2@a.com',NULL,NULL,5,'STAFF',NULL,NULL,1717823386,1,1006);
+INSERT INTO `sys_user` VALUES (1,'admin','21232f297a57a5a743894a0e4a801fc3','admin','111@gmail.com','https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif',0,NULL,NULL,'127.0.0.1',1493103488,1487868050,1,1),(2,'zhaoer','21232f297a57a5a743894a0e4a801fc3','','49727546@qq.com','https://gw.alipayobjects.com/zos/antfincdn/aPkFc8Sj7n/method-draw-image.svg',NULL,3,'DGM',NULL,NULL,1554800129,1,1002),(3,'zhangsan','21232f297a57a5a743894a0e4a801fc3','','','',NULL,4,'DM','',NULL,1554803362,1,1003),(4,'lisi','21232f297a57a5a743894a0e4a801fc3',NULL,'',NULL,NULL,4,'STAFF',NULL,NULL,1717345461,1,1005),(5,'wangwu','21232f297a57a5a743894a0e4a801fc3',NULL,'2@a.com',NULL,NULL,4,'STAFF',NULL,NULL,1717823386,1,1006);
 /*!40000 ALTER TABLE `sys_user` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -446,7 +416,7 @@ CREATE TABLE `sys_user_role` (
   KEY `role_id` (`role_id`),
   CONSTRAINT `sys_user_role_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `sys_user` (`id`),
   CONSTRAINT `sys_user_role_ibfk_2` FOREIGN KEY (`role_id`) REFERENCES `sys_role` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -455,7 +425,7 @@ CREATE TABLE `sys_user_role` (
 
 LOCK TABLES `sys_user_role` WRITE;
 /*!40000 ALTER TABLE `sys_user_role` DISABLE KEYS */;
-INSERT INTO `sys_user_role` VALUES (1,1,1),(4,3,2),(6,4,3),(7,2,1),(8,5,3);
+INSERT INTO `sys_user_role` VALUES (1,1,1),(4,3,2),(6,4,3),(8,5,3),(9,2,2);
 /*!40000 ALTER TABLE `sys_user_role` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -503,4 +473,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2024-06-08 16:23:22
+-- Dump completed on 2024-06-12 23:15:57

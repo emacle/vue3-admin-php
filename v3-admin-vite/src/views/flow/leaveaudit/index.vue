@@ -73,7 +73,8 @@ const handleCreateOrUpdate = () => {
   formRef.value?.validate((valid: boolean, fields) => {
     if (!valid) return console.error("表单校验不通过", fields)
     loading.value = true
-    const api = formData.value.process_id === undefined ? createLeaveAuditDataApi : updateLeaveAuditDataApi
+    // const api = formData.value.process_id === undefined ? createLeaveAuditDataApi : updateLeaveAuditDataApi
+    const api = updateLeaveAuditDataApi
     // 提取并保留 result, reason 和 process_id 三项
     const newFormData = {
       result: formData.value.result,
@@ -90,8 +91,8 @@ const handleCreateOrUpdate = () => {
       .finally(() => {
         loading.value = false
       })
-      .catch((err) => {
-        console.log(err)
+      .catch((err: unknown) => {
+        console.error(err); // 使用 console.error 更合适
       })
   })
 }
