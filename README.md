@@ -1,6 +1,6 @@
 # [vue3-admin-php-demo](http://pocoyo.rr.nu:10000)
 
-# vue-php-admin 项目说明
+# vue3-admin-php 项目说明
 通用后台角色权限管理系统, 基于 [v3-admin-vite](https://github.com/un-pany/v3-admin-vite) 和 [PHP CodeIgniter 4.5.0](https://github.com/codeigniter4/framework) RESTful 实现，采用前后端分离架构的权限管理系统，PHP快速开发平台，目标是搭建一套简洁易用的快速解决方案，可以帮助用户有效降低项目开发难度和成本。
 
 以 [v3-admin-vite](https://github.com/un-pany/v3-admin-vite) 前端模板为基础，修改动态路由部分，实现菜单路由可根据后端角色进行动态加载。
