@@ -80,6 +80,8 @@ class Filters extends BaseFilters
                 '/',
                 'api/v2/sys/employee/*',
                 'api/v2/sys/employee',
+                'api/v2/sys/user/testapi',
+                'api/v2/sys/jiutian/chat',
                 'api/v2/sys/user/login',
                 'api/v2/sys/user/logout',
                 'api/v2/sys/user/info',

@@ -15,6 +15,7 @@
         "catfan/medoo": "^2.1",
         "codeigniter4/framework": "^4.0",
         "firebase/php-jwt": "^6.10",
+        "guzzlehttp/guzzle": "^7.9",
         "nette/utils": "^4.0"
     },
     "require-dev": {

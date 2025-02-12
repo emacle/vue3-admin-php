@@ -10,6 +10,8 @@ $routes->get('/', 'Home::index');
 // v4.5.0 filter顺序变化
 $routes->group('api/v2/sys', ['namespace' => 'App\Controllers\Api\V2\Sys'], function ($routes) {
     // $routes->resource('user');  // 优先下面精准增删除改查+options 6个方法
+    $routes->get('user/testapi', 'User::testapi');
+    $routes->post('jiutian/chat', 'Jiutian::chat');
     $routes->get('user', 'User::index');
     $routes->get('user/roleoptions', 'User::roleoptions');
     $routes->get('user/deptoptions', 'User::deptoptions');

@@ -18,6 +18,21 @@ class User extends ResourceController
         $this->Medoodb = \Config\Services::medoo();
     }
 
+    #region testapi
+    public function testapi()
+    {
+            $response = [
+                "code" => 0,
+                "type" => 'success',
+                "message" => 'testapi success',
+                "data" => []
+            ];
+            return $this->respond($response);
+ 
+    }
+    #endregion
+
+
     #region 登录
     public function login()
     {
